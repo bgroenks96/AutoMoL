@@ -15,10 +15,9 @@ public final class TermSentence implements Sentence
   {
     return term;
   }
-
-  @Override
-  public boolean evaluate ()
+  
+  public String getName ()
   {
-    return term.evaluate ();
+    return term.getName ();
   }
 }

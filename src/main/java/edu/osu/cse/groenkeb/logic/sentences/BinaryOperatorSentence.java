@@ -1,9 +1,10 @@
 package edu.osu.cse.groenkeb.logic.sentences;
 
 import edu.osu.cse.groenkeb.logic.Term;
+import edu.osu.cse.groenkeb.logic.TermVisitor;
 import edu.osu.cse.groenkeb.logic.operators.BinaryOperator;
 
-public class BinaryOperatorSentence implements Sentence
+public class BinaryOperatorSentence implements Sentence<BinaryOperator>
 {
   private final BinaryOperator op;
   private final Term a, b;
@@ -29,16 +30,22 @@ public class BinaryOperatorSentence implements Sentence
   {
     return this.b;
   }
-
+  
   @Override
-  public boolean evaluate ()
+  public void visit (TermVisitor visitor)
   {
-    return op.evaluate (a, b);
+    visitor.binarySentence (this);
   }
   
   @Override
   public String toString()
   {
     return String.format ("%s(%s,%s)", op, a, b);
+  }
+
+  @Override
+  public String getName ()
+  {
+    return toString();
   }
 }

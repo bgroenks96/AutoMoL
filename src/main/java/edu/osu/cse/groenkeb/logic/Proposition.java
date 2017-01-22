@@ -14,26 +14,21 @@ public class Proposition implements Term
     return true;
   }
   
+  @Override
   public String getName()
   {
     return name;
   }
   
   @Override
-  public boolean equals(Object obj)
-  {
-    return obj instanceof Proposition && name.equals (((Proposition)obj).name);
-  }
-  
-  @Override
-  public int hashCode()
-  {
-    return name.hashCode ();
-  }
-  
-  @Override
   public String toString()
   {
     return getName();
+  }
+
+  @Override
+  public void visit (TermVisitor visitor)
+  {
+    visitor.prop (this);
   }
 }
