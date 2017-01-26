@@ -17,8 +17,6 @@ hs_err_pid*
 
 # eclipse
 .settings/
-.project
-.classpath
 .gradle/
-
+.cache-main
 

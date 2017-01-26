@@ -1,7 +1,7 @@
 package edu.osu.cse.groenkeb.logic;
 
-import edu.osu.cse.groenkeb.logic.operators.AndOperator;
-import edu.osu.cse.groenkeb.logic.operators.NotOperator;
+import edu.osu.cse.groenkeb.logic.And;
+import edu.osu.cse.groenkeb.logic.Not;
 
 public final class Sentences
 {
@@ -12,19 +12,19 @@ public final class Sentences
   
   public static Sentence and(Sentence left, Sentence right)
   {
-    final AndOperator operator = new AndOperator();
+    final And operator = new And();
     return new BinarySentence(left, right, operator);
   }
   
   public static Sentence not(Sentence operand)
   {
-    final NotOperator operator = new NotOperator();
+    final Not operator = new Not();
     return new UnarySentence(operand, operator);
   }
   
   public static Sentence nil()
   {
-    return NullSentence.get();
+    return new NullSentence();
   }
   
 //  private Sentence result;

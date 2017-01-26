@@ -25,5 +25,7 @@ public final class EmptyPremise implements Premise
     return NullProof.get();
   }
   
-  private EmptyPremise();
+  private EmptyPremise()
+  {
+  }
 }

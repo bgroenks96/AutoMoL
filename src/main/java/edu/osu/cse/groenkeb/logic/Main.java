@@ -1,6 +1,8 @@
 package edu.osu.cse.groenkeb.logic;
 
-import static edu.osu.cse.groenkeb.logic.Sentences.*;
+import static edu.osu.cse.groenkeb.logic.Sentences.and;
+import static edu.osu.cse.groenkeb.logic.Sentences.atom;
+import static edu.osu.cse.groenkeb.logic.Sentences.not;
 
 public class Main
 {
