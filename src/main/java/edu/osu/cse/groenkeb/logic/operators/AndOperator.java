@@ -8,9 +8,15 @@ public class AndOperator implements BinaryOperator
   @Override
   public Relation asRelation()
   {
-    return Relations.and ();
+    return Relations.and();
   }
   
+  @Override
+  public boolean matches(Operator operator)
+  {
+    return operator instanceof AndOperator;
+  }
+
   @Override
   public String toString()
   {

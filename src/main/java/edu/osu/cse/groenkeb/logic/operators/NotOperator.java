@@ -5,11 +5,18 @@ import edu.osu.cse.groenkeb.logic.relation.Relations;
 
 public final class NotOperator implements UnaryOperator
 {
-  public Relation asRelation()
+  @Override
+  public boolean matches(Operator operator)
   {
-    return Relations.not ();
+    return operator instanceof NotOperator;
   }
   
+  @Override
+  public Relation asRelation()
+  {
+    return Relations.not();
+  }
+
   @Override
   public String toString()
   {
