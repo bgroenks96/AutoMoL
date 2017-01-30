@@ -1,11 +1,8 @@
 package edu.osu.cse.groenkeb.logic
 
-import edu.osu.cse.groenkeb.logic.relation.Relation
-import edu.osu.cse.groenkeb.logic.relation.Relations
-
 abstract class Operator
 {
-  def asRelation(): Relation
+  def relate(s1: Sentence)(s2: Sentence): Relation
   def matches(op: Operator): Boolean
   override def toString(): String
 }
@@ -15,7 +12,7 @@ abstract class UnaryOperator extends Operator
 
 case class And() extends BinaryOperator
 {
-  def asRelation() = Relations.and()
+  def relate(s1: Sentence)(s2: Sentence) = AndRelation(s1, s2)
   
   def matches(op: Operator) = op match
   {
@@ -28,7 +25,7 @@ case class And() extends BinaryOperator
 
 case class Not() extends UnaryOperator
 {
-  def asRelation() = Relations.not()
+  def relate(s1: Sentence)(s2: Sentence) = NotRelation(s1)
   
   def matches(op: Operator) = op match
   {

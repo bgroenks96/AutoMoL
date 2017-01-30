@@ -10,5 +10,9 @@ public class Main
   {
     final Sentence sentence = and(atom("A"), not(atom("B")));
     System.out.println(sentence);
+    
+    final Sentence s1 = and(atom("A"), atom("B"));
+    final Sentence s2 = and(atom("A"), atom("B"));
+    System.out.println(s1.matches(s2));
   }
 }

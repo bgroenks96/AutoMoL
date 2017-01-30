@@ -9,7 +9,7 @@ abstract class Sentence
 case class AtomicSentence(atom: Atom) extends Sentence
 {
   def matches(s: Sentence) = s match {
-    case AtomicSentence(atom) => true
+    case AtomicSentence(atom) => this.atom.matches(atom)
     case _ => false
   }
   
@@ -19,7 +19,7 @@ case class AtomicSentence(atom: Atom) extends Sentence
 case class BinarySentence(left: Sentence, right: Sentence, op: BinaryOperator) extends Sentence
 {
   def matches(s: Sentence) = s match {
-    case BinarySentence(left, right, op) => true
+    case BinarySentence(left, right, op) => this.left.matches(left) && this.right.matches(right) && this.op.matches(op)
     case _ => false
   }
   
@@ -29,11 +29,11 @@ case class BinarySentence(left: Sentence, right: Sentence, op: BinaryOperator) e
 case class UnarySentence(s: Sentence, op: UnaryOperator) extends Sentence
 {
   def matches(s: Sentence) = s match {
-    case UnarySentence(s, op) => true
+    case UnarySentence(s, op) => this.s.matches(s) && this.op.matches(op)
     case _ => false
   }
   
-  override def toString() = String.format("%s(%s)", op, s)
+  override def toString() = String.format("%s%s", op, s)
 }
 
 case class NullSentence() extends Sentence
