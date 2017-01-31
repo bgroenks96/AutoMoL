@@ -20,7 +20,33 @@ case class And() extends BinaryOperator
     case _ => false
   }
   
-  override def toString() = "&"
+  override def toString() = "and"
+}
+
+case class Or() extends BinaryOperator
+{
+  def relate(s1: Sentence)(s2: Sentence) = OrRelation(s1, s2)
+  
+  def matches(op: Operator) = op match
+  {
+    case And() => true
+    case _ => false
+  }
+  
+  override def toString() = "or"
+}
+
+case class Implies() extends BinaryOperator
+{
+  def relate(s1: Sentence)(s2: Sentence) = ImpliesRelation(s1, s2)
+  
+  def matches(op: Operator) = op match
+  {
+    case Implies() => true
+    case _ => false
+  }
+  
+  override def toString() = "=>"
 }
 
 case class Not() extends UnaryOperator
