@@ -17,7 +17,7 @@ abstract class ObjectRelation(val sentences: Sentence*) extends Relation
 /**
  * Base type for meta-linguistic relations between objects in the object-language.
  */
-abstract class MetaRelation(val relations: Relation*) extends Relation
+abstract class MetaRelation(val relations: ObjectRelation*) extends ObjectRelation
 
 /**
  * Base type for all connective relations: (s1, s2) in C(s1, s2)
@@ -42,7 +42,6 @@ case class SentenceRelation(val sentence: Sentence) extends ObjectRelation(sente
   def member = sentence
 }
 
-case class ContingentRelation(r: SentenceRelation) extends MetaRelation(r)
 case class TruthRelation(r: SentenceRelation) extends MetaRelation(r)
 case class AbsurdityRelation(r: SentenceRelation) extends MetaRelation(r)
 case class TurnstileRelation(prem: SentenceRelation, conc: SentenceRelation) extends MetaRelation(prem, conc)

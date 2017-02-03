@@ -4,7 +4,9 @@ import java.util.Collection;
 
 import com.google.common.collect.ImmutableSet;
 
+import edu.osu.cse.groenkeb.logic.proof.interfaces.Conclusion;
 import edu.osu.cse.groenkeb.logic.proof.interfaces.Premise;
+import edu.osu.cse.groenkeb.logic.proof.rules.Rule;
 
 public final class ProofBuilder
 {
@@ -30,5 +32,31 @@ public final class ProofBuilder
     this.context = context;
   }
   
-  class A<K extends A<K, T>, T extends A<K, T>> {}
+  public class OngoingConclusion
+  {
+    private final ProofBuilder proofBuilder;
+    private final Rule rule;
+    private Premise major, minor;
+    private Conclusion result;
+    
+    private OngoingConclusion(ProofBuilder proofBuilder, Rule rule)
+    {
+      this.proofBuilder = proofBuilder;
+      this.rule = rule;
+    }
+    
+    public OngoingConclusion withMajor(Premise major)
+    {
+      assert minor == null;
+      this.major = major;
+      return this;
+    }
+    
+    public ProofBuilder andMinor(Premise minor)
+    {
+      assert major != null;
+      this.minor = minor;
+      return proofBuilder;
+    }
+  }
 }

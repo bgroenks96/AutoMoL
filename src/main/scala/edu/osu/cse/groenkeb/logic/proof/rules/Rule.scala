@@ -3,16 +3,11 @@ package edu.osu.cse.groenkeb.logic.proof.rules
 import scala.collection.immutable.LinearSeq
 
 import edu.osu.cse.groenkeb.logic._
-
-// need some way of defining a rule to take some number of sentences
-// and mapping them to relations; rules should operate on relations, not operators!
-// idea: RelationMap .... maps sentences => relational-nodes, and stores relational-nodes
-// in a tree according to their appearances in the sentences. A rule could then locate the
-// relevant relations for the given sentences and filter out those that are not applicable
+import RuleUtils._
 
 trait Rule
 {
-  def apply(relations: List[Relation]): List[Relation]
+  def apply(relations: List[Relation]): List[MetaRelation]
   
   def accepts(relations: List[Relation]): Boolean
 }
@@ -36,9 +31,9 @@ case class AndIntroRule() extends IntroductionRule
 {
   def invert(): EliminationRule = AndElimRule()
   
-  def apply(relations: List[Relation]): List[Relation] = relations match
+  def apply(relations: List[Relation]): List[MetaRelation] = relations match
   {
-    case TruthRelation(x) :: TruthRelation(y) :: Nil => List(AndRelation(x.member, y.member))
+    case TruthRelation(x) :: TruthRelation(y) :: Nil => List(confirm(AndRelation(x.member, y.member).result))
     case _ => List()
   }
 }
@@ -47,9 +42,17 @@ case class AndElimRule() extends EliminationRule
 {
   def invert(): IntroductionRule = AndIntroRule()
   
-  def apply(relations: List[Relation]): List[Relation] = relations match
+  def apply(relations: List[Relation]): List[MetaRelation] = relations match
   {
     case AndRelation(x, y) :: Nil => List(TruthRelation(x.relate), TruthRelation(y.relate))
     case _ => List()
   }
 }
+
+private object RuleUtils
+{
+  def confirm(s: SentenceRelation): TruthRelation = TruthRelation(s);
+  
+  def reject(s: SentenceRelation): AbsurdityRelation = AbsurdityRelation(s);
+}
+
