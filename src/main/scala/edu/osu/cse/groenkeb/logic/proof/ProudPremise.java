@@ -1,21 +1,18 @@
 package edu.osu.cse.groenkeb.logic.proof;
 
-import java.util.Optional;
-
 import edu.osu.cse.groenkeb.logic.Sentence;
 import edu.osu.cse.groenkeb.logic.proof.EmptyProof.NullProof;
-import edu.osu.cse.groenkeb.logic.proof.interfaces.Conclusion;
 import edu.osu.cse.groenkeb.logic.proof.interfaces.Premise;
 import edu.osu.cse.groenkeb.logic.proof.interfaces.Proof;
 
 /**
- * Represents a premise/conclusion that "stands proud" and has no former proof.
+ * Represents a premise that "stands proud" and has no former proof.
  */
-public final class ProudConclusion implements Conclusion
+public final class ProudPremise implements Premise
 {
   private final Sentence sentence;
   
-  public ProudConclusion(Sentence sentence)
+  public ProudPremise(Sentence sentence)
   {
     this.sentence = sentence;
   }
@@ -30,23 +27,5 @@ public final class ProudConclusion implements Conclusion
   public Sentence getSentence()
   {
     return sentence;
-  }
-
-  @Override
-  public Premise getMajor()
-  {
-    return EmptyPremise.get();
-  }
-
-  @Override
-  public Optional<Premise> getMinor()
-  {
-    return Optional.empty();
-  }
-
-  @Override
-  public boolean hasMinor()
-  {
-    return false;
   }
 }

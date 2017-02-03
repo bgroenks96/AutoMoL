@@ -3,7 +3,8 @@ package edu.osu.cse.groenkeb.logic
 abstract class Sentence
 {
   def matches(s: Sentence): Boolean
-  override def toString(): String
+  def relate = SentenceRelation(this)
+  override def toString: String
 }
 
 case class AtomicSentence(atom: Atom) extends Sentence

@@ -17,20 +17,20 @@ import edu.osu.cse.groenkeb.logic.proof.interfaces.Conclusion;
 import edu.osu.cse.groenkeb.logic.proof.interfaces.Premise;
 import edu.osu.cse.groenkeb.utils.Immutability;
 
-abstract class ProofContext
+public abstract class ProofContext
 {
   private final Set<Premise> initialPremises = Sets.newHashSet();
 
-  private final Set<Assumption> availableAssumptions = Sets.newHashSet();
+  private final Set<Assumption> hangingAssumptions = Sets.newHashSet();
 
   private final BiMap<Assumption, Conclusion> discharges = HashBiMap.create();
 
-  ProofContext(Collection<Premise> premises)
+  protected ProofContext(Collection<Premise> premises)
   {
     this(premises, ImmutableSet.of(), ImmutableMap.of());
   }
 
-  ProofContext(Premise... premises)
+  protected ProofContext(Premise... premises)
   {
     this(Arrays.asList(premises));
   }
@@ -39,9 +39,9 @@ abstract class ProofContext
                                              Set<Assumption> availableAssumptions,
                                              Map<Assumption, Conclusion> discharges);
 
-  public final SetView<Assumption> getAvailableAssumptions()
+  public SetView<Assumption> getAvailableAssumptions()
   {
-    return Immutability.viewFor(Sets.union(availableAssumptions, initialPremises));
+    return Sets.union(Sets.union(hangingAssumptions, discharges.values()), initialPremises);
   }
 
   public final SetView<Assumption> getDischargedAssumptions()
@@ -51,17 +51,19 @@ abstract class ProofContext
 
   public final Conclusion conclusionFor(Assumption dischargedAssumption)
   {
+    assert discharges.containsKey(dischargedAssumption);
     return discharges.get(dischargedAssumption);
   }
 
   public final Assumption assumptionFor(Conclusion conclusion)
   {
+    assert discharges.inverse().containsKey(conclusion);
     return discharges.inverse().get(conclusion);
   }
 
   public final ProofContext copy()
   {
-    return createFrom(initialPremises, availableAssumptions, discharges);
+    return createFrom(initialPremises, hangingAssumptions, discharges);
   }
 
   @Override
@@ -69,27 +71,27 @@ abstract class ProofContext
   {
     return copy();
   }
-  
+
   protected final void assume(Assumption assumption)
   {
-    availableAssumptions.add(assumption);
+    hangingAssumptions.add(assumption);
   }
-  
+
   protected final void discharge(Assumption assumption, Conclusion conclusion)
   {
-    final boolean dischargable = availableAssumptions.contains(assumption);
+    final boolean dischargable = hangingAssumptions.contains(assumption);
     assert dischargable;
     if (!dischargable) return;
-    availableAssumptions.remove(assumption);
+    hangingAssumptions.remove(assumption);
     discharges.put(assumption, conclusion);
   }
 
-  private ProofContext(Collection<Premise> premises,
-                       Collection<Assumption> available,
-                       Map<Assumption, Conclusion> discharges)
+  protected ProofContext(Collection<Premise> premises,
+                         Collection<Assumption> hangingAssumptions,
+                         Map<Assumption, Conclusion> discharges)
   {
     this.initialPremises.addAll(premises);
-    this.availableAssumptions.addAll(available);
+    this.hangingAssumptions.addAll(hangingAssumptions);
     this.discharges.putAll(discharges);
   }
 }

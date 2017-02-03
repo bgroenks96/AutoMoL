@@ -10,6 +10,12 @@ public interface Proof
    */
   ImmutableSet<Premise> getPremises();
   
+  
+  /**
+   * @return the list of all assumptions in the order that they were introduced
+   */
+  ImmutableList<Assumption> getAssumptions();
+  
   /**
    * @return a list of conclusions in the order they appear in the proof from top to bottom, left to right.
    */
