@@ -2,32 +2,27 @@ package edu.osu.cse.groenkeb.logic.proof;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 
+import edu.osu.cse.groenkeb.logic.MetaRelation;
+import edu.osu.cse.groenkeb.logic.SentenceRelation;
+import edu.osu.cse.groenkeb.logic.TruthRelation;
 import edu.osu.cse.groenkeb.logic.proof.interfaces.Assumption;
 import edu.osu.cse.groenkeb.logic.proof.interfaces.Conclusion;
 import edu.osu.cse.groenkeb.logic.proof.interfaces.Premise;
-import edu.osu.cse.groenkeb.utils.Immutability;
 
 public abstract class ProofContext
 {
-  private final Set<Premise> initialPremises = Sets.newHashSet();
-
-  private final Set<Assumption> hangingAssumptions = Sets.newHashSet();
-
-  private final BiMap<Assumption, Conclusion> discharges = HashBiMap.create();
+  private final ImmutableSet<Premise> initialPremises;
+  
+  private final ImmutableSet<MetaRelation> relations;
 
   protected ProofContext(Collection<Premise> premises)
   {
-    this(premises, ImmutableSet.of(), ImmutableMap.of());
+    this(ImmutableSet.copyOf(premises), ImmutableSet.of());
   }
 
   protected ProofContext(Premise... premises)
@@ -35,35 +30,30 @@ public abstract class ProofContext
     this(Arrays.asList(premises));
   }
 
-  protected abstract ProofContext createFrom(Set<Premise> initialPremises,
-                                             Set<Assumption> availableAssumptions,
-                                             Map<Assumption, Conclusion> discharges);
-
-  public SetView<Assumption> getAvailableAssumptions()
+  protected abstract ProofContext createFrom(ImmutableSet<Premise> initialPremises,
+                                             ImmutableSet<MetaRelation> relations);
+  
+  public Set<MetaRelation> relationsFor(Assumption assumption)
   {
-    return Sets.union(Sets.union(hangingAssumptions, discharges.values()), initialPremises);
+    final SentenceRelation object = assumption.getSentence().relate();
+    return relations.stream().filter(r -> r.contains(object)).collect(Collectors.toSet());
   }
-
-  public final SetView<Assumption> getDischargedAssumptions()
+  
+  public final ProofContext withAssumption(Assumption assumption)
   {
-    return Immutability.viewFor(discharges.keySet());
+    final SentenceRelation relation = new SentenceRelation(assumption.getSentence());
+    ImmutableSet.builder().addAll(relations).add(new TruthRelation(relation));
+    return createFrom(initialPremises, relations);
   }
-
-  public final Conclusion conclusionFor(Assumption dischargedAssumption)
+  
+  public final ProofContext withDischarge(Conclusion conclusion, Assumption...assumptions)
   {
-    assert discharges.containsKey(dischargedAssumption);
-    return discharges.get(dischargedAssumption);
-  }
-
-  public final Assumption assumptionFor(Conclusion conclusion)
-  {
-    assert discharges.inverse().containsKey(conclusion);
-    return discharges.inverse().get(conclusion);
+    return null;
   }
 
   public final ProofContext copy()
   {
-    return createFrom(initialPremises, hangingAssumptions, discharges);
+    return createFrom(initialPremises, relations);
   }
 
   @Override
@@ -72,26 +62,10 @@ public abstract class ProofContext
     return copy();
   }
 
-  protected final void assume(Assumption assumption)
+  protected ProofContext(ImmutableSet<Premise> initialPremises,
+                         ImmutableSet<MetaRelation> relations)
   {
-    hangingAssumptions.add(assumption);
-  }
-
-  protected final void discharge(Assumption assumption, Conclusion conclusion)
-  {
-    final boolean dischargable = hangingAssumptions.contains(assumption);
-    assert dischargable;
-    if (!dischargable) return;
-    hangingAssumptions.remove(assumption);
-    discharges.put(assumption, conclusion);
-  }
-
-  protected ProofContext(Collection<Premise> premises,
-                         Collection<Assumption> hangingAssumptions,
-                         Map<Assumption, Conclusion> discharges)
-  {
-    this.initialPremises.addAll(premises);
-    this.hangingAssumptions.addAll(hangingAssumptions);
-    this.discharges.putAll(discharges);
+    this.initialPremises = initialPremises;
+    this.relations = relations;
   }
 }

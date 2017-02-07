@@ -12,17 +12,17 @@ trait Rule
   def accepts(relations: List[Relation]): Boolean
 }
 
-abstract class BaseRule extends Rule
+sealed abstract class BaseRule extends Rule
 {
   def accepts(relations: List[Relation]): Boolean = apply(relations).size > 0
 }
 
-abstract class IntroductionRule extends BaseRule
+sealed abstract class IntroductionRule extends BaseRule
 {
   def invert(): EliminationRule
 }
 
-abstract class EliminationRule extends BaseRule
+sealed abstract class EliminationRule extends BaseRule
 {
   def invert(): IntroductionRule
 }
@@ -47,6 +47,11 @@ case class AndElimRule() extends EliminationRule
     case AndRelation(x, y) :: Nil => List(TruthRelation(x.relate), TruthRelation(y.relate))
     case _ => List()
   }
+}
+
+case class NullRule() extends BaseRule
+{
+  def apply(relations: List[Relation]): List[MetaRelation] = List()
 }
 
 private object RuleUtils

@@ -1,7 +1,6 @@
 package edu.osu.cse.groenkeb.logic.proof;
 
 import edu.osu.cse.groenkeb.logic.Sentence;
-import edu.osu.cse.groenkeb.logic.proof.EmptyProof.NullProof;
 import edu.osu.cse.groenkeb.logic.proof.interfaces.Premise;
 import edu.osu.cse.groenkeb.logic.proof.interfaces.Proof;
 
@@ -20,7 +19,7 @@ public final class ProudPremise implements Premise
   @Override
   public Proof getProof()
   {
-    return NullProof.get();
+    return new EmptyProof(new EmptyConclusion(new EmptyPremise()));
   }
 
   @Override

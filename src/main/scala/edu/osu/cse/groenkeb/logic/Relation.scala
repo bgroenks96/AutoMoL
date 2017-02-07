@@ -3,27 +3,32 @@ package edu.osu.cse.groenkeb.logic
 /**
  * Relational ordered pair (s1, s2)
  */
-abstract class Relation
+sealed abstract class Relation
 
-abstract class ObjectRelation(val sentences: Sentence*) extends Relation
+sealed abstract class ObjectRelation(val sentences: Sentence*) extends Relation
 {
   def count = sentences.length
   
   def head = sentences(0)
   
   def tail = sentences(count - 1)
+  
+  def intersects(r: ObjectRelation) = sentences.exists(s => r.sentences.contains(s))
 }
 
 /**
  * Base type for meta-linguistic relations between objects in the object-language.
  */
-abstract class MetaRelation(val relations: ObjectRelation*) extends ObjectRelation
+sealed abstract class MetaRelation(val relations: ObjectRelation*) extends Relation
+{
+  def contains(r: ObjectRelation) = relations.contains(r)
+}
 
 /**
  * Base type for all connective relations: (s1, s2) in C(s1, s2)
  * where C is some logical connective operator
  */
-abstract class ConnectiveRelation(s1: Sentence, s2: Sentence) extends ObjectRelation(s1, s2)
+sealed abstract class ConnectiveRelation(s1: Sentence, s2: Sentence) extends ObjectRelation(s1, s2)
 {
   def result: SentenceRelation
   
@@ -42,9 +47,13 @@ case class SentenceRelation(val sentence: Sentence) extends ObjectRelation(sente
   def member = sentence
 }
 
+// ----- META RELATIONS ------ //
+
 case class TruthRelation(r: SentenceRelation) extends MetaRelation(r)
 case class AbsurdityRelation(r: SentenceRelation) extends MetaRelation(r)
 case class TurnstileRelation(prem: SentenceRelation, conc: SentenceRelation) extends MetaRelation(prem, conc)
+
+// ----- CONNECTIVE RELATIONS ----- //
 
 case class NotRelation(s: Sentence) extends ConnectiveRelation(s, s)
 {
@@ -65,6 +74,8 @@ case class ImpliesRelation(s1: Sentence, s2: Sentence) extends ConnectiveRelatio
 {
   def result = SentenceRelation(new BinarySentence(s1, s2, Implies()))
 }
+
+// -------------------------------- //
 
 case class NullRelation() extends Relation
 
