@@ -2,14 +2,25 @@ package edu.osu.cse.groenkeb.logic.parse
 
 import scala.collection.LinearSeq
 
-class NodeRecursiveTokenizer(delim: (Char, Char)) extends Tokenizer[TokenBase] {
+class NodeRecursiveTokenizer(delim: (Char, Char), prevalidate: Boolean) extends Tokenizer[TokenBase] {
   
-  def this() = this(('(', ')'))
+  def this() = this(('(', ')'), true)
+  def this(prevalidate: Boolean) = this(('(', ')'), prevalidate)
   
   private val delimStart = delim._1
   private val delimEnd = delim._2
   
-  def tokenize(source: String): Seq[TokenBase] = tokenize(source, 0, Vector()).tokens
+  def tokenize(source: String): Seq[TokenBase] = {
+    if (prevalidate) validate(source);
+    tokenize(source, 0, Vector()).tokens
+  }
+  
+  def validate(source: String) {
+    source match {
+      case s if source.count { x => x == delimStart } == source.count { x => x == delimEnd } => Unit
+      case s => throw TokenizerException("Delimiter mismatch!")
+    }
+  }
     
   private def tokenize(src: String, ind: Int, tokens: Vector[TokenBase]): TokenResult = {
     if (ind >= src.length()) return TokenResult(tokens, 0)
@@ -21,14 +32,14 @@ class NodeRecursiveTokenizer(delim: (Char, Char)) extends Tokenizer[TokenBase] {
     }
   }
   
-  private def tokenizeTerm(src: String, ind: Int, tokens: Vector[TokenBase], word: String) = {
-    var result = tokenize(src, ind + word.length(), tokens :+ TerminalToken(word))
-    TokenResult(result.tokens, result.len + word.length)
-  }
-  
   private def tokenizeNode(src: String, ind: Int, tokens: Vector[TokenBase], nodeResult: TokenResult) = {
     val result = tokenize(src, ind + nodeResult.len + 1, tokens :+ NodeToken(nodeResult.tokens))
     TokenResult(result.tokens , result.len + nodeResult.len + 1)
+  }
+  
+  private def tokenizeTerm(src: String, ind: Int, tokens: Vector[TokenBase], word: String) = {
+    var result = tokenize(src, ind + word.length(), tokens :+ TerminalToken(word))
+    TokenResult(result.tokens, result.len + word.length)
   }
   
   private def tokenizeBlank(src: String, ind: Int, tokens: Vector[TokenBase]) = {
@@ -49,18 +60,5 @@ class NodeRecursiveTokenizer(delim: (Char, Char)) extends Tokenizer[TokenBase] {
   }
 }
 
-case class TokenResult(val tokens: Vector[TokenBase], val len: Int)
-
-sealed abstract class TokenBase extends Token {
-  def value: String
-  override def toString() = value
-}
-
-case class TerminalToken(str: String) extends TokenBase {
-  def value = str
-}
-
-case class NodeToken(val children: Vector[Token]) extends TokenBase {
-  def value = '[' + children.mkString(",") + ']'
-}
+private case class TokenResult(val tokens: Vector[TokenBase], val len: Int)
 

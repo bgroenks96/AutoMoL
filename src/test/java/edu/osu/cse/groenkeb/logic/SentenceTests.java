@@ -17,7 +17,7 @@ public class SentenceTests
   @Test
   public void testBinarySentenceToString()
   {
-    assertEquals("&(A, B)", and(atom("A"), atom("B")).toString());
+    assertEquals("and(A, B)", and(atom("A"), atom("B")).toString());
   }
   
   @Test
