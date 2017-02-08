@@ -2,53 +2,65 @@ package edu.osu.cse.groenkeb.logic.parse
 
 import scala.collection.LinearSeq
 
-class NodeRecursiveTokenizer(delim: (Char, Char)) extends Tokenizer[NodeToken] {
+class NodeRecursiveTokenizer(delim: (Char, Char)) extends Tokenizer[TokenBase] {
   
   def this() = this(('(', ')'))
   
   private val delimStart = delim._1
   private val delimEnd = delim._2
   
-  def tokenize(source: String): Seq[NodeToken] = {
-    val tokens = Vector()
-    return tokenize(source, tokens)
-  }
-  
-  private def tokenize(str: String, tokens: Vector[NodeToken]): Vector[NodeToken] = {
-    if (str == null || str.isEmpty()) return tokens
-    str.charAt(0) match {
-      case `delimStart` => return tokens :+ ParentNodeToken(tokenize(str.substring(1), Vector()))
-      case `delimEnd` => return tokens
-      case c if c.isWhitespace => return tokenize(str.substring(1), tokens)
-      case _ => {
-        val word = nextWord(str)
-        return tokenize(str.substring(word.length()), tokens :+ TerminalNodeToken(word))
-      }
+  def tokenize(source: String): Seq[TokenBase] = tokenize(source, 0, Vector()).tokens
+    
+  private def tokenize(src: String, ind: Int, tokens: Vector[TokenBase]): TokenResult = {
+    if (ind >= src.length()) return TokenResult(tokens, 0)
+    src.charAt(ind) match {
+      case `delimStart` => tokenizeNode(src, ind, tokens, tokenize(src, ind + 1, Vector()))
+      case `delimEnd` => return TokenResult(tokens, 1)
+      case c if c.isWhitespace => tokenizeBlank(src, ind, tokens)
+      case _ => tokenizeTerm(src, ind, tokens, nextWord(src, ind))
     }
   }
   
-  private def nextWord(str: String): String = str.substring(0, str.indexWhere(isTermChar) match {
+  private def tokenizeTerm(src: String, ind: Int, tokens: Vector[TokenBase], word: String) = {
+    var result = tokenize(src, ind + word.length(), tokens :+ TerminalToken(word))
+    TokenResult(result.tokens, result.len + word.length)
+  }
+  
+  private def tokenizeNode(src: String, ind: Int, tokens: Vector[TokenBase], nodeResult: TokenResult) = {
+    val result = tokenize(src, ind + nodeResult.len + 1, tokens :+ NodeToken(nodeResult.tokens))
+    TokenResult(result.tokens , result.len + nodeResult.len + 1)
+  }
+  
+  private def tokenizeBlank(src: String, ind: Int, tokens: Vector[TokenBase]) = {
+    var nextResult = tokenize(src, ind + 1, tokens)
+    TokenResult(nextResult.tokens, nextResult.len + 1)
+  }
+  
+  private def nextWord(str: String, startInd: Int): String = {
+    str.substring(startInd, str.indexWhere(isTerminatingChar, startInd) match {
     case x if x > 0 => x
     case x => str.length()
-  })
-  
-  private def isTermChar(c: Char) = c match {
+  })}
+
+  private def isTerminatingChar(c: Char) = c match {
     case `delimEnd` => true
     case x if x.isWhitespace => true
     case _ => false
   }
 }
 
-abstract class NodeToken extends Token {
+case class TokenResult(val tokens: Vector[TokenBase], val len: Int)
+
+sealed abstract class TokenBase extends Token {
   def value: String
   override def toString() = value
 }
 
-case class TerminalNodeToken(str: String) extends NodeToken {
+case class TerminalToken(str: String) extends TokenBase {
   def value = str
 }
 
-case class ParentNodeToken(val children: Vector[NodeToken]) extends NodeToken {
+case class NodeToken(val children: Vector[Token]) extends TokenBase {
   def value = '[' + children.mkString(",") + ']'
 }
 
