@@ -2,7 +2,8 @@ package edu.osu.cse.groenkeb.logic;
 
 public final class Atom
 {
-
+  public static final Atom ABSURDITY = new Atom("!");
+  
   private final String name;
 
   public Atom(String name)

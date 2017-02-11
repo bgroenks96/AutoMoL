@@ -2,14 +2,10 @@ package edu.osu.cse.groenkeb.logic.proof;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 
-import edu.osu.cse.groenkeb.logic.MetaRelation;
-import edu.osu.cse.groenkeb.logic.SentenceRelation;
-import edu.osu.cse.groenkeb.logic.TruthRelation;
+import edu.osu.cse.groenkeb.logic.ObjectRelation;
 import edu.osu.cse.groenkeb.logic.proof.interfaces.Assumption;
 import edu.osu.cse.groenkeb.logic.proof.interfaces.Conclusion;
 import edu.osu.cse.groenkeb.logic.proof.interfaces.Premise;
@@ -18,7 +14,7 @@ public abstract class ProofContext
 {
   private final ImmutableSet<Premise> initialPremises;
   
-  private final ImmutableSet<MetaRelation> relations;
+  private final ImmutableSet<ObjectRelation> relations;
 
   protected ProofContext(Collection<Premise> premises)
   {
@@ -31,19 +27,11 @@ public abstract class ProofContext
   }
 
   protected abstract ProofContext createFrom(ImmutableSet<Premise> initialPremises,
-                                             ImmutableSet<MetaRelation> relations);
-  
-  public Set<MetaRelation> relationsFor(Assumption assumption)
-  {
-    final SentenceRelation object = assumption.getSentence().relate();
-    return relations.stream().filter(r -> r.contains(object)).collect(Collectors.toSet());
-  }
+                                             ImmutableSet<ObjectRelation> relations);
   
   public final ProofContext withAssumption(Assumption assumption)
   {
-    final SentenceRelation relation = new SentenceRelation(assumption.getSentence());
-    ImmutableSet.builder().addAll(relations).add(new TruthRelation(relation));
-    return createFrom(initialPremises, relations);
+    return null;
   }
   
   public final ProofContext withDischarge(Conclusion conclusion, Assumption...assumptions)
@@ -63,7 +51,7 @@ public abstract class ProofContext
   }
 
   protected ProofContext(ImmutableSet<Premise> initialPremises,
-                         ImmutableSet<MetaRelation> relations)
+                         ImmutableSet<ObjectRelation> relations)
   {
     this.initialPremises = initialPremises;
     this.relations = relations;

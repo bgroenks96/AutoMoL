@@ -2,7 +2,7 @@ package edu.osu.cse.groenkeb.logic.parse
 
 import scala.collection.LinearSeq
 
-class NodeRecursiveTokenizer(delim: (Char, Char), prevalidate: Boolean) extends Tokenizer[TokenBase] {
+class NodeRecursiveTokenizer(delim: (Char, Char), prevalidate: Boolean) extends Tokenizer {
   
   def this() = this(('(', ')'), true)
   def this(prevalidate: Boolean) = this(('(', ')'), prevalidate)

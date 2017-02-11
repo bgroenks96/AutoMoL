@@ -22,6 +22,11 @@ public final class Sentences
     return new UnarySentence(operand, operator);
   }
   
+  public static Sentence absurdity()
+  {
+    return new AtomicSentence(Atom.ABSURDITY);
+  }
+  
   public static Sentence nil()
   {
     return new NullSentence();

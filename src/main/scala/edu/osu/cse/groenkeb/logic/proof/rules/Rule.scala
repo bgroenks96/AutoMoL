@@ -3,18 +3,17 @@ package edu.osu.cse.groenkeb.logic.proof.rules
 import scala.collection.immutable.LinearSeq
 
 import edu.osu.cse.groenkeb.logic._
-import RuleUtils._
 
 trait Rule
 {
-  def apply(relations: List[Relation]): List[MetaRelation]
+  def apply(relations: List[ObjectRelation]): List[ObjectRelation]
   
-  def accepts(relations: List[Relation]): Boolean
+  def accepts(relations: List[ObjectRelation]): Boolean
 }
 
 sealed abstract class BaseRule extends Rule
 {
-  def accepts(relations: List[Relation]): Boolean = apply(relations).size > 0
+  def accepts(relations: List[ObjectRelation]): Boolean = apply(relations).size > 0
 }
 
 sealed abstract class IntroductionRule extends BaseRule
@@ -31,9 +30,9 @@ case class AndIntroRule() extends IntroductionRule
 {
   def invert(): EliminationRule = AndElimRule()
   
-  def apply(relations: List[Relation]): List[MetaRelation] = relations match
+  def apply(relations: List[ObjectRelation]): List[ObjectRelation] = relations match
   {
-    case TruthRelation(x) :: TruthRelation(y) :: Nil => List(confirm(AndRelation(x.member, y.member).result))
+    case SentenceRelation(x) :: SentenceRelation(y) :: Nil => List(AndRelation(x, y))
     case _ => List()
   }
 }
@@ -42,22 +41,15 @@ case class AndElimRule() extends EliminationRule
 {
   def invert(): IntroductionRule = AndIntroRule()
   
-  def apply(relations: List[Relation]): List[MetaRelation] = relations match
+  def apply(relations: List[ObjectRelation]): List[ObjectRelation] = relations match
   {
-    case AndRelation(x, y) :: Nil => List(TruthRelation(x.relate), TruthRelation(y.relate))
+    case AndRelation(x, y) :: Nil => List(SentenceRelation(x), SentenceRelation(y))
     case _ => List()
   }
 }
 
 case class NullRule() extends BaseRule
 {
-  def apply(relations: List[Relation]): List[MetaRelation] = List()
-}
-
-private object RuleUtils
-{
-  def confirm(s: SentenceRelation): TruthRelation = TruthRelation(s);
-  
-  def reject(s: SentenceRelation): AbsurdityRelation = AbsurdityRelation(s);
+  def apply(relations: List[ObjectRelation]): List[ObjectRelation] = List()
 }
 

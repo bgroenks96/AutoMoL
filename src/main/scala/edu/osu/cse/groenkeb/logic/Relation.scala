@@ -47,10 +47,10 @@ case class SentenceRelation(val sentence: Sentence) extends ObjectRelation(sente
   def member = sentence
 }
 
+case class AbsurdityRelation() extends ObjectRelation(Sentences.absurdity())
+
 // ----- META RELATIONS ------ //
 
-case class TruthRelation(r: SentenceRelation) extends MetaRelation(r)
-case class AbsurdityRelation(r: SentenceRelation) extends MetaRelation(r)
 case class TurnstileRelation(prem: SentenceRelation, conc: SentenceRelation) extends MetaRelation(prem, conc)
 
 // ----- CONNECTIVE RELATIONS ----- //
