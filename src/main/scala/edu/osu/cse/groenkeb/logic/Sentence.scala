@@ -1,5 +1,7 @@
 package edu.osu.cse.groenkeb.logic
 
+import edu.osu.cse.groenkeb.logic.parse.OperatorMatcher;
+
 abstract class Sentence
 {
   def matches(s: Sentence): Boolean

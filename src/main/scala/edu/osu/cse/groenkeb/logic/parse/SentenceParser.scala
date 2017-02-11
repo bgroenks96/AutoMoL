@@ -4,7 +4,8 @@ import edu.osu.cse.groenkeb.logic._
 
 import scala.collection.mutable.Queue
 
-abstract class SentenceParser(tokenizer: Tokenizer) extends Parser[String, Sentence, SentenceParserOpts] {
+abstract class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) extends Parser[String, Sentence, SentenceParserOpts] {
+  def isValidAtomName(str: String): Boolean
   def parse(src: String, opts: SentenceParserOpts*): Sentence = {
     return null
   }
@@ -25,30 +26,45 @@ abstract class SentenceParser(tokenizer: Tokenizer) extends Parser[String, Sente
     }
   }
   
-  private def matchOp[T <: Operator](str: String): T = str match {
-    //
+  private def matchBinaryOp(str: String): BinaryOperator = {
+    val op = opMatcher.opFor(str)
+    op match {
+      case x if x.isInstanceOf[BinaryOperator] => op.asInstanceOf[BinaryOperator]
+      case Null() => null
+    }
+  }
+  
+  private def matchUnaryOp(str: String): UnaryOperator = {
+    val op = opMatcher.opFor(str)
+    op match {
+      case x if x.isInstanceOf[UnaryOperator] => op.asInstanceOf[UnaryOperator]
+      case Null() => null
+    }
   }
 
   private sealed abstract class NodeParser {
-    def parse(node: NodeToken): Sentence
+    def parseNode(node: NodeToken): Sentence
+    def parseTerm(node: TerminalToken): Sentence = {
+      return null
+    }
   }
   private case class InfixNodeParser() extends NodeParser {
-    def parse(node: NodeToken): Sentence = {
+    def parseNode(node: NodeToken): Sentence = {
       val children = node.children
       children match {
         case NodeToken(c1) :: TerminalToken(x) :: NodeToken(c2) :: Nil =>
-          BinarySentence(parse(NodeToken(c1)), parse(NodeToken(c2)), And())
+          BinarySentence(parseNode(NodeToken(c1)), parseNode(NodeToken(c2)), matchBinaryOp(x))
       }
     }
   }
   private case class PostfixNodeParser() extends NodeParser {
-    def parse(node: NodeToken): Sentence = {
-
+    def parseNode(node: NodeToken): Sentence = {
+      return null
     }
   }
   private case class PrefixNodeParser() extends NodeParser {
-    def parse(node: NodeToken): Sentence = {
-
+    def parseNode(node: NodeToken): Sentence = {
+      return null
     }
   }
 }

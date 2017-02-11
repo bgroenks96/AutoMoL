@@ -57,22 +57,22 @@ case class TurnstileRelation(prem: SentenceRelation, conc: SentenceRelation) ext
 
 case class NotRelation(s: Sentence) extends ConnectiveRelation(s, s)
 {
-  def result = SentenceRelation(new UnarySentence(s, Not()))
+  def result = SentenceRelation(UnarySentence(s, Not()))
 }
 
 case class AndRelation(s1: Sentence, s2: Sentence) extends ConnectiveRelation(s1, s2)
 {
-  def result = SentenceRelation(new BinarySentence(s1, s2, And()))
+  def result = SentenceRelation(BinarySentence(s1, s2, And()))
 }
 
 case class OrRelation(s1: Sentence, s2: Sentence) extends ConnectiveRelation(s1, s2)
 {
-  def result = SentenceRelation(new BinarySentence(s1, s2, Or()))
+  def result = SentenceRelation(BinarySentence(s1, s2, Or()))
 }
 
 case class ImpliesRelation(s1: Sentence, s2: Sentence) extends ConnectiveRelation(s1, s2)
 {
-  def result = SentenceRelation(new BinarySentence(s1, s2, Implies()))
+  def result = SentenceRelation(BinarySentence(s1, s2, Implies()))
 }
 
 // -------------------------------- //

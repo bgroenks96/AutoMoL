@@ -18,6 +18,6 @@ public class Main
     System.out.println(s1.matches(s2));
     
     final NodeRecursiveTokenizer tokenizer = new NodeRecursiveTokenizer();
-    System.out.print(tokenizer.tokenize("(((a b) c"));
+    System.out.print(tokenizer.tokenize("a b (c d)"));
   }
 }

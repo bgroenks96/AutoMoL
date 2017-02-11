@@ -10,7 +10,7 @@ trait Token {
   def value: String
 }
 
-protected case class TokenizerException(msg: String) extends Exception(msg)
+sealed case class TokenizerException(msg: String) extends Exception(msg)
 
 sealed abstract class TokenBase extends Token {
   def value: String
