@@ -11,14 +11,14 @@ class DefaultOperatorMatcher extends OperatorMatcher {
   def opFor(str: String): Operator = str match {
     case "and" => And()
     case "or" => Or()
-    case "~" => Not()
+    case "not" => Not()
     case _ => Null()
   }
   
   def nameFor(op: Operator): String = op match {
     case And() => "and"
     case Or() => "or"
-    case Not() => "~"
+    case Not() => "not"
     case _ => ""
   }
 }

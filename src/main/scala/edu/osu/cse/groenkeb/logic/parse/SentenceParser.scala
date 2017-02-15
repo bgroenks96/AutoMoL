@@ -4,24 +4,32 @@ import edu.osu.cse.groenkeb.logic._
 
 import scala.collection.mutable.Queue
 
-abstract class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) extends Parser[String, Sentence, SentenceParserOpts] {
-  def isValidAtomName(str: String): Boolean
-  def parse(src: String, opts: SentenceParserOpts*): Sentence = {
-    return null
+class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) extends Parser[String, Sentence, SentenceParserOpts] {
+  def parse(src: String, opts: SentenceParserOpts): Sentence = {
+    parse(src, List(opts))
+  }
+  
+  def parse(src: String, opts: Seq[SentenceParserOpts]): Sentence = {
+    val nodeParser = opts.find(o => o.isInstanceOf[Notation]).orElse(Option.apply(Notation("prefix"))).get match {
+      case Notation("prefix") => PrefixNodeParser()
+      case Notation("postfix") => PostfixNodeParser()
+      case Notation("infix") => InfixNodeParser()
+      case n => throw new ParserException("Unsupported notation type: " + n)
+    }
+    
+    parse(nodeParser, tokenizer.tokenize(src).toList)
   }
 
-  private def parse(tokens: Queue[Token]): Sentence = {
-    var next = tokens.dequeue()
-    return null
+  private def parse(parser: NodeParser, tokens: List[Token]): Sentence = tokens match {
+    case NodeToken(children) :: Nil => parser.parseNode(NodeToken(children))
+    case tokens => parser.parseNode(NodeToken(tokens))
   }
 
   private def nodeParserFrom(opts: SentenceParserOpts*): NodeParser = {
     var option = opts.find(x => x match { case Notation(t) => true })
     var notation = option.getOrElse[SentenceParserOpts](Notation("prefix")).asInstanceOf[Notation]
     notation match {
-      case Notation("infix") => InfixNodeParser()
       case Notation("prefix") => PrefixNodeParser()
-      case Notation("postfix") => PostfixNodeParser()
       case _ => throw new IllegalArgumentException("Notation type not recognized: " + notation.typestr)
     }
   }
@@ -30,7 +38,8 @@ abstract class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: Operator
     val op = opMatcher.opFor(str)
     op match {
       case x if x.isInstanceOf[BinaryOperator] => op.asInstanceOf[BinaryOperator]
-      case Null() => null
+      case Null() => throw ParserException("Unrecognized operator: " + str);
+      case _ => throw ParserException("Illegal use of non-binary operator: " + str);
     }
   }
   
@@ -38,33 +47,51 @@ abstract class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: Operator
     val op = opMatcher.opFor(str)
     op match {
       case x if x.isInstanceOf[UnaryOperator] => op.asInstanceOf[UnaryOperator]
-      case Null() => null
+      case Null() => throw ParserException("Unrecognized operator: " + str);
+      case _ => throw ParserException("Illegal use of non-unary operator: " + str);
+    }
+  }
+  
+  private def matchAtom(str: String): Atom = {
+    val op = opMatcher.opFor(str)
+    op match {
+      case Null() => new Atom(str)
+      case _ => throw ParserException("Found unexpected operator token: " + str)
     }
   }
 
   private sealed abstract class NodeParser {
     def parseNode(node: NodeToken): Sentence
-    def parseTerm(node: TerminalToken): Sentence = {
-      return null
+    protected def operand(token: Token) = token match {
+      case TerminalToken(x) => AtomicSentence(new Atom(x))
+      case NodeToken(children) => parseNode(NodeToken(children))
     }
   }
-  private case class InfixNodeParser() extends NodeParser {
-    def parseNode(node: NodeToken): Sentence = {
-      val children = node.children
-      children match {
-        case NodeToken(c1) :: TerminalToken(x) :: NodeToken(c2) :: Nil =>
-          BinarySentence(parseNode(NodeToken(c1)), parseNode(NodeToken(c2)), matchBinaryOp(x))
-      }
-    }
-  }
-  private case class PostfixNodeParser() extends NodeParser {
-    def parseNode(node: NodeToken): Sentence = {
-      return null
-    }
-  }
+  
   private case class PrefixNodeParser() extends NodeParser {
-    def parseNode(node: NodeToken): Sentence = {
-      return null
+    def parseNode(node: NodeToken): Sentence = node.children.toList match {
+      case TerminalToken(op) :: left :: right :: Nil => BinarySentence(operand(left), operand(right), matchBinaryOp(op))
+      case TerminalToken(op) :: unary :: Nil => UnarySentence(operand(unary), matchUnaryOp(op))
+      case TerminalToken(x) :: Nil => operand(TerminalToken(x))
+      case _ => throw ParserException("Found malformed token node: " + node.value)
+    }
+  }
+  
+  private case class PostfixNodeParser() extends NodeParser {
+    def parseNode(node: NodeToken): Sentence = node.children.toList match {
+      case left :: right :: TerminalToken(op) :: Nil => BinarySentence(operand(left), operand(right), matchBinaryOp(op))
+      case unary :: TerminalToken(op) :: Nil => UnarySentence(operand(unary), matchUnaryOp(op))
+      case TerminalToken(x) :: Nil => operand(TerminalToken(x))
+      case _ => throw ParserException("Found malformed token node: " + node.value)
+    }
+  }
+  
+  private case class InfixNodeParser() extends NodeParser {
+    def parseNode(node: NodeToken): Sentence = node.children.toList match {
+      case left :: TerminalToken(op) :: right :: Nil => BinarySentence(operand(left), operand(right), matchBinaryOp(op))
+      case TerminalToken(op) :: unary :: Nil => UnarySentence(operand(unary), matchUnaryOp(op))
+      case TerminalToken(x) :: Nil => operand(TerminalToken(x))
+      case _ => throw ParserException("Found malformed token node: " + node.value)
     }
   }
 }
