@@ -11,8 +11,12 @@ public class Main
   {    
     final NodeRecursiveTokenizer tokenizer = new NodeRecursiveTokenizer();
     final SentenceParser parser = new SentenceParser(tokenizer, new DefaultOperatorMatcher());
-    System.out.println(parser.parse("not ((C or D) and (A and B))", new Notation("infix")));
-    System.out.println(parser.parse("and (not (or C D)) B", new Notation("prefix")));
-    System.out.println(parser.parse("(A (C not) and)", new Notation("postfix")));
+    final Sentence a = parser.parse("not ((C or D) and (A and B))", new Notation("infix"));
+    final Sentence b = parser.parse("and (not (or C D)) B", new Notation("prefix"));
+    final Sentence c = parser.parse("(A B and)", new Notation("postfix"));
+    System.out.println(a.toRelation());
+    System.out.println(b.toRelation());
+    System.out.println(c.toRelation());
+    System.out.println(a.toRelation().decompose());
   }
 }

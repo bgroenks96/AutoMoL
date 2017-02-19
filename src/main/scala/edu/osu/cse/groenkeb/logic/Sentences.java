@@ -16,6 +16,12 @@ public final class Sentences
     return new BinarySentence(left, right, operator);
   }
   
+  public static Sentence or(Sentence left, Sentence right)
+  {
+    final Or operator = new Or();
+    return new BinarySentence(left, right, operator);
+  }
+  
   public static Sentence not(Sentence operand)
   {
     final Not operator = new Not();

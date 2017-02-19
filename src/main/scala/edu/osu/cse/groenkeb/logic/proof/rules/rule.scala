@@ -95,10 +95,10 @@ case class NullRule() extends BaseRule
 {
   def parity = None()
   
-  def accepts = false
+  def accepts(relation: ObjectRelation) = false
   
-  def yields = false
+  def yields(relation: ObjectRelation) = false
   
-  def inquire = Nil
+  def infer(conclusion: ObjectRelation)(from: ObjectRelation*) = NullResult()
 }
 

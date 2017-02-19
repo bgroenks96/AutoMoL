@@ -1,8 +1,12 @@
 package edu.osu.cse.groenkeb.logic;
 
-import static org.junit.Assert.*;
-
-import static edu.osu.cse.groenkeb.logic.Sentences.*;
+import static edu.osu.cse.groenkeb.logic.Sentences.and;
+import static edu.osu.cse.groenkeb.logic.Sentences.atom;
+import static edu.osu.cse.groenkeb.logic.Sentences.not;
+import static edu.osu.cse.groenkeb.logic.Sentences.or;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -60,5 +64,12 @@ public class SentenceTests
   public void testUnarySentenceNoMatch()
   {
     assertFalse(not(atom("A")).matches(not(atom("B"))));
+  }
+  
+  @Test
+  public void testComplexSentenceMatch()
+  {
+    final Sentence sentence = and(not(or(atom("C"), atom("D"))), atom("B"));
+    assertTrue(sentence.matches(sentence));
   }
 }
