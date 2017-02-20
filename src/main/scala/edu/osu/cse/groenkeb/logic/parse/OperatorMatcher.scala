@@ -7,7 +7,7 @@ trait OperatorMatcher {
   def nameFor(op: Operator): String
 }
 
-class DefaultOperatorMatcher extends OperatorMatcher {
+case class DefaultOperatorMatcher() extends OperatorMatcher {
   def opFor(str: String): Operator = str match {
     case "and" => And()
     case "or" => Or()
