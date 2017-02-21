@@ -1,14 +1,18 @@
 package edu.osu.cse.groenkeb.logic
 
+import edu.osu.cse.groenkeb.logic.ImpliesOp
+import edu.osu.cse.groenkeb.logic.NotOp
+import edu.osu.cse.groenkeb.logic.OrOp
+import edu.osu.cse.groenkeb.logic.AndOp
+import edu.osu.cse.groenkeb.logic.proof.rules.Discharge
+
 /**
  * Relational ordered pair (s1, s2)
  */
 sealed abstract class Relation
 
 sealed abstract class ObjectRelation(val sentences: Sentence*) extends Relation {
-  def result: SentenceRelation
-
-  def sentenceResult = result.sentence
+  def toSentence: Sentence
 
   def count = sentences.length
 
@@ -40,20 +44,20 @@ sealed abstract class ConnectiveRelation(s1: Sentence, s2: Sentence) extends Obj
   def decompose() = List(s1.toRelation, s2.toRelation)
 
   // first check if connective sentence matches, then left sentence, then right sentence iff not equal to left
-  def contains(r: ObjectRelation) = sentenceResult.matches(r.sentenceResult) || s1.toRelation.contains(r) || (!s1.matches(s2) && s2.toRelation.contains(r))
+  def contains(r: ObjectRelation) = toSentence.matches(r.toSentence) || s1.toRelation.contains(r) || (!s1.matches(s2) && s2.toRelation.contains(r))
 }
 
 /**
  * Identity relation for any singular sentence s: (s, s)
  */
 case class SentenceRelation(val sentence: Sentence) extends ObjectRelation(sentence) {
-  def result = this
-
+  def toSentence = sentence
+  
   def decompose() = List(sentence.toRelation)
 
-  def contains(r: ObjectRelation) = sentence.matches(r.sentenceResult) || (decompose() match {
+  def contains(r: ObjectRelation) = sentence.matches(r.toSentence) || (decompose() match {
     case SentenceRelation(s) :: Nil => s match {
-      case AtomicSentence(a) => s.matches(r.sentenceResult)
+      case AtomicSentence(a) => s.matches(r.toSentence)
       case complexSentence => s.toRelation.contains(r)
     }
     case complexRelation :: Nil => complexRelation.contains(r)
@@ -66,9 +70,7 @@ case class SentenceRelation(val sentence: Sentence) extends ObjectRelation(sente
 }
 
 case class Absurdity() extends ObjectRelation(Sentences.absurdity()) {
-  def sentence = Sentences.absurdity()
-
-  def result = SentenceRelation(sentence)
+  def toSentence = Sentences.absurdity()
 
   def decompose() = List()
 
@@ -77,30 +79,30 @@ case class Absurdity() extends ObjectRelation(Sentences.absurdity()) {
 
 // ----- META RELATIONS ------ //
 
-case class Turnstile(val premises: Seq[Sentence], val conclusion: Sentence) extends MetaRelation
+case class Turnstile(val from: Discharge, val conclusion: Sentence) extends MetaRelation
 
 // ----- CONNECTIVE RELATIONS ----- //
 
 case class Not(s: Sentence) extends ConnectiveRelation(s, s) {
-  def result = SentenceRelation(UnarySentence(s, NotOp()))
+  def toSentence = UnarySentence(s, NotOp())
 }
 
 case class And(s1: Sentence, s2: Sentence) extends ConnectiveRelation(s1, s2) {
-  def result = SentenceRelation(BinarySentence(s1, s2, AndOp()))
+  def toSentence = BinarySentence(s1, s2, AndOp())
 }
 
 case class Or(s1: Sentence, s2: Sentence) extends ConnectiveRelation(s1, s2) {
-  def result = SentenceRelation(BinarySentence(s1, s2, OrOp()))
+  def toSentence = BinarySentence(s1, s2, OrOp())
 }
 
 case class Implies(s1: Sentence, s2: Sentence) extends ConnectiveRelation(s1, s2) {
-  def result = SentenceRelation(BinarySentence(s1, s2, ImpliesOp()))
+  def toSentence = BinarySentence(s1, s2, ImpliesOp())
 }
 
 // -------------------------------- //
 
 case class NullObject() extends ObjectRelation(NullSentence(), NullSentence()) {
-  def result = SentenceRelation(Sentences.nil())
+  def toSentence = Sentences.nil()
 
   def decompose() = List()
 

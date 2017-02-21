@@ -17,13 +17,13 @@ object Main extends App {
   val sentenceA = parser.parse("A")
   val sentenceB = parser.parse("B")
   val sentenceAandB = parser.parse("(and A B)")
-  val rules = RuleSet(AndIntroRule(), AndElimRule(), ReflexivityRule())
+  val rules = RuleSet(ReflexivityRule())
   val premise = ProudPremise(sentenceA)
   val proofContext = ProofContext(List(premise), List(), rules)
-  val proofSearch = new ProofSearch(proofContext)
   
   val complexSentence = parser.parse("(A and (not (C or B)))", Notation("infix"))
   println(complexSentence)
+  println(1 :: Nil)
   //println(proofSearch.findProof(sentenceA))
   //println(proofSearch.findProof(sentenceAandB))
 }

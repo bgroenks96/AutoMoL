@@ -1,8 +1,5 @@
 package edu.osu.cse.groenkeb.logic;
 
-import edu.osu.cse.groenkeb.logic.And;
-import edu.osu.cse.groenkeb.logic.Not;
-
 public final class Sentences
 {
   public static Sentence atom(String name)
@@ -12,19 +9,19 @@ public final class Sentences
   
   public static Sentence and(Sentence left, Sentence right)
   {
-    final And operator = new And();
+    final AndOp operator = new AndOp();
     return new BinarySentence(left, right, operator);
   }
   
   public static Sentence or(Sentence left, Sentence right)
   {
-    final Or operator = new Or();
+    final OrOp operator = new OrOp();
     return new BinarySentence(left, right, operator);
   }
   
   public static Sentence not(Sentence operand)
   {
-    final Not operator = new Not();
+    final NotOp operator = new NotOp();
     return new UnarySentence(operand, operator);
   }
   

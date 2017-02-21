@@ -1,14 +1,15 @@
 package edu.osu.cse.groenkeb.logic.proof.rules
 
+import edu.osu.cse.groenkeb.logic.proof.types.Proof
 import edu.osu.cse.groenkeb.logic.ObjectRelation
 
 case class RuleSet(val rules: Rule*) {
-  def yielding(relation: ObjectRelation) = {
-    subset { r => r.yields(relation) }
+  def yielding(obj: ObjectRelation) = {
+    subset { r => r.yields(obj) }
   }
   
-  def accepting(relation: ObjectRelation) = {
-    subset { r => r.accepts(relation) }
+  def accepting(proof: Proof) = {
+    subset { r => r.accepts(proof) }
   }
   
   def subset(predicate: Rule => Boolean) = {
