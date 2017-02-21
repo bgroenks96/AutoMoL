@@ -21,6 +21,9 @@ object Main extends App {
   val premise = ProudPremise(sentenceA)
   val proofContext = ProofContext(List(premise), List(), rules)
   val proofSearch = new ProofSearch(proofContext)
-  println(proofSearch.findProof(sentenceA))
-  println(proofSearch.findProof(sentenceAandB))
+  
+  val complexSentence = parser.parse("(A and (not (C or B)))", Notation("infix"))
+  println(complexSentence)
+  //println(proofSearch.findProof(sentenceA))
+  //println(proofSearch.findProof(sentenceAandB))
 }

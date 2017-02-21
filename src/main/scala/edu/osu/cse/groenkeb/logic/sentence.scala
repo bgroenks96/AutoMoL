@@ -42,7 +42,7 @@ case class UnarySentence(s: Sentence, op: UnaryOperator) extends Sentence
   
   def toRelation = op.toRelation(s)
   
-  override def toString() = String.format("%s%s", op, s)
+  override def toString() = String.format("%s(%s)", op, s)
 }
 
 case class NullSentence() extends Sentence

@@ -41,5 +41,5 @@ case class NotOp() extends UnaryOperator {
     case _ => false
   }
 
-  override def toString() = "~"
+  override def toString() = "not"
 }
