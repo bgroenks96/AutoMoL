@@ -9,11 +9,11 @@ abstract class Operator {
 abstract class BinaryOperator extends Operator
 abstract class UnaryOperator extends Operator
 
-case class Null() extends Operator {
-  def toRelation(s: Sentence*) = s match { case Nil => NullObjectRelation() }
+case class NullOp() extends Operator {
+  def toRelation(s: Sentence*) = s match { case Nil => NullObject() }
   
   def matches (op: Operator) = op match {
-    case Null() => true
+    case NullOp() => true
     case _ => false
   }
   

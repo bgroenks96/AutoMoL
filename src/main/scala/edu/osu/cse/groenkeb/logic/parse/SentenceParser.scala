@@ -38,7 +38,7 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
     val op = opMatcher.opFor(str)
     op match {
       case x if x.isInstanceOf[BinaryOperator] => op.asInstanceOf[BinaryOperator]
-      case Null() => throw ParserException("Unrecognized operator: " + str);
+      case NullOp() => throw ParserException("Unrecognized operator: " + str);
       case _ => throw ParserException("Illegal use of non-binary operator: " + str);
     }
   }
@@ -47,7 +47,7 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
     val op = opMatcher.opFor(str)
     op match {
       case x if x.isInstanceOf[UnaryOperator] => op.asInstanceOf[UnaryOperator]
-      case Null() => throw ParserException("Unrecognized operator: " + str);
+      case NullOp() => throw ParserException("Unrecognized operator: " + str);
       case _ => throw ParserException("Illegal use of non-unary operator: " + str);
     }
   }
@@ -55,7 +55,7 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
   private def matchAtom(str: String): Atom = {
     val op = opMatcher.opFor(str)
     op match {
-      case Null() => new Atom(str)
+      case NullOp() => new Atom(str)
       case _ => throw ParserException("Found unexpected operator token: " + str)
     }
   }

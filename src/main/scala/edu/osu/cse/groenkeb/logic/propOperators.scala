@@ -1,43 +1,43 @@
 package edu.osu.cse.groenkeb.logic
 
-case class And() extends BinaryOperator {
-  def toRelation(s: Sentence*) = s match { case Seq(left, right) => AndRelation(left, right) }
+case class AndOp() extends BinaryOperator {
+  def toRelation(s: Sentence*) = s match { case Seq(left, right) => And(left, right) }
 
   def matches(op: Operator) = op match {
-    case And() => true
+    case AndOp() => true
     case _ => false
   }
 
   override def toString() = "and"
 }
 
-case class Or() extends BinaryOperator {
-  def toRelation(s: Sentence*) = s match { case Seq(left, right) => OrRelation(left, right) }
+case class OrOp() extends BinaryOperator {
+  def toRelation(s: Sentence*) = s match { case Seq(left, right) => Or(left, right) }
 
   def matches(op: Operator) = op match {
-    case Or() => true
+    case OrOp() => true
     case _ => false
   }
 
   override def toString() = "or"
 }
 
-case class Implies() extends BinaryOperator {
-  def toRelation(s: Sentence*) = s match { case Seq(left, right) => ImpliesRelation(left, right) }
+case class ImpliesOp() extends BinaryOperator {
+  def toRelation(s: Sentence*) = s match { case Seq(left, right) => Implies(left, right) }
 
   def matches(op: Operator) = op match {
-    case Implies() => true
+    case ImpliesOp() => true
     case _ => false
   }
 
   override def toString() = "=>"
 }
 
-case class Not() extends UnaryOperator {
-  def toRelation(s: Sentence*) = s match { case Seq(operand) => NotRelation(operand) }
+case class NotOp() extends UnaryOperator {
+  def toRelation(s: Sentence*) = s match { case Seq(operand) => Not(operand) }
 
   def matches(op: Operator) = op match {
-    case Not() => true
+    case NotOp() => true
     case _ => false
   }
 

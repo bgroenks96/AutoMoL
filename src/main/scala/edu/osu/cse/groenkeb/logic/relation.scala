@@ -24,11 +24,9 @@ sealed abstract class ObjectRelation(val sentences: Sentence*) extends Relation 
 }
 
 /**
- * Base type for meta-linguistic relations between objects in the object-language.
+ * Base type for meta-linguistic relations between sentences in the object-language.
  */
-sealed abstract class MetaRelation(val relations: ObjectRelation*) extends Relation {
-  def contains(r: ObjectRelation) = relations.contains(r)
-}
+sealed abstract class MetaRelation extends Relation
 
 /**
  * Base type for all connective relations: (s1, s2) in C(s1, s2)
@@ -60,9 +58,14 @@ case class SentenceRelation(val sentence: Sentence) extends ObjectRelation(sente
     }
     case complexRelation :: Nil => complexRelation.contains(r)
   })
+  
+  def atomic = sentence match {
+    case AtomicSentence(_) => true
+    case _ => false
+  }
 }
 
-case class AbsurdityRelation() extends ObjectRelation(Sentences.absurdity()) {
+case class Absurdity() extends ObjectRelation(Sentences.absurdity()) {
   def sentence = Sentences.absurdity()
 
   def result = SentenceRelation(sentence)
@@ -74,29 +77,29 @@ case class AbsurdityRelation() extends ObjectRelation(Sentences.absurdity()) {
 
 // ----- META RELATIONS ------ //
 
-case class TurnstileRelation(prem: SentenceRelation, conc: SentenceRelation) extends MetaRelation(prem, conc)
+case class Turnstile(val premises: Seq[Sentence], val conclusion: Sentence) extends MetaRelation
 
 // ----- CONNECTIVE RELATIONS ----- //
 
-case class NotRelation(s: Sentence) extends ConnectiveRelation(s, s) {
-  def result = SentenceRelation(UnarySentence(s, Not()))
+case class Not(s: Sentence) extends ConnectiveRelation(s, s) {
+  def result = SentenceRelation(UnarySentence(s, NotOp()))
 }
 
-case class AndRelation(s1: Sentence, s2: Sentence) extends ConnectiveRelation(s1, s2) {
-  def result = SentenceRelation(BinarySentence(s1, s2, And()))
+case class And(s1: Sentence, s2: Sentence) extends ConnectiveRelation(s1, s2) {
+  def result = SentenceRelation(BinarySentence(s1, s2, AndOp()))
 }
 
-case class OrRelation(s1: Sentence, s2: Sentence) extends ConnectiveRelation(s1, s2) {
-  def result = SentenceRelation(BinarySentence(s1, s2, Or()))
+case class Or(s1: Sentence, s2: Sentence) extends ConnectiveRelation(s1, s2) {
+  def result = SentenceRelation(BinarySentence(s1, s2, OrOp()))
 }
 
-case class ImpliesRelation(s1: Sentence, s2: Sentence) extends ConnectiveRelation(s1, s2) {
-  def result = SentenceRelation(BinarySentence(s1, s2, Implies()))
+case class Implies(s1: Sentence, s2: Sentence) extends ConnectiveRelation(s1, s2) {
+  def result = SentenceRelation(BinarySentence(s1, s2, ImpliesOp()))
 }
 
 // -------------------------------- //
 
-case class NullObjectRelation() extends ObjectRelation(NullSentence(), NullSentence()) {
+case class NullObject() extends ObjectRelation(NullSentence(), NullSentence()) {
   def result = SentenceRelation(Sentences.nil())
 
   def decompose() = List()

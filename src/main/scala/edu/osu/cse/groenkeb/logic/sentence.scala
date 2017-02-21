@@ -52,7 +52,7 @@ case class NullSentence() extends Sentence
     case _ => false
   }
   
-  def toRelation = NullObjectRelation()
+  def toRelation = NullObject()
   
   override def toString() = ""
 }

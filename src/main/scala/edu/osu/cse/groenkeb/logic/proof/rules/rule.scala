@@ -1,8 +1,10 @@
 package edu.osu.cse.groenkeb.logic.proof.rules
 
-import scala.collection.immutable.LinearSeq
-
-import edu.osu.cse.groenkeb.logic._
+import edu.osu.cse.groenkeb.logic.Turnstile
+import edu.osu.cse.groenkeb.logic.ObjectRelation
+import edu.osu.cse.groenkeb.logic.And
+import edu.osu.cse.groenkeb.logic.SentenceRelation
+import edu.osu.cse.groenkeb.logic.Relation
 
 trait Rule {
   /**
@@ -13,51 +15,41 @@ trait Rule {
   /**
    * True if this rule accepts the given object type as a premise, false otherwise.
    */
-  def accepts(relation: ObjectRelation): Boolean
+  def accepts(relation: Relation): Boolean
 
   /**
    * True if this rule yields the given object type as a conclusion, false otherwise.
    */
-  def yields(relation: ObjectRelation): Boolean
+  def yields(relation: Relation): Boolean
 
   /**
    *
    */
-  def infer(conclusion: ObjectRelation)(from: ObjectRelation*): InferenceResult
+  def infer(conclusion: ObjectRelation)(from: Relation*): InferenceResult
 }
-
-sealed abstract class RuleParity(inverse: Rule)
-case class Elimination(inverse: Rule) extends RuleParity(inverse)
-case class Introduction(inverse: Rule) extends RuleParity(inverse)
-case class None(self: Rule) extends RuleParity(self)
-
-sealed abstract class InferenceResult
-case class CompleteResult(val conclusions: ObjectRelation*) extends InferenceResult
-case class IncompleteResult(val required: ObjectRelation*) extends InferenceResult
-case class NullResult() extends InferenceResult
 
 abstract class BaseRule extends Rule
 
 case class AndIntroRule() extends BaseRule {
   def parity = Introduction(AndElimRule())
 
-  def accepts(relation: ObjectRelation) = relation match {
+  def accepts(relation: Relation) = relation match {
     case SentenceRelation(x) => true
     case _ => false
   }
 
-  def yields(relation: ObjectRelation) = relation match {
-    case AndRelation(x, y) => true
+  def yields(relation: Relation) = relation match {
+    case And(x, y) => true
     case _ => false
   }
 
-  def infer(conclusion: ObjectRelation)(from: ObjectRelation*) = conclusion match {
-    case AndRelation(x, y) => from match {
+  def infer(conclusion: ObjectRelation)(from: Relation*) = conclusion match {
+    case And(x, y) => from match {
       // NOTE: order matters for this match; will need to repeat cases to handle differing order if this is an issue
-      case Seq(SentenceRelation(x), SentenceRelation(y)) => CompleteResult(AndRelation(x, y))
-      case Seq(SentenceRelation(x)) => IncompleteResult(SentenceRelation(y))
-      case Seq(SentenceRelation(y)) => IncompleteResult(SentenceRelation(x))
-      case _ => IncompleteResult(SentenceRelation(x), SentenceRelation(y))
+      case Seq(SentenceRelation(x), SentenceRelation(y)) => CompleteResult(And(x, y))
+      case Seq(SentenceRelation(x)) => IncompleteResult(Require(SentenceRelation(y)))
+      case Seq(SentenceRelation(y)) => IncompleteResult(Require(SentenceRelation(x)))
+      case _ => IncompleteResult(Composite(Require(x.toRelation), Require(y.toRelation)))
     }
     case _ => NullResult()
   }
@@ -66,21 +58,24 @@ case class AndIntroRule() extends BaseRule {
 case class AndElimRule() extends BaseRule {
   def parity = Elimination(AndIntroRule())
 
-  def accepts(relation: ObjectRelation) = relation match {
-    case AndRelation(x, y) => true
+  def accepts(relation: Relation) = relation match {
+    case And(x, y) => true
+    case Turnstile(s, y) => true
     case _ => false
   }
 
-  def yields(relation: ObjectRelation) = relation match {
+  def yields(relation: Relation) = relation match {
     case SentenceRelation(x) => true
     case _ => false
   }
 
-  def infer(conclusion: ObjectRelation)(from: ObjectRelation*) = {
+  def infer(conclusion: ObjectRelation)(from: Relation*) = {
     conclusion match {
-      case SentenceRelation(x) => from match {
-        case Seq(AndRelation(x, y)) => CompleteResult(SentenceRelation(x))
-        case Seq(AndRelation(y, x)) => CompleteResult(SentenceRelation(x))
+      case SentenceRelation(c) => from match {
+        case Seq(And(x, y), Turnstile(s, c)) if s.contains(x) => CompleteResult(SentenceRelation(c))
+        case Seq(And(x, y), Turnstile(s, c)) if s.contains(y) => CompleteResult(SentenceRelation(c))
+        case Seq(And(x, y), _*) => 
+          IncompleteResult(Discrete(Vacuous(Turnstile(List(x), c)), Vacuous(Turnstile(List(y), c))))
         case _ => NullResult()
       }
       case _ => NullResult()
@@ -91,21 +86,21 @@ case class AndElimRule() extends BaseRule {
 case class ReflexivityRule() extends BaseRule {
   def parity = None(this)
   
-  def accepts(relation: ObjectRelation) = relation match {
+  def accepts(relation: Relation) = relation match {
     case SentenceRelation(x) => true
     case _ => false
   }
   
-  def yields(relation: ObjectRelation) = relation match {
+  def yields(relation: Relation) = relation match {
     case SentenceRelation(x) => true
     case _ => false
   }
   
-  def infer(conclusion: ObjectRelation)(from: ObjectRelation*) = {
+  def infer(conclusion: ObjectRelation)(from: Relation*) = {
     conclusion match {
       case SentenceRelation(x) => from match {
         case Seq(SentenceRelation(x)) => CompleteResult(SentenceRelation(x))
-        case _ => IncompleteResult(SentenceRelation(x))
+        case _ => IncompleteResult(Require(SentenceRelation(x)))
       }
       case _ => NullResult()
     }
@@ -115,10 +110,10 @@ case class ReflexivityRule() extends BaseRule {
 case class NullRule() extends BaseRule {
   def parity = None(this)
 
-  def accepts(relation: ObjectRelation) = false
+  def accepts(relation: Relation) = false
 
-  def yields(relation: ObjectRelation) = false
+  def yields(relation: Relation) = false
 
-  def infer(conclusion: ObjectRelation)(from: ObjectRelation*) = NullResult()
+  def infer(conclusion: ObjectRelation)(from: Relation*) = NullResult()
 }
 
