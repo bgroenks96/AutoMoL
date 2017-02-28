@@ -3,6 +3,7 @@ package edu.osu.cse.groenkeb.logic.proof.types
 import edu.osu.cse.groenkeb.logic.ObjectRelation
 import edu.osu.cse.groenkeb.logic.proof.rules.Rule
 import edu.osu.cse.groenkeb.logic.proof.rules.RuleArgs
+import edu.osu.cse.groenkeb.logic.proof.rules.Discharge
 
 sealed abstract class Proof(val conclusion: Option[Conclusion], val premises: Seq[Premise])
 case class CompleteProof(conc: Conclusion, prems: Seq[Premise]) extends Proof(Option.apply(conc), prems)

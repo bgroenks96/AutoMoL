@@ -1,11 +1,5 @@
 package edu.osu.cse.groenkeb.logic
 
-import edu.osu.cse.groenkeb.logic.ImpliesOp
-import edu.osu.cse.groenkeb.logic.NotOp
-import edu.osu.cse.groenkeb.logic.OrOp
-import edu.osu.cse.groenkeb.logic.AndOp
-import edu.osu.cse.groenkeb.logic.proof.rules.Discharge
-
 /**
  * Relational ordered pair (s1, s2)
  */
@@ -79,7 +73,7 @@ case class Absurdity() extends ObjectRelation(Sentences.absurdity()) {
 
 // ----- META RELATIONS ------ //
 
-case class Turnstile(val from: Discharge, val conclusion: Sentence) extends MetaRelation
+case class Turnstile(val from: Seq[Sentence], val conclusion: Sentence) extends MetaRelation
 
 // ----- CONNECTIVE RELATIONS ----- //
 

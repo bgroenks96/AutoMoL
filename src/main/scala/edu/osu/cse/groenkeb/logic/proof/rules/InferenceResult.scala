@@ -7,5 +7,5 @@ import edu.osu.cse.groenkeb.logic.Turnstile
 
 sealed abstract class InferenceResult
 case class CompleteResult(val proof: Proof) extends InferenceResult
-case class IncompleteResult(val required: Turnstile*) extends InferenceResult 
+case class IncompleteResult(val params: RuleParams) extends InferenceResult 
 case class NullResult() extends InferenceResult

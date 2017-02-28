@@ -3,7 +3,6 @@ package edu.osu.cse.groenkeb.logic.proof.rules
 import edu.osu.cse.groenkeb.logic.ObjectRelation
 import edu.osu.cse.groenkeb.logic.Sentence
 import edu.osu.cse.groenkeb.logic.SentenceRelation
-import edu.osu.cse.groenkeb.logic.Turnstile
 import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
 import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.types.Premise
@@ -42,19 +41,16 @@ case class ReflexivityRule() extends BaseRule {
   def parity = None(this)
 
   def accepts(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(SentenceRelation(x), _, _), _) => true
+    case CompleteProof(Conclusion(_, _, _), _) => true
     case _ => false
   }
 
-  def yields(obj: ObjectRelation) = obj match {
-    case SentenceRelation(x) => true
-    case _ => false
-  }
+  def yields(obj: ObjectRelation) = true
 
   def infer(conc: ObjectRelation)(args: RuleArgs) = args match {
-    case UnaryArgs(CompleteProof(Conclusion(SentenceRelation(conc), _, _), _)) =>
-      CompleteResult(CompleteProof(SentenceRelation(conc), this, args, ProudPremise(conc) :: Nil))
-    case _ => IncompleteResult(Turnstile(Empty(), conc.toSentence))
+    case UnaryArgs(CompleteProof(Conclusion(conc, _, _), _)) =>
+      CompleteResult(CompleteProof(conc, this, args, ProudPremise(conc.toSentence) :: Nil))
+    case _ => IncompleteResult(UnaryParams(AnyProof(conc)))
   }
 }
 

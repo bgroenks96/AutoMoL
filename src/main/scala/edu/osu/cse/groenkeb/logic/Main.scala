@@ -8,7 +8,8 @@ import edu.osu.cse.groenkeb.logic.parse.SentenceParser
 import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
 import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
 import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
-import edu.osu.cse.groenkeb.logic.proof.ProofSearch
+import edu.osu.cse.groenkeb.logic.proof.PropSolver
+import edu.osu.cse.groenkeb.logic.proof.DefaultPremiseSelector
 
 object Main extends App {
   implicit val matcher = DefaultOperatorMatcher()
@@ -18,12 +19,12 @@ object Main extends App {
   val sentenceB = parser.parse("B")
   val sentenceAandB = parser.parse("(and A B)")
   val rules = RuleSet(ReflexivityRule())
-  val premise = ProudPremise(sentenceA)
-  val proofContext = ProofContext(List(premise), List(), rules)
+  val premise = ProudPremise(sentenceAandB)
+  implicit val proofContext = ProofContext(List(premise), List(), rules)
+  val propSolver = new PropSolver(new DefaultPremiseSelector())
   
-  val complexSentence = parser.parse("(A and (not (C or B)))", Notation("infix"))
-  println(complexSentence)
-  println(1 :: Nil)
-  //println(proofSearch.findProof(sentenceA))
-  //println(proofSearch.findProof(sentenceAandB))
+  println(propSolver.prove(sentenceAandB))
+  
+  //val complexSentence = parser.parse("(A and (not (C or B)))", Notation("infix"))
+  //println(complexSentence)
 }
