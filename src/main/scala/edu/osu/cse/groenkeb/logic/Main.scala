@@ -17,13 +17,13 @@ object Main extends App {
   val parser = new SentenceParser(tokenizer)
   val sentenceA = parser.parse("A")
   val sentenceB = parser.parse("B")
-  val sentenceAandB = parser.parse("(and A B)")
-  val rules = RuleSet(ReflexivityRule())
-  val premise = ProudPremise(sentenceAandB)
-  implicit val proofContext = ProofContext(List(premise), List(), rules)
+  val sentenceC = parser.parse("C")
+  val complexSentence = parser.parse("(and (and A B) C)")
+  val rules = RuleSet(ReflexivityRule(), AndIntroductionRule())
+  implicit val proofContext = ProofContext(List(ProudPremise(sentenceA), ProudPremise(sentenceB), ProudPremise(sentenceC)), rules)
   val propSolver = new PropSolver(new DefaultPremiseSelector())
   
-  println(propSolver.prove(sentenceAandB))
+  println(propSolver.prove(sentenceA))
   
   //val complexSentence = parser.parse("(A and (not (C or B)))", Notation("infix"))
   //println(complexSentence)

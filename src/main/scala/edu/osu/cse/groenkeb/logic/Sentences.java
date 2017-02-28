@@ -27,7 +27,7 @@ public final class Sentences
   
   public static Sentence absurdity()
   {
-    return new AtomicSentence(Atom.ABSURDITY);
+    return new AtomicSentence(Atom.absurdity());
   }
   
   public static Sentence nil()

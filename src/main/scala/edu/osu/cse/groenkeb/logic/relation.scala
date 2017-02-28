@@ -3,9 +3,9 @@ package edu.osu.cse.groenkeb.logic
 /**
  * Relational ordered pair (s1, s2)
  */
-sealed abstract class Relation
+abstract class Relation
 
-sealed abstract class ObjectRelation(val sentences: Sentence*) extends Relation {
+abstract class ObjectRelation(val sentences: Sentence*) extends Relation {
   def toSentence: Sentence
 
   def count = sentences.length

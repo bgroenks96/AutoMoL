@@ -7,17 +7,20 @@ import edu.osu.cse.groenkeb.logic.proof.types._
 class PropSolver(selector: PremiseSelector) {
   def prove(sentence: Sentence)(implicit context: ProofContext): ProofSearch = prove(sentence.toRelation)
 
-  private def prove(conc: ObjectRelation)(implicit context: ProofContext) = proveAndReduce(conc, context.rules.yielding(conc))
+  private def prove(conc: ObjectRelation)(implicit context: ProofContext) = {
+    searchAndReduce(conc, context.premises)(context.withGoal(conc.toSentence))
+  }
 
   private def searchPremises(conc: ObjectRelation)(implicit context: ProofContext) = searchAndReduce(conc, selector.select(conc))
 
   private def args(params: RuleParams)(implicit context: ProofContext): RuleArgs = params match {
     case UnaryParams(param0) => UnaryArgs(prove(param0))
+    case BinaryParams(param0, param1) => BinaryArgs(prove(param0), prove(param1))
     case _ => throw new Exception()
   }
 
   private def prove(param: RuleParam)(implicit context: ProofContext): Proof = param match {
-    case AnyProof(conc) => searchPremises(conc).proof
+    case AnyProof(conc) => searchPremises(conc)(context.withGoal(conc.toSentence)).proof
     case RelevantProof(conc, discharge) => discharge match {
       case Required(prem) => prove(conc)(context.withAssumption(Assumption(prem))).proof match {
         case CompleteProof(conc, prems) if prems.exists(p => p.sentence.matches(prem)) => CompleteProof(conc, prems)
@@ -69,10 +72,11 @@ class PropSolver(selector: PremiseSelector) {
     prems match {
       case Seq(premise, next@_*) => premise match {
         case premise if premise.sentence.matches(conc.toSentence) => successFrom(ProudPremise(premise.sentence).proof, Unit => searchAndReduce(conc, next))
-        case ProudPremise(s) => composeResult(proveAndReduce(conc, context.rules.accepting(ProudPremise(s).proof)), next)
-        case Assumption(s) => composeResult(proveAndReduce(conc, context.rules.accepting(ProudPremise(s).proof)), next)
-        case NullPremise() => searchAndReduce(conc, next)
+        case ProudPremise(s) if conc.contains(s.toRelation) => composeResult(proveAndReduce(conc, context.rules.accepting(ProudPremise(s).proof).yielding(conc)), next)
+        case Assumption(s) if conc.contains(s.toRelation) => composeResult(proveAndReduce(conc, context.rules.accepting(ProudPremise(s).proof).yielding(conc)), next)
+        case _ => searchAndReduce(conc, next)
       }
+      case Nil => ProofSearch(conc.toSentence, Failure(NullProof(context.premises)))
     }
   }
 

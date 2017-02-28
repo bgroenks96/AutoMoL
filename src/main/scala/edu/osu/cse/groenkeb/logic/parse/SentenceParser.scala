@@ -34,19 +34,19 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
     }
   }
   
-  private def matchBinaryOp(str: String): BinaryOperator = {
+  private def matchBinaryOp(str: String): BinaryOperator[_] = {
     val op = opMatcher.opFor(str)
     op match {
-      case x if x.isInstanceOf[BinaryOperator] => op.asInstanceOf[BinaryOperator]
+      case x if x.isInstanceOf[BinaryOperator[_]] => op.asInstanceOf[BinaryOperator[_]]
       case NullOp() => throw ParserException("Unrecognized operator: " + str);
       case _ => throw ParserException("Illegal use of non-binary operator: " + str);
     }
   }
   
-  private def matchUnaryOp(str: String): UnaryOperator = {
+  private def matchUnaryOp(str: String): UnaryOperator[_] = {
     val op = opMatcher.opFor(str)
     op match {
-      case x if x.isInstanceOf[UnaryOperator] => op.asInstanceOf[UnaryOperator]
+      case x if x.isInstanceOf[UnaryOperator[_]] => op.asInstanceOf[UnaryOperator[_]]
       case NullOp() => throw ParserException("Unrecognized operator: " + str);
       case _ => throw ParserException("Illegal use of non-unary operator: " + str);
     }
