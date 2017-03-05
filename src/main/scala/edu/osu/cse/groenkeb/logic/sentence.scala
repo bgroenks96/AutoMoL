@@ -1,11 +1,10 @@
 package edu.osu.cse.groenkeb.logic
 
-import edu.osu.cse.groenkeb.logic.parse.OperatorMatcher;
-
 abstract class Sentence
 {
   def matches(s: Sentence): Boolean
-  def toRelation: ObjectRelation
+  def contains(s: Sentence): Boolean
+  def decompose(): Seq[Sentence]
   override def toString: String
 }
 
@@ -16,33 +15,39 @@ case class AtomicSentence(atom: Atom) extends Sentence
     case _ => false
   }
   
-  def toRelation = SentenceRelation(this)
+  def contains(s: Sentence) = matches(s)
+  
+  def decompose() = List(this)
   
   override def toString() = atom.toString()
 }
 
-case class BinarySentence(left: Sentence, right: Sentence, op: BinaryOperator[_]) extends Sentence
+case class BinarySentence(val left: Sentence, val right: Sentence, val conn: BinaryConnective) extends Sentence
 {
   def matches(s: Sentence) = s match {
-    case BinarySentence(left, right, op) => this.left.matches(left) && this.right.matches(right) && this.op.matches(op)
+    case BinarySentence(left, right, conn) => this.left.matches(left) && this.right.matches(right) && this.conn.matches(conn)
     case _ => false
   }
   
-  def toRelation = op.toRelation(left, right)
+  def contains(s: Sentence) = left.contains(s) || right.contains(s)
   
-  override def toString() = String.format("%s(%s.%s)", op, left, right)
+  def decompose() = List(left, right)
+  
+  override def toString() = String.format("%s(%s.%s)", conn, left, right)
 }
 
-case class UnarySentence(s: Sentence, op: UnaryOperator[_]) extends Sentence
+case class UnarySentence(val operand: Sentence, conn: UnaryConnective) extends Sentence
 {
   def matches(s: Sentence) = s match {
-    case UnarySentence(s, op) => this.s.matches(s) && this.op.matches(op)
+    case UnarySentence(operand, conn) => this.operand.matches(operand) && this.conn.matches(conn)
     case _ => false
   }
   
-  def toRelation = op.toRelation(s)
+  def contains(s: Sentence) = operand.contains(s)
   
-  override def toString() = String.format("%s(%s)", op, s)
+  def decompose() = List(operand)
+  
+  override def toString() = String.format("%s(%s)", conn, operand)
 }
 
 case class NullSentence() extends Sentence
@@ -52,7 +57,9 @@ case class NullSentence() extends Sentence
     case _ => false
   }
   
-  def toRelation = NullObject()
+  def contains(s: Sentence) = false
+  
+  def decompose() = Nil
   
   override def toString() = ""
 }

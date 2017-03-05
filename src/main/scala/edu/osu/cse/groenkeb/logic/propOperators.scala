@@ -1,9 +1,7 @@
 package edu.osu.cse.groenkeb.logic
 
-case class AndOp() extends BinaryPredicate {
-  def toRelation(s: Sentence*) = s match { case Seq(left, right) => And(left, right) }
-
-  def matches[T](op: Operator[T]) = op match {
+case class AndOp() extends BinaryConnective {
+  def matches(op: Operator) = op match {
     case AndOp() => true
     case _ => false
   }
@@ -16,10 +14,8 @@ case class AndOp() extends BinaryPredicate {
   override def toString() = "and"
 }
 
-case class OrOp() extends BinaryPredicate {
-  def toRelation(s: Sentence*) = s match { case Seq(left, right) => Or(left, right) }
-
-  def matches[T](op: Operator[T]) = op match {
+case class OrOp() extends BinaryConnective {
+  def matches(op: Operator) = op match {
     case OrOp() => true
     case _ => false
   }
@@ -32,10 +28,8 @@ case class OrOp() extends BinaryPredicate {
   override def toString() = "or"
 }
 
-case class ImpliesOp() extends BinaryPredicate {
-  def toRelation(s: Sentence*) = s match { case Seq(left, right) => Implies(left, right) }
-
-  def matches[T](op: Operator[T]) = op match {
+case class ImpliesOp() extends BinaryConnective {
+  def matches(op: Operator) = op match {
     case ImpliesOp() => true
     case _ => false
   }
@@ -48,10 +42,8 @@ case class ImpliesOp() extends BinaryPredicate {
   override def toString() = "=>"
 }
 
-case class NotOp() extends UnaryPredicate {
-  def toRelation(s: Sentence*) = s match { case Seq(operand) => Not(operand) }
-
-  def matches[T](op: Operator[T]) = op match {
+case class NotOp() extends UnaryConnective {
+  def matches(op: Operator) = op match {
     case NotOp() => true
     case _ => false
   }

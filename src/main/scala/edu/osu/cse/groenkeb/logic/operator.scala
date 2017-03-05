@@ -1,28 +1,38 @@
 package edu.osu.cse.groenkeb.logic
 
-trait Operator[TResult] {
-  def toRelation(s: Sentence*): ObjectRelation
-  def matches[T](op: Operator[T]): Boolean
-  def evaluate(functor: Sentence => TResult, args: Sentence*): TResult
+trait Operator {
+  def matches(op: Operator): Boolean
   override def toString(): String
 }
 
-abstract class BinaryOperator[TResult] extends Operator[TResult]
-abstract class UnaryOperator[TResult] extends Operator[TResult]
+trait Predicate extends Operator
 
-trait Predicate extends Operator[Boolean]
-abstract class BinaryPredicate extends BinaryOperator[Boolean] with Predicate
-abstract class UnaryPredicate extends UnaryOperator[Boolean] with Predicate
+trait Connective extends Operator {
+  def evaluate(functor: Sentence => Boolean, args: Sentence*): Boolean
+}
 
-case class NullOp() extends Operator[Unit] {
-  def toRelation(s: Sentence*) = s match { case Nil => NullObject() }
-  
-  def matches[T](op: Operator[T]) = op match {
+abstract class UnaryConnective extends Connective
+abstract class BinaryConnective extends Connective
+
+abstract class NamedPredicate(val name: String) extends Predicate
+case class PropPredicate(pname: String) extends NamedPredicate(pname) {
+  def matches(op: Operator) = op match {
+    case PropPredicate(this.pname) => true
+    case _ => false
+  }
+}
+case class ObjectPredicate(pname: String, val args: Term*) extends NamedPredicate(pname) {
+  def matches(op: Operator) = op match {
+    case ObjectPredicate(this.pname, args@_*) if args.equals(this.args) => true
+    case _ => false
+  }
+}
+
+case class NullOp() extends Operator {
+  def matches(op: Operator) = op match {
     case NullOp() => true
     case _ => false
   }
-  
-  def evaluate(functor: Sentence => Unit, args: Sentence*) = Unit
   
   override def toString() = ""
 }
