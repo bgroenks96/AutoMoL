@@ -14,18 +14,13 @@ trait Connective extends Operator {
 abstract class UnaryConnective extends Connective
 abstract class BinaryConnective extends Connective
 
-abstract class NamedPredicate(val name: String) extends Predicate
-case class PropPredicate(pname: String) extends NamedPredicate(pname) {
+case class NamedPredicate(val name: String) extends Predicate {
   def matches(op: Operator) = op match {
-    case PropPredicate(this.pname) => true
+    case NamedPredicate(this.name) => true
     case _ => false
   }
-}
-case class ObjectPredicate(pname: String, val args: Term*) extends NamedPredicate(pname) {
-  def matches(op: Operator) = op match {
-    case ObjectPredicate(this.pname, args@_*) if args.equals(this.args) => true
-    case _ => false
-  }
+  
+  override def toString = name
 }
 
 case class NullOp() extends Operator {

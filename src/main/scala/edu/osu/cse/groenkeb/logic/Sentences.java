@@ -2,26 +2,26 @@ package edu.osu.cse.groenkeb.logic;
 
 public final class Sentences
 {
-  public static Sentence atom(String name)
+  public static Sentence atom(String str)
   {
-    return new AtomicSentence(new Atom(name));
+    return new AtomicSentence(Atom.parse(str));
   }
   
   public static Sentence and(Sentence left, Sentence right)
   {
-    final AndOp operator = new AndOp();
+    final And operator = new And();
     return new BinarySentence(left, right, operator);
   }
   
   public static Sentence or(Sentence left, Sentence right)
   {
-    final OrOp operator = new OrOp();
+    final Or operator = new Or();
     return new BinarySentence(left, right, operator);
   }
   
   public static Sentence not(Sentence operand)
   {
-    final NotOp operator = new NotOp();
+    final Not operator = new Not();
     return new UnarySentence(operand, operator);
   }
   

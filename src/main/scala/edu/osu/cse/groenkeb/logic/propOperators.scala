@@ -1,8 +1,8 @@
 package edu.osu.cse.groenkeb.logic
 
-case class AndOp() extends BinaryConnective {
+case class And() extends BinaryConnective {
   def matches(op: Operator) = op match {
-    case AndOp() => true
+    case And() => true
     case _ => false
   }
   
@@ -14,9 +14,9 @@ case class AndOp() extends BinaryConnective {
   override def toString() = "and"
 }
 
-case class OrOp() extends BinaryConnective {
+case class Or() extends BinaryConnective {
   def matches(op: Operator) = op match {
-    case OrOp() => true
+    case Or() => true
     case _ => false
   }
   
@@ -28,9 +28,9 @@ case class OrOp() extends BinaryConnective {
   override def toString() = "or"
 }
 
-case class ImpliesOp() extends BinaryConnective {
+case class Implies() extends BinaryConnective {
   def matches(op: Operator) = op match {
-    case ImpliesOp() => true
+    case Implies() => true
     case _ => false
   }
   
@@ -42,9 +42,9 @@ case class ImpliesOp() extends BinaryConnective {
   override def toString() = "=>"
 }
 
-case class NotOp() extends UnaryConnective {
+case class Not() extends UnaryConnective {
   def matches(op: Operator) = op match {
-    case NotOp() => true
+    case Not() => true
     case _ => false
   }
   

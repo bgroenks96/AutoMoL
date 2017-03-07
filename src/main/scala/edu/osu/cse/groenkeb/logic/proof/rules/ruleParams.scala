@@ -1,10 +1,10 @@
 package edu.osu.cse.groenkeb.logic.proof.rules
 
-import edu.osu.cse.groenkeb.logic.ObjectRelation
+import edu.osu.cse.groenkeb.logic.Sentence
 
 sealed abstract class RuleParam
-case class AnyProof(val conc: ObjectRelation) extends RuleParam
-case class RelevantProof(val conc: ObjectRelation, val from: Discharge) extends RuleParam
+case class AnyProof(val conc: Sentence) extends RuleParam
+case class RelevantProof(val conc: Sentence, val from: Discharge) extends RuleParam
 
 sealed abstract class RuleParams
 case class EmptyParams() extends RuleParams

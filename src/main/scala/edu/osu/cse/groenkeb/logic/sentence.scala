@@ -1,6 +1,6 @@
 package edu.osu.cse.groenkeb.logic
 
-abstract class Sentence
+sealed abstract class Sentence
 {
   def matches(s: Sentence): Boolean
   def contains(s: Sentence): Boolean
@@ -18,6 +18,8 @@ case class AtomicSentence(atom: Atom) extends Sentence
   def contains(s: Sentence) = matches(s)
   
   def decompose() = List(this)
+  
+  def toRelation = atom.toRelation
   
   override def toString() = atom.toString()
 }

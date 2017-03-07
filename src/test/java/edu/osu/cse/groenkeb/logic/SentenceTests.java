@@ -19,6 +19,12 @@ public class SentenceTests
   }
   
   @Test
+  public void testAtomicPredcateToString()
+  {
+    assertEquals("A[b.c]", atom("A[b.c]").toString());
+  }
+  
+  @Test
   public void testBinarySentenceToString()
   {
     assertEquals("and(A.B)", and(atom("A"), atom("B")).toString());
@@ -27,7 +33,7 @@ public class SentenceTests
   @Test
   public void testUnarySentenceToString()
   {
-    assertEquals("~A", not(atom("A")).toString());
+    assertEquals("not(A)", not(atom("A")).toString());
   }
   
   @Test

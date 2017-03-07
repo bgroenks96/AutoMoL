@@ -55,7 +55,7 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
   private def matchAtom(str: String): Atom = {
     val op = opMatcher.opFor(str)
     op match {
-      case NullOp() => new Atom(str)
+      case NullOp() => Atom.parse(str)
       case _ => throw ParserException("Found unexpected operator token: " + str)
     }
   }
@@ -63,7 +63,7 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
   private sealed abstract class NodeParser {
     def parseNode(node: NodeToken): Sentence
     protected def operand(token: Token) = token match {
-      case TerminalToken(x) => AtomicSentence(new Atom(x))
+      case TerminalToken(x) => AtomicSentence(matchAtom(x))
       case NodeToken(children) => parseNode(NodeToken(children))
     }
   }
