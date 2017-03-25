@@ -6,6 +6,7 @@ import edu.osu.cse.groenkeb.logic.NullSentence
 import edu.osu.cse.groenkeb.logic.Predicate
 import edu.osu.cse.groenkeb.logic.Sentence
 import edu.osu.cse.groenkeb.logic.UnarySentence
+import edu.osu.cse.groenkeb.logic.parse.ParserException
 
 case class FirstOrderModel(val diagram: AtomicDiagram) extends Model {
   def domain = diagram.domain
@@ -31,7 +32,7 @@ object FirstOrderModel {
   private def diagram(domain: Domain, sentences: Sentence*): AtomicDiagram = sentences.toList match {
     case Nil => AtomicDiagram(domain)
     case AtomicSentence(atom) :: rem => AtomicDiagram(domain, atom.toRelation) ++ diagram(domain, rem:_*)
-    case _ => throw new IllegalArgumentException("found non-atomic sentence in model declaration")
+    case _ => throw ParserException("found non-atomic sentence in model declaration")
     //case sentence :: rem => diagram(domain, sentence.decompose():_*) ++ diagram(domain, rem:_*)
   }
 }

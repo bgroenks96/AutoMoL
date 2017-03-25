@@ -16,26 +16,26 @@ public class VerifyProgram
     try(final Scanner input = new Scanner(System.in))
     {
       final SentenceParser parser = new SentenceParser(new NodeRecursiveTokenizer(), new DefaultOperatorMatcher());
-      final ModelVerificationCommandProcessor processor = new ModelVerificationCommandProcessor(input, parser, new Notation("infix"));
+      final ModelVerificationCommandProcessor processor = new ModelVerificationCommandProcessor(input, parser, new Notation("prefix"));
       Command<ModelVerificationContext> next = null;
       ModelVerificationContext context = new ModelVerificationContext(FirstOrderModel.empty());
       boolean shouldContinue = true;
       do
       {
-        if (next != null)
-        {
-          context = next.execute(context);
-          System.out.println();
-        }
-
-        context.printStatus();
-        System.out.print("> ");
         try
         {
+          if (next != null)
+          {
+            context = next.execute(context);
+            System.out.println();
+          }
+
+          context.printStatus();
+          System.out.print("> ");
           next = processor.tryParseNextCommand();
           shouldContinue = next != null;
         }
-        catch (InvalidCommandException e)
+        catch (Exception e)
         {
           System.out.println(e.getMessage() + "\n");
           next = null;

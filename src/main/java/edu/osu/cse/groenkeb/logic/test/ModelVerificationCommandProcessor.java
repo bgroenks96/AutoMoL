@@ -32,19 +32,24 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
     final String next = input.nextLine();
     if (next == null || next.isEmpty()) return null;
     
-    final String cmdStr = next.substring(QUERY.length(), next.length()).trim();
-    if (next.startsWith(QUERY))
+    final String cmdStr = next.substring(1, next.length()).trim();
+    try
     {
-      return parseQuery(cmdStr);
+      if (next.startsWith(QUERY))
+      {
+        return parseQuery(cmdStr);
+      }
+      else if (next.startsWith(SET))
+      {
+        return parseSet(cmdStr);
+      }
     }
-    else if (next.startsWith(SET))
+    catch (Exception e)
     {
-      return parseSet(cmdStr);
+      throw new InvalidCommandException("unable to parse input: " + e.getMessage());
     }
-    else
-    {
-      throw new InvalidCommandException("unrecognized command string: " + next);
-    }
+    
+    throw new InvalidCommandException("unrecognized command string: " + next);
   }
   
   public QueryCommand parseQuery(final String str)
