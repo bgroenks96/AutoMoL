@@ -1,11 +1,6 @@
 package edu.osu.cse.groenkeb.logic.model
 
-import edu.osu.cse.groenkeb.logic.AtomicSentence
-import edu.osu.cse.groenkeb.logic.BinarySentence
-import edu.osu.cse.groenkeb.logic.NullSentence
-import edu.osu.cse.groenkeb.logic.Predicate
-import edu.osu.cse.groenkeb.logic.Sentence
-import edu.osu.cse.groenkeb.logic.UnarySentence
+import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.parse.ParserException
 
 case class FirstOrderModel(val diagram: AtomicDiagram) extends Model {
@@ -14,6 +9,7 @@ case class FirstOrderModel(val diagram: AtomicDiagram) extends Model {
     case AtomicSentence(atom) => diagram.has(atom.toRelation)
     case UnarySentence(operand, conn) => conn.evaluate(verify, operand)
     case BinarySentence(left, right, conn) => conn.evaluate(verify, left, right)
+    case QuantifiedSentence(operand, quantifier) => quantifier.evaluate(diagram.domain, verify, operand)
     case NullSentence() => false
   }
 }

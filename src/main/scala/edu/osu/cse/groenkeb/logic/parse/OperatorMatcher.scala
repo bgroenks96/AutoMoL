@@ -8,10 +8,15 @@ trait OperatorMatcher {
 }
 
 case class DefaultOperatorMatcher() extends OperatorMatcher {
+  val UQPattern = "(U)(:)?(.*)".r
+  val EQPattern = "(E)(:)?(.*)".r
   def opFor(str: String): Operator = str match {
     case "and" => And()
     case "or" => Or()
     case "not" => Not()
+    case ">>" => Implies()
+    case UQPattern(_,_,x) => UniversalQuantifier(Term(x))
+    case EQPattern(_,_,x) => ExistentialQuantifier(Term(x))
     case _ => NullOp()
   }
   
@@ -19,6 +24,9 @@ case class DefaultOperatorMatcher() extends OperatorMatcher {
     case And() => "and"
     case Or() => "or"
     case Not() => "not"
+    case Implies() => ">>"
+    case ExistentialQuantifier(x) => "E:" + x.name
+    case UniversalQuantifier(x) => "U:" + x.name
     case _ => ""
   }
 }

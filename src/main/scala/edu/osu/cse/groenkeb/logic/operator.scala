@@ -1,11 +1,17 @@
 package edu.osu.cse.groenkeb.logic
 
+import edu.osu.cse.groenkeb.logic.model.Domain
+
 trait Operator {
   def matches(op: Operator): Boolean
   override def toString(): String
 }
 
 trait Predicate extends Operator
+
+trait Quantifier extends Operator {
+  def evaluate(domain: Domain, functor: Sentence => Boolean, arg: Sentence): Boolean
+}
 
 trait Connective extends Operator {
   def evaluate(functor: Sentence => Boolean, args: Sentence*): Boolean

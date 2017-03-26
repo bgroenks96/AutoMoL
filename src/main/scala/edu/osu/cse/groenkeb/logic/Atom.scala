@@ -5,6 +5,11 @@ case class Atom(val predicate: Predicate, val terms: Term*) {
   
   def toRelation = ObjectRelation(predicate, terms:_*)
   
+  def substitute(orig: Term, sub: Term) = Atom(predicate, terms map { t => t match {
+    case `orig` => sub
+    case _ => t
+  }}:_*)
+  
   override def toString = terms match {
     case Nil => predicate.toString()
     case terms => String.format("%s[%s]", predicate.toString(), terms.mkString("."))

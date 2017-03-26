@@ -78,4 +78,13 @@ public class SentenceTests
     final Sentence sentence = and(not(or(atom("C"), atom("D"))), atom("B"));
     assertTrue(sentence.matches(sentence));
   }
+  
+  @Test
+  public void testSentenceSubstitution()
+  {
+    final Sentence sentence = and(not(atom("C")), atom("L[x]"));
+    final Sentence expected = and(not(atom("C")), atom("L[a]"));
+    final Sentence substitute = sentence.substitute (new Term("x"), new Term("a"));
+    assertTrue(substitute.matches (expected));
+  }
 }

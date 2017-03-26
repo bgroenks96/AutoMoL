@@ -43,10 +43,11 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
     }
   }
   
-  private def matchUnaryOp(str: String): UnaryConnective = {
+  private def matchUnaryOp(str: String): Either[UnaryConnective, Quantifier] = {
     val op = opMatcher.opFor(str)
     op match {
-      case x if x.isInstanceOf[UnaryConnective] => op.asInstanceOf[UnaryConnective]
+      case x if x.isInstanceOf[UnaryConnective] => Left(op.asInstanceOf[UnaryConnective])
+      case x if x.isInstanceOf[Quantifier] => Right(op.asInstanceOf[Quantifier])
       case NullOp() => throw ParserException("Unrecognized operator: " + str);
       case _ => throw ParserException("Illegal use of non-unary operator: " + str);
     }
@@ -71,7 +72,7 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
   private case class PrefixNodeParser() extends NodeParser {
     def parseNode(node: NodeToken): Sentence = node.children.toList match {
       case TerminalToken(op) :: left :: right :: Nil => BinarySentence(operand(left), operand(right), matchBinaryOp(op))
-      case TerminalToken(op) :: unary :: Nil => UnarySentence(operand(unary), matchUnaryOp(op))
+      case TerminalToken(op) :: unary :: Nil => matchUnaryOp(op).fold(u => UnarySentence(operand(unary), u), q => QuantifiedSentence(operand(unary), q))
       case TerminalToken(x) :: Nil => operand(TerminalToken(x))
       case _ => throw ParserException("Found malformed token node: " + node.value)
     }
@@ -80,7 +81,7 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
   private case class PostfixNodeParser() extends NodeParser {
     def parseNode(node: NodeToken): Sentence = node.children.toList match {
       case left :: right :: TerminalToken(op) :: Nil => BinarySentence(operand(left), operand(right), matchBinaryOp(op))
-      case unary :: TerminalToken(op) :: Nil => UnarySentence(operand(unary), matchUnaryOp(op))
+      case unary :: TerminalToken(op) :: Nil => matchUnaryOp(op).fold(u => UnarySentence(operand(unary), u), q => QuantifiedSentence(operand(unary), q))
       case TerminalToken(x) :: Nil => operand(TerminalToken(x))
       case _ => throw ParserException("Found malformed token node: " + node.value)
     }
@@ -89,7 +90,7 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
   private case class InfixNodeParser() extends NodeParser {
     def parseNode(node: NodeToken): Sentence = node.children.toList match {
       case left :: TerminalToken(op) :: right :: Nil => BinarySentence(operand(left), operand(right), matchBinaryOp(op))
-      case TerminalToken(op) :: unary :: Nil => UnarySentence(operand(unary), matchUnaryOp(op))
+      case TerminalToken(op) :: unary :: Nil => matchUnaryOp(op).fold(u => UnarySentence(operand(unary), u), q => QuantifiedSentence(operand(unary), q))
       case TerminalToken(x) :: Nil => operand(TerminalToken(x))
       case _ => throw ParserException("Found malformed token node: " + node.value)
     }
