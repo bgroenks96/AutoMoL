@@ -100,3 +100,9 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
 sealed abstract class SentenceParserOpts
 case class Notation(typestr: String) extends SentenceParserOpts
 
+object Notation {
+  def Infix = Notation("infix")
+  def Prefix = Notation("prefix")
+  def Postfix = Notation("postfix")
+}
+

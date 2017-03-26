@@ -3,7 +3,7 @@ package edu.osu.cse.groenkeb.logic.test;
 import java.util.Scanner;
 
 import edu.osu.cse.groenkeb.logic.model.FirstOrderModel;
-import edu.osu.cse.groenkeb.logic.parse.DefaultOperatorMatcher;
+import edu.osu.cse.groenkeb.logic.parse.DefaultFirstOrderOpMatcher;
 import edu.osu.cse.groenkeb.logic.parse.NodeRecursiveTokenizer;
 import edu.osu.cse.groenkeb.logic.parse.Notation;
 import edu.osu.cse.groenkeb.logic.parse.SentenceParser;
@@ -15,8 +15,8 @@ public class VerifyProgram
   {
     try(final Scanner input = new Scanner(System.in))
     {
-      final SentenceParser parser = new SentenceParser(new NodeRecursiveTokenizer(), new DefaultOperatorMatcher());
-      final ModelVerificationCommandProcessor processor = new ModelVerificationCommandProcessor(input, parser, new Notation("prefix"));
+      final SentenceParser parser = new SentenceParser(new NodeRecursiveTokenizer(), new DefaultFirstOrderOpMatcher());
+      final ModelVerificationCommandProcessor processor = new ModelVerificationCommandProcessor(input, parser, Notation.Infix);
       Command<ModelVerificationContext> next = null;
       ModelVerificationContext context = new ModelVerificationContext(FirstOrderModel.empty());
       boolean shouldContinue = true;
