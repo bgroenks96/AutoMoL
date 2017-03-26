@@ -9,5 +9,5 @@ case class AtomicDiagram(val domain: Domain, val relations: ObjectRelation*) {
   def merge(diagram: AtomicDiagram) = AtomicDiagram(this.domain ++ diagram.domain, this.relations.union(diagram.relations).distinct:_*)
   def has(relation: ObjectRelation) = relations.contains(relation)  
   def has(term: Term) = domain.has(term)
-  override def toString = String.format("%s(%s Relations{%s})", getClass.getSimpleName, domain, relations.mkString("; "))
+  override def toString = String.format("%s(%s Relations{%s})", getClass.getSimpleName, domain, relations.mkString(", "))
 }

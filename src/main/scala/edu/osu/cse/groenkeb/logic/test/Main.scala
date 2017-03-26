@@ -1,7 +1,7 @@
 package edu.osu.cse.groenkeb.logic.test
 
 import edu.osu.cse.groenkeb.logic.proof.rules._
-import edu.osu.cse.groenkeb.logic.parse.DefaultOperatorMatcher
+import edu.osu.cse.groenkeb.logic.parse.DefaultPropOpMatcher
 import edu.osu.cse.groenkeb.logic.parse.NodeRecursiveTokenizer
 import edu.osu.cse.groenkeb.logic.parse.SentenceParser
 import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
@@ -11,7 +11,7 @@ import edu.osu.cse.groenkeb.logic.proof.PropSolver
 import edu.osu.cse.groenkeb.logic.proof.DefaultPremiseSelector
 
 object Main extends App {
-  implicit val matcher = DefaultOperatorMatcher()
+  implicit val matcher = new DefaultPropOpMatcher()
   val tokenizer = new NodeRecursiveTokenizer()
   val parser = new SentenceParser(tokenizer)
   val sentenceA = parser.parse("A")

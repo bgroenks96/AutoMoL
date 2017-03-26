@@ -101,8 +101,8 @@ sealed abstract class SentenceParserOpts
 case class Notation(typestr: String) extends SentenceParserOpts
 
 object Notation {
-  def Infix = Notation("infix")
-  def Prefix = Notation("prefix")
-  def Postfix = Notation("postfix")
+  val Infix = Notation("infix")
+  val Prefix = Notation("prefix")
+  val Postfix = Notation("postfix")
 }
 

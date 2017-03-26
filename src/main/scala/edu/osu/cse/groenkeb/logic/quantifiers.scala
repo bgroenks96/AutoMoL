@@ -22,7 +22,8 @@ case class UniversalQuantifier(term: Term) extends Quantifier {
   }
   
   def evaluate(domain: Domain, functor: Sentence => Boolean, arg: Sentence) = {
-    domain.terms forall { t => functor.apply(arg.substitute(term, t)) }
+    // forall returns true for any empty collection, so we need to check the empty condition first
+    !domain.terms.isEmpty && (domain.terms forall { t => functor.apply(arg.substitute(term, t)) })
   }
   
   override def toString = "U:" + term.name

@@ -16,7 +16,7 @@ public class VerifyProgram
     try(final Scanner input = new Scanner(System.in))
     {
       final SentenceParser parser = new SentenceParser(new NodeRecursiveTokenizer(), new DefaultFirstOrderOpMatcher());
-      final ModelVerificationCommandProcessor processor = new ModelVerificationCommandProcessor(input, parser, Notation.Infix);
+      final ModelVerificationCommandProcessor processor = new ModelVerificationCommandProcessor(input, parser, Notation.Infix());
       Command<ModelVerificationContext> next = null;
       ModelVerificationContext context = new ModelVerificationContext(FirstOrderModel.empty());
       boolean shouldContinue = true;
