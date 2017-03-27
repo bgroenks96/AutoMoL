@@ -21,9 +21,9 @@ object Atom {
   
   def parse(str: String) = {
     val propPattern = "([A-z]+)".r
-    val objPattern = "([A-z]+)\\[([A-z0-9\\.]+)*\\]".r
+    val objPattern = "([A-z]+)\\[([A-z0-9,]+)*\\]".r
     str match {
-      case objPattern(pred, argstr) => Atom(NamedPredicate(pred), argstr.split("\\.").map { s => Term(s) }:_*)
+      case objPattern(pred, argstr) => Atom(NamedPredicate(pred), argstr.split(",").map { s => Term(s) }:_*)
       case propPattern(pred) => Atom(NamedPredicate(pred))
       case _ => throw new Exception("invalid format for atom string: " + str)
     }

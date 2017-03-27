@@ -13,7 +13,7 @@ import edu.osu.cse.groenkeb.logic.utils.Convert;
 public class ModelVerificationCommandProcessor implements CommandProcessor<ModelVerificationContext>
 {
   private static final String QUERY = "?";
-  private static final String SET = "$";
+  private static final String SET = "!";
   
   private final Scanner input;
   private final SentenceParser parser;
@@ -61,9 +61,9 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
   public SetCommand parseSet(final String str)
   {
     final List<Sentence> sentences = new ArrayList<Sentence>();
-    for (final String s : str.split(","))
+    for (final String s : str.split(";"))
     {
-      sentences.add(this.parser.parse(s, this.opts));
+      sentences.add(this.parser.parse(s.trim(), this.opts));
     }
     
     return new SetCommand(sentences);

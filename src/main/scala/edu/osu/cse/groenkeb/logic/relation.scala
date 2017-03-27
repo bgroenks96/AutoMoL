@@ -5,5 +5,5 @@ package edu.osu.cse.groenkeb.logic
  */
 abstract class Relation
 case class ObjectRelation(val predicate: Predicate, val terms: Term*) {
-  override def toString = String.format("%s[%s]", predicate, terms.mkString("."))
+  override def toString = String.format("%s[%s]", predicate, terms.mkString(","))
 }
