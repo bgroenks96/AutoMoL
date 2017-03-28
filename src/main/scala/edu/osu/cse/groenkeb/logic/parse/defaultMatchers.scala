@@ -21,8 +21,8 @@ class DefaultPropOpMatcher() extends OperatorMatcher {
 }
 
 class DefaultFirstOrderOpMatcher extends DefaultPropOpMatcher {
-  val UQPattern = "(U)(:)?([A-z]+)".r
-  val EQPattern = "(E)(:)?([A-z]+)".r
+  val UQPattern = "(U)(:)?([a-z])".r
+  val EQPattern = "(E)(:)?([a-z])".r
   
   override def opFor(str: String): Operator = str match {
     case UQPattern(_,_,x) => UniversalQuantifier(Term(x))

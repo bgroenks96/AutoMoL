@@ -38,8 +38,8 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
     val op = opMatcher.opFor(str)
     op match {
       case x if x.isInstanceOf[BinaryConnective] => op.asInstanceOf[BinaryConnective]
-      case NullOp() => throw ParserException("Unrecognized operator: " + str);
-      case _ => throw ParserException("Illegal use of non-binary operator: " + str);
+      case NullOp() => throw ParserException("undefined or malformed operator: " + str);
+      case _ => throw ParserException("illegal use of non-binary operator: " + str);
     }
   }
   
@@ -48,8 +48,8 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
     op match {
       case x if x.isInstanceOf[UnaryConnective] => Left(op.asInstanceOf[UnaryConnective])
       case x if x.isInstanceOf[Quantifier] => Right(op.asInstanceOf[Quantifier])
-      case NullOp() => throw ParserException("Unrecognized operator: " + str);
-      case _ => throw ParserException("Illegal use of non-unary operator: " + str);
+      case NullOp() => throw ParserException("undefined or malformed operator: " + str);
+      case _ => throw ParserException("illegal use of non-unary operator: " + str);
     }
   }
   
@@ -74,7 +74,7 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
       case TerminalToken(op) :: left :: right :: Nil => BinarySentence(operand(left), operand(right), matchBinaryOp(op))
       case TerminalToken(op) :: unary :: Nil => matchUnaryOp(op).fold(u => UnarySentence(operand(unary), u), q => QuantifiedSentence(operand(unary), q))
       case TerminalToken(x) :: Nil => operand(TerminalToken(x))
-      case _ => throw ParserException("Found malformed token node: " + node.value)
+      case _ => throw ParserException("invalid format for token group: %s".format(node.value))
     }
   }
   
@@ -83,7 +83,7 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
       case left :: right :: TerminalToken(op) :: Nil => BinarySentence(operand(left), operand(right), matchBinaryOp(op))
       case unary :: TerminalToken(op) :: Nil => matchUnaryOp(op).fold(u => UnarySentence(operand(unary), u), q => QuantifiedSentence(operand(unary), q))
       case TerminalToken(x) :: Nil => operand(TerminalToken(x))
-      case _ => throw ParserException("Found malformed token node: " + node.value)
+      case _ => throw ParserException("invalid format for token group: %s".format(node.value))
     }
   }
   
@@ -92,7 +92,7 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
       case left :: TerminalToken(op) :: right :: Nil => BinarySentence(operand(left), operand(right), matchBinaryOp(op))
       case TerminalToken(op) :: unary :: Nil => matchUnaryOp(op).fold(u => UnarySentence(operand(unary), u), q => QuantifiedSentence(operand(unary), q))
       case TerminalToken(x) :: Nil => operand(TerminalToken(x))
-      case _ => throw ParserException("Found malformed token node: " + node.value)
+      case _ => throw ParserException("invalid format for token group: %s".format(node.value))
     }
   }
 }

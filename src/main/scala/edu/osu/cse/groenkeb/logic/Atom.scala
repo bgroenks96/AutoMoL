@@ -25,7 +25,7 @@ object Atom {
     str match {
       case objPattern(pred, argstr) => Atom(NamedPredicate(pred), argstr.split(",").map { s => Term(s) }:_*)
       case propPattern(pred) => Atom(NamedPredicate(pred))
-      case _ => throw new Exception("invalid format for atom string: " + str)
+      case _ => throw new Exception("invalid definition of atom: " + str)
     }
   }
 }

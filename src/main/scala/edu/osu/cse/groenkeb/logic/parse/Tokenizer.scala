@@ -22,6 +22,6 @@ case class TerminalToken(str: String) extends TokenBase {
 }
 
 case class NodeToken(val children: Seq[Token]) extends TokenBase {
-  def value = '[' + children.mkString(",") + ']'
+  def value = "(%s)".format(children.mkString(" "))
 }
 
