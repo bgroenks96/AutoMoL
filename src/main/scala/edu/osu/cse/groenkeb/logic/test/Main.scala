@@ -8,7 +8,7 @@ import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
 import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
 import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
 import edu.osu.cse.groenkeb.logic.proof.PropSolver
-import edu.osu.cse.groenkeb.logic.proof.DefaultPremiseSelector
+import edu.osu.cse.groenkeb.logic.proof.NaiveProofStrategy
 
 object Main extends App {
   implicit val matcher = new DefaultPropOpMatcher()
@@ -18,11 +18,12 @@ object Main extends App {
   val sentenceB = parser.parse("B")
   val sentenceC = parser.parse("C")
   val complexSentence = parser.parse("(and (and A B) C)")
-  val rules = RuleSet(ReflexivityRule(), AndIntroductionRule())
-  implicit val proofContext = ProofContext(List(ProudPremise(sentenceA), ProudPremise(sentenceB), ProudPremise(sentenceC)), rules)
-  val propSolver = new PropSolver(new DefaultPremiseSelector())
+  val rules = RuleSet(Seq(AndIntroductionRule()))
+  implicit val proofContext = ProofContext(complexSentence, List(ProudPremise(sentenceA), ProudPremise(sentenceB), ProudPremise(sentenceC)), rules)
+  implicit val proofStrategy = NaiveProofStrategy()
+  val propSolver = new PropSolver()
   
-  println(propSolver.prove(sentenceA))
+  println(propSolver.proof)
   
   //val complexSentence = parser.parse("(A and (not (C or B)))", Notation("infix"))
   //println(complexSentence)
