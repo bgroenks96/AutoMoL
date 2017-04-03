@@ -9,6 +9,9 @@ import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
 import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
 import edu.osu.cse.groenkeb.logic.proof.PropSolver
 import edu.osu.cse.groenkeb.logic.proof.NaiveProofStrategy
+import edu.osu.cse.groenkeb.logic.proof.ProofUtils
+import edu.osu.cse.groenkeb.logic.proof.Success
+import edu.osu.cse.groenkeb.logic.proof.Failure
 
 object Main extends App {
   implicit val matcher = new DefaultPropOpMatcher()
@@ -25,7 +28,17 @@ object Main extends App {
   implicit val proofStrategy = NaiveProofStrategy()
   val propSolver = new PropSolver()
   
-  println(propSolver.proof)
+  propSolver.proof match {
+    case Success(proof, _) => {
+      println("Success:")
+      ProofUtils.prettyPrint(proof)
+    }
+    case Failure(nullProof, _) => {
+      println("Failure:")
+      println(nullProof)
+    }
+  }
+  
   
   //val complexSentence = parser.parse("(A and (not (C or B)))", Notation("infix"))
   //println(complexSentence)

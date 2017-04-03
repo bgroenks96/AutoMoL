@@ -16,6 +16,7 @@ case class Conclusion(val conclusion: Sentence,
                       val args: RuleArgs) extends Premise(conclusion) {
   def major = args.prems(0)
   def minors = args.prems.drop(1)
+  var premiseCount = args.prems.length
 }
 case class Assumption(s: Sentence) extends Premise(s) {
   // default proof from identity for assumption
