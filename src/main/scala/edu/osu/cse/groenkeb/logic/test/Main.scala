@@ -30,11 +30,11 @@ object Main extends App {
   
   propSolver.proof match {
     case Success(proof, _) => {
-      println("Success:")
+      println("Success")
       ProofUtils.prettyPrint(proof)
     }
     case Failure(nullProof, _) => {
-      println("Failure:")
+      println("Failure")
       println(nullProof)
     }
   }

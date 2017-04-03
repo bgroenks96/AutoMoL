@@ -35,7 +35,7 @@ case class AndIntroductionRule() extends AbstractRule {
     case _ => NullResult()
   }
 
-  override def toString = "&-Intro"
+  override def toString = "<&-Intro>"
 }
 
 case class AndEliminationRule() extends AbstractRule {
@@ -60,5 +60,5 @@ case class AndEliminationRule() extends AbstractRule {
     case _ => NullResult()
   }
 
-  override def toString = "&-Elim"
+  override def toString = "<&-Elim>"
 }

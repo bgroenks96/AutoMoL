@@ -28,6 +28,8 @@ final case class IdentityRule protected() extends AbstractRule {
       CompleteResult(CompleteProof(`conc`, this, args, prems))
     case _ => IncompleteResult(UnaryParams(AnyProof(conc)))
   }
+  
+  override def toString = "<id>"
 }
 
 final case class NonContradictionRule protected() extends AbstractRule {
@@ -49,6 +51,8 @@ final case class NonContradictionRule protected() extends AbstractRule {
       case _ => IncompleteResult(BinaryParams(AnyProof(conc), AnyProof(negation)))
     }
   }
+  
+  override def toString = "<!>"
 }
 
 final case class NullRule protected() extends AbstractRule {
@@ -59,5 +63,7 @@ final case class NullRule protected() extends AbstractRule {
   def yields(sentence: Sentence) = false
 
   def infer(conc: Sentence)(args: RuleArgs) = NullResult()
+  
+  override def toString = "<>"
 }
 

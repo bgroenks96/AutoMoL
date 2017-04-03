@@ -13,7 +13,7 @@ import edu.osu.cse.groenkeb.logic.utils.Convert;
 public class ModelVerificationCommandProcessor implements CommandProcessor<ModelVerificationContext>
 {
   private static final String QUERY = "?";
-  private static final String SET = "!";
+  private static final String SET = "$";
   
   private final Scanner input;
   private final SentenceParser parser;
