@@ -11,24 +11,14 @@ import edu.osu.cse.groenkeb.logic.proof.rules.Rule
 
 case class ProofContext private (val goal: Sentence,
                                  val premises: Seq[Premise],
-                                 val assumptions: Seq[Assumption],
                                  val rules: RuleSet) {  
-  def this(goal: Sentence, premises: Seq[Premise], rules: RuleSet) {
-    this(goal, premises, List(), rules)
-  }
+  def withAssumptions(newAssumptions: Assumption*) = ProofContext(goal, premises ++ newAssumptions, rules)
   
-  def withAssumption(assumption: Assumption) = ProofContext(goal, premises, assumptions:+assumption, rules)
+  def withRuleSet(newRules: RuleSet) = ProofContext(goal, premises, newRules)
   
-  def withRuleSet(newRules: RuleSet) = ProofContext(goal, premises, assumptions, newRules)
-  
-  def withGoal(newGoal: Sentence) = ProofContext(newGoal, premises, assumptions, rules)
+  def withGoal(newGoal: Sentence) = ProofContext(newGoal, premises, rules)
   
   def lessAssumptions(assumptions: Assumption*) = ProofContext(goal,
-                                                              premises,
-                                                              assumptions.diff(assumptions),
-                                                              rules)
-}
-
-object ProofContext {
-  def apply(goal: Sentence, premises: Seq[Premise], rules: RuleSet) = new ProofContext(goal, premises, rules)
+                                                               premises.filter { p => !assumptions.exists { a => a.sentence.matches(p.sentence) } },
+                                                               rules)
 }

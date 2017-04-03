@@ -21,7 +21,7 @@ public class SentenceTests
   @Test
   public void testAtomicPredcateToString()
   {
-    assertEquals("A[b.c]", atom("A[b.c]").toString());
+    assertEquals("A[b.c]", atom("A[b,c]").toString());
   }
   
   @Test

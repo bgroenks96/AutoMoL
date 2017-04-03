@@ -13,16 +13,19 @@ sealed abstract class Premise(val sentence: Sentence)
 case class NullPremise() extends Premise(Sentences.nil())
 case class Conclusion(val conclusion: Sentence,
                       val rule: Rule,
-                      val args: RuleArgs) extends Premise(conclusion)
+                      val args: RuleArgs) extends Premise(conclusion) {
+  def major = args.prems(0)
+  def minors = args.prems.drop(1)
+}
 case class Assumption(s: Sentence) extends Premise(s) {
   // default proof from identity for assumption
-  def proof = CompleteProof(s, IdentityRule(), Default.args(s, this), this :: Nil)
+  def proof = CompleteProof(s, IdentityRule(), Default.args(s, this), Seq(this))
 }
 case class ProudPremise(s: Sentence) extends Premise(s) {
   // default proof from identity for "proud" premise
-  def proof = CompleteProof(s, IdentityRule(), Default.args(s, this), this :: Nil)
+  def proof = CompleteProof(s, IdentityRule(), Default.args(s, this), Nil)
 }
 
 private object Default {
-  def args(s: Sentence, p: Premise) = UnaryArgs(CompleteProof(Conclusion(s, NullRule(), EmptyArgs()), p :: Nil))
+  def args(s: Sentence, p: Premise) = UnaryArgs(CompleteProof(Conclusion(s, NullRule(), EmptyArgs()), Nil))
 }

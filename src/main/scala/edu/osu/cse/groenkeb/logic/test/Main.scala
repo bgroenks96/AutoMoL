@@ -17,9 +17,11 @@ object Main extends App {
   val sentenceA = parser.parse("A")
   val sentenceB = parser.parse("B")
   val sentenceC = parser.parse("C")
+  val sentenceAB = parser.parse("(and A B)")
   val complexSentence = parser.parse("(and (and A B) C)")
-  val rules = RuleSet(Seq(AndIntroductionRule()))
-  implicit val proofContext = ProofContext(complexSentence, List(ProudPremise(sentenceA), ProudPremise(sentenceB), ProudPremise(sentenceC)), rules)
+  val rules = RuleSet(Seq(AndIntroductionRule(), AndEliminationRule()))
+  implicit val proofContext = ProofContext(sentenceA, List(ProudPremise(sentenceAB)), rules)
+  //implicit val proofContext = ProofContext(complexSentence, List(ProudPremise(sentenceA), ProudPremise(sentenceB), ProudPremise(sentenceC)), rules)
   implicit val proofStrategy = NaiveProofStrategy()
   val propSolver = new PropSolver()
   
