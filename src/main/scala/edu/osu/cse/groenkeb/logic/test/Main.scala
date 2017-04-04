@@ -12,20 +12,21 @@ import edu.osu.cse.groenkeb.logic.proof.NaiveProofStrategy
 import edu.osu.cse.groenkeb.logic.proof.ProofUtils
 import edu.osu.cse.groenkeb.logic.proof.Success
 import edu.osu.cse.groenkeb.logic.proof.Failure
+import edu.osu.cse.groenkeb.logic.proof.types.Premises
 
 object Main extends App {
   implicit val matcher = new DefaultPropOpMatcher()
-  val tokenizer = new NodeRecursiveTokenizer()
-  val parser = new SentenceParser(tokenizer)
+  implicit val proofStrategy = NaiveProofStrategy()
+  val parser = new SentenceParser()
   val sentenceA = parser.parse("A")
   val sentenceB = parser.parse("B")
   val sentenceC = parser.parse("C")
-  val sentenceAB = parser.parse("(and A B)")
-  val complexSentence = parser.parse("and (or A C) (and (and A B) (and C B))")
+  val sentenceD = parser.parse("D")
+  val sentenceABC = parser.parse("and C (and A B)")
+  val complexSentence = parser.parse("and (or D A) (and (and A B) (and C B))")
   val rules = RuleSet(Seq(AndIntroductionRule(), AndEliminationRule()))
-  implicit val proofContext = ProofContext(sentenceAB, List(ProudPremise(complexSentence)), rules)
-  //implicit val proofContext = ProofContext(complexSentence, List(ProudPremise(sentenceA), ProudPremise(sentenceB), ProudPremise(sentenceC)), rules)
-  implicit val proofStrategy = NaiveProofStrategy()
+  //implicit val proofContext = ProofContext(sentenceD, Premises.proud(complexSentence), rules)
+  implicit val proofContext = ProofContext(sentenceABC, Premises.proud(sentenceA, sentenceB, sentenceC), rules)
   val propSolver = new PropSolver()
   
   propSolver.proof match {
@@ -35,7 +36,7 @@ object Main extends App {
     }
     case Failure(nullProof, _) => {
       println("Failure")
-      println(nullProof)
+      println(String.format("No proof of %s given premises [%s]", proofContext.goal, nullProof.prems.mkString(", ")))
     }
   }
   

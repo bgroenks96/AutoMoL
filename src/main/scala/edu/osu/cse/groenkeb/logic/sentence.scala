@@ -40,7 +40,7 @@ case class BinarySentence(val left: Sentence, val right: Sentence, val conn: Bin
   
   def decompose() = List(left, right)
   
-  override def toString() = String.format("%s(%s.%s)", conn, left, right)
+  override def toString() = String.format("%s(%s,%s)", conn, left, right)
 }
 
 case class UnarySentence(val operand: Sentence, val conn: UnaryConnective) extends Sentence

@@ -2,9 +2,9 @@ package edu.osu.cse.groenkeb.logic.parse
 
 import edu.osu.cse.groenkeb.logic._
 
-import scala.collection.mutable.Queue
-
 class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) extends Parser[String, Sentence, SentenceParserOpts] {
+  def this()(implicit opMatcher: OperatorMatcher) = this(new NodeRecursiveTokenizer())
+  
   def parse(src: String, opts: SentenceParserOpts = Notation("prefix")): Sentence = {
     parse(src, List(opts))
   }

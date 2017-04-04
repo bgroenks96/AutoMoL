@@ -27,6 +27,11 @@ case class ProudPremise(s: Sentence) extends Premise(s) {
   def proof = CompleteProof(s, IdentityRule(), Default.args(s, this), Nil)
 }
 
+object Premises {
+  def proud(sentences: Sentence*) = sentences map { s => ProudPremise(s) }
+  def assume(sentences: Sentence*) = sentences map { s => Assumption(s) }
+}
+
 private object Default {
   def args(s: Sentence, p: Premise) = UnaryArgs(CompleteProof(Conclusion(s, NullRule(), EmptyArgs()), Nil))
 }

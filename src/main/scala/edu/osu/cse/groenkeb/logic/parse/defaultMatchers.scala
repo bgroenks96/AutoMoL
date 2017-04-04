@@ -7,7 +7,7 @@ class DefaultPropOpMatcher() extends OperatorMatcher {
     case "and" => And()
     case "or" => Or()
     case "not" => Not()
-    case "->" => Implies()
+    case "if" => Implies()
     case _ => NullOp()
   }
   
@@ -15,7 +15,7 @@ class DefaultPropOpMatcher() extends OperatorMatcher {
     case And() => "and"
     case Or() => "or"
     case Not() => "not"
-    case Implies() => "->"
+    case Implies() => "if"
     case _ => ""
   }
 }

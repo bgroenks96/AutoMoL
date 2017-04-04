@@ -53,11 +53,11 @@ case class PropSolver(implicit strategy: ProofStrategy) extends Solver {
       discharge match {
         case Vacuous(assumptions@_*) => then(proof(newContext.withAssumptions(assumptions:_*)))
         case Required(assumptions@_*) => then(proof(newContext.withAssumptions(assumptions:_*))) match {
-          case CompleteProof(c, prems) if assumptions forall { a => prems.contains(a.sentence) } => CompleteProof(c, (prems ++ context.premises).distinct)
+          case CompleteProof(c, prems) if assumptions.par forall { a => prems.contains(a.sentence) } => CompleteProof(c, (prems ++ context.premises).distinct)
           case _ => NullProof(newContext.premises)
         }
         case Variate(assumptions@_*) => then(proof(newContext.withAssumptions(assumptions:_*))) match {
-          case CompleteProof(c, prems) if prems exists { p => assumptions exists { a => a.sentence.matches(p.sentence) } } =>
+          case CompleteProof(c, prems) if prems.par exists { p => assumptions exists { a => a.sentence.matches(p.sentence) } } =>
             CompleteProof(c, (prems ++ context.premises).distinct)
           case _ => NullProof(newContext.premises)
         }
