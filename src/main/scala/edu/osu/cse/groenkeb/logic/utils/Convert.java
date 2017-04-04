@@ -2,12 +2,18 @@ package edu.osu.cse.groenkeb.logic.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Stream;
 
 import scala.collection.JavaConversions;
 import scala.collection.Seq;
 
 public final class Convert
 {
+  public static final <T> Seq<T> toScalaSeq(final Stream<T> stream)
+  {
+    return JavaConversions.asScalaIterator(stream.iterator()).toSeq();
+  }
+  
   public static final <T> Seq<T> toScalaSeq(final Iterable<T> itr)
   {
     return JavaConversions.asScalaIterator(itr.iterator()).toSeq();

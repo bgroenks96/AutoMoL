@@ -1,10 +1,14 @@
 package edu.osu.cse.groenkeb.logic.test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
 import edu.osu.cse.groenkeb.logic.Sentence;
+import edu.osu.cse.groenkeb.logic.Term;
+import edu.osu.cse.groenkeb.logic.model.Domain;
 import edu.osu.cse.groenkeb.logic.model.FirstOrderModel;
 import edu.osu.cse.groenkeb.logic.parse.SentenceParser;
 import edu.osu.cse.groenkeb.logic.parse.SentenceParserOpts;
@@ -52,21 +56,33 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
     throw new InvalidCommandException("unrecognized command string: " + next);
   }
   
-  public QueryCommand parseQuery(final String str)
+  public QueryCommand parseQuery(final String input)
   {
-    final Sentence querySentence = this.parser.parse(str, opts);
+    final Sentence querySentence = this.parser.parse(input, opts);
     return new QueryCommand(querySentence);
   }
   
-  public SetCommand parseSet(final String str)
+  public SetCommand parseSet(final String input)
   {
+    Domain auxDomain = new Domain(Convert.emptyScalaSeq());
     final List<Sentence> sentences = new ArrayList<Sentence>();
-    for (final String s : str.split(";"))
+    for (final String pt : input.split(";"))
     {
-      sentences.add(this.parser.parse(s.trim(), this.opts));
+      final String str = pt.trim();
+      if (str.startsWith("{") && str.endsWith("}"))
+      {
+        final List<String> termStrs = Arrays.asList(str.substring(1, str.length() - 1).split(","));
+        final Stream<Term> terms = termStrs.stream().map((String s) -> new Term(s));
+        auxDomain = auxDomain.merge(new Domain(Convert.toScalaSeq(terms)));
+      }
+      else
+      {
+        sentences.add(this.parser.parse(pt, this.opts));
+      }
     }
     
-    return new SetCommand(sentences);
+    final FirstOrderModel model = FirstOrderModel.from(Convert.toScalaSeq(sentences));
+    return new SetCommand(model.withDomain(auxDomain));
   }
   
   private class QueryCommand implements Command<ModelVerificationContext>
@@ -88,16 +104,16 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
   
   private class SetCommand implements Command<ModelVerificationContext>
   {
-    private final List<Sentence> sentences;
+    private final FirstOrderModel model;
     
-    SetCommand(final List<Sentence> sentences)
+    SetCommand(FirstOrderModel model)
     {
-      this.sentences = sentences;
+      this.model = model;
     }
     
     public ModelVerificationContext execute(ModelVerificationContext current)
     {
-      return new ModelVerificationContext(FirstOrderModel.from(Convert.toScalaSeq(sentences)));
+      return new ModelVerificationContext(model);
     }
   }
 }
