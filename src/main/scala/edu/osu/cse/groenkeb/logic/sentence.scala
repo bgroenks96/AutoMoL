@@ -34,7 +34,7 @@ case class BinarySentence(val left: Sentence, val right: Sentence, val conn: Bin
     case _ => false
   }
   
-  def contains(s: Sentence) = left.contains(s) || right.contains(s)
+  def contains(s: Sentence) = matches(s) || left.contains(s) || right.contains(s)
   
   def substitute(orig: Term, sub: Term) = BinarySentence(left.substitute(orig, sub), right.substitute(orig, sub), conn)
   
@@ -50,7 +50,7 @@ case class UnarySentence(val operand: Sentence, val conn: UnaryConnective) exten
     case _ => false
   }
   
-  def contains(s: Sentence) = operand.contains(s)
+  def contains(s: Sentence) = matches(s) || operand.contains(s)
   
   def substitute(orig: Term, sub: Term) = UnarySentence(operand.substitute(orig, sub), conn)
   
@@ -66,7 +66,7 @@ case class QuantifiedSentence(val operand: Sentence, val quantifier: Quantifier)
     case _ => false
   }
   
-  def contains(s: Sentence) = operand.contains(s)
+  def contains(s: Sentence) = matches(s) || operand.contains(s)
   
   def substitute(orig: Term, sub: Term) = QuantifiedSentence(operand.substitute(orig, sub), quantifier)
   

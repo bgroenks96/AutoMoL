@@ -87,4 +87,29 @@ public class SentenceTests
     final Sentence substitute = sentence.substitute (new Term("x"), new Term("a"));
     assertTrue(substitute.matches (expected));
   }
+  
+  @Test
+  public void testSimpleSentenceContainsAtom()
+  {
+    final Sentence sentenceA = atom("A");
+    final Sentence sentenceAB = and(atom("A"), atom("B"));
+    assertTrue(sentenceAB.contains(sentenceA));
+  }
+  
+  @Test
+  public void testComplexSentenceContainsAtom()
+  {
+    final Sentence sentenceA = atom("A");
+    final Sentence complexSentence = or(and(not(atom("A")), atom("B")), atom("C"));
+    assertTrue(complexSentence.contains(sentenceA));
+  }
+  
+  @Test
+  public void testComplexSentenceContainsBinarySentence()
+  {
+    final Sentence sentenceA = atom("A");
+    final Sentence sentenceBD = and(atom("B"), atom("D"));
+    final Sentence complexSentence = or(and(not(atom("A")), sentenceBD), atom("C"));
+    assertTrue(complexSentence.contains(sentenceBD));
+  }
 }

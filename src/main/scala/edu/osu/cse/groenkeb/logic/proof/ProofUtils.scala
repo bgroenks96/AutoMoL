@@ -1,6 +1,7 @@
 package edu.osu.cse.groenkeb.logic.proof
 
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
+import edu.osu.cse.groenkeb.logic.proof.rules.NullRule
 
 object ProofUtils {
   def prettyPrint(proof: Proof) {
@@ -13,7 +14,8 @@ object ProofUtils {
     if (!itr.hasNext()) return
     var proof = itr.next()
     var conclusion = proof.conclusion.get
-    println(String.format("%s %s %s [%s]\n", prefix, conclusion.sentence, conclusion.rule, proof.premises.mkString(",")))
+    if (conclusion.rule.isInstanceOf[NullRule]) return;
+    println(String.format("%s %s %s\n", prefix, conclusion.sentence, conclusion.rule))
     conclusion.args.prems foreach { p => prettyPrint(itr, prefix + ":") }
   }
 }

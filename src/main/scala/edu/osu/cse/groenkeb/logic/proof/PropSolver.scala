@@ -36,12 +36,6 @@ case class PropSolver(implicit strategy: ProofStrategy) extends Solver {
     }
   }
   
-  private def proofByDecomposition(premise: Premise)(implicit context: ProofContext): Proof = premise.sentence.decompose() match {
-    case Seq(unary) => then(proof(context.withGoal(unary)))
-    case Seq(left, right) if right.contains(context.goal) => then(proof(context.withGoal(right)))
-    case Seq(left, right) if left.contains(context.goal) => then(proof(context.withGoal(left)))
-  }
-  
   private def proofFromInference(rules: RuleSet, args: RuleArgs = EmptyArgs())(implicit context: ProofContext): Proof = rules match {
     case RuleSet(Nil) => NullProof(context.premises)
     case RuleSet(Seq(head, rem@_*)) => infer(head, args) match {
@@ -59,11 +53,12 @@ case class PropSolver(implicit strategy: ProofStrategy) extends Solver {
       discharge match {
         case Vacuous(assumptions@_*) => then(proof(newContext.withAssumptions(assumptions:_*)))
         case Required(assumptions@_*) => then(proof(newContext.withAssumptions(assumptions:_*))) match {
-          case CompleteProof(c, p) if assumptions forall { a => p.contains(a.sentence) } => CompleteProof(c, p)
+          case CompleteProof(c, prems) if assumptions forall { a => prems.contains(a.sentence) } => CompleteProof(c, (prems ++ context.premises).distinct)
           case _ => NullProof(newContext.premises)
         }
         case Variate(assumptions@_*) => then(proof(newContext.withAssumptions(assumptions:_*))) match {
-          case CompleteProof(c, prems) if prems exists { p => assumptions exists { a => a.sentence.matches(p.sentence) } } => CompleteProof(c, prems)
+          case CompleteProof(c, prems) if prems exists { p => assumptions exists { a => a.sentence.matches(p.sentence) } } =>
+            CompleteProof(c, (prems ++ context.premises).distinct)
           case _ => NullProof(newContext.premises)
         }
       }
