@@ -22,25 +22,44 @@ object Main extends App {
   val sentenceB = parser.parse("B")
   val sentenceC = parser.parse("C")
   val sentenceD = parser.parse("D")
-  val sentenceABC = parser.parse("and C (and A B)")
+  val sentenceBD = parser.parse("and B D")
+  val sentenceABC = parser.parse("and (and A B) C")
   val complexSentence = parser.parse("and (or D A) (and (and A B) (and C B))")
   val rules = RuleSet(Seq(AndIntroductionRule(), AndEliminationRule()))
-  //implicit val proofContext = ProofContext(sentenceD, Premises.proud(complexSentence), rules)
-  implicit val proofContext = ProofContext(sentenceABC, Premises.proud(sentenceA, sentenceB, sentenceC), rules)
   val propSolver = new PropSolver()
-  
-  propSolver.proof match {
-    case Success(proof, _) => {
-      println("Success")
-      ProofUtils.prettyPrint(proof)
-    }
-    case Failure(nullProof, _) => {
-      println("Failure")
-      println(String.format("No proof of %s given premises [%s]", proofContext.goal, nullProof.prems.mkString(", ")))
+ 
+  exapmleAndIntro
+  println("--------")
+  exampleAndElim
+  println("--------")
+  exampleAndElimWithInto
+  println("--------")
+
+  def run(implicit context: ProofContext) {
+    propSolver.proof match {
+      case Success(proof, _) => {
+        println("Success")
+        ProofUtils.prettyPrint(proof)
+      }
+      case Failure(nullProof, _) => {
+        println("Failure")
+        println(String.format("No proof of %s given premises [%s]", context.goal, nullProof.prems.mkString(", ")))
+      }
     }
   }
+
+  def exampleAndElim {
+    implicit val proofContext = ProofContext(sentenceA, Premises.proud(complexSentence), rules)
+    run
+  }
   
+  def exapmleAndIntro {
+    implicit val proofContext = ProofContext(sentenceABC, Premises.proud(sentenceA, sentenceB, sentenceC), rules)
+    run
+  }
   
-  //val complexSentence = parser.parse("(A and (not (C or B)))", Notation("infix"))
-  //println(complexSentence)
+  def exampleAndElimWithInto {
+    implicit val proofContext = ProofContext(sentenceBD, Premises.proud(sentenceD, sentenceABC), rules)
+    run
+  }
 }

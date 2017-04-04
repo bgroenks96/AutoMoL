@@ -27,7 +27,7 @@ public class SentenceTests
   @Test
   public void testBinarySentenceToString()
   {
-    assertEquals("and(A.B)", and(atom("A"), atom("B")).toString());
+    assertEquals("and(A,B)", and(atom("A"), atom("B")).toString());
   }
   
   @Test
@@ -107,7 +107,6 @@ public class SentenceTests
   @Test
   public void testComplexSentenceContainsBinarySentence()
   {
-    final Sentence sentenceA = atom("A");
     final Sentence sentenceBD = and(atom("B"), atom("D"));
     final Sentence complexSentence = or(and(not(atom("A")), sentenceBD), atom("C"));
     assertTrue(complexSentence.contains(sentenceBD));

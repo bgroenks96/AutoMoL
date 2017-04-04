@@ -16,10 +16,10 @@ public class VerifyProgram
     try(final Scanner input = new Scanner(System.in))
     {
       final SentenceParser parser = new SentenceParser(new NodeRecursiveTokenizer(), new DefaultFirstOrderOpMatcher());
-      final ModelVerificationCommandProcessor processor = new ModelVerificationCommandProcessor(input, parser, Notation.Infix());
+      final ModelVerificationCommandProcessor processor = new ModelVerificationCommandProcessor(input, parser, Notation.Prefix());
       Command<ModelVerificationContext> next = null;
       ModelVerificationContext context = new ModelVerificationContext(FirstOrderModel.empty());
-      boolean shouldContinue = true;
+      boolean done = false;
       do
       {
         try
@@ -33,7 +33,7 @@ public class VerifyProgram
           context.printStatus();
           System.out.print("> ");
           next = processor.tryParseNextCommand();
-          shouldContinue = next != null;
+          done = next == null;
         }
         catch (Exception e)
         {
@@ -41,7 +41,7 @@ public class VerifyProgram
           next = null;
         }
       }
-      while (shouldContinue);
+      while (!done);
     }
   }
 }
