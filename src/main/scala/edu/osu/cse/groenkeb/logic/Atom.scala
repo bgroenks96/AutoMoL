@@ -22,7 +22,9 @@ object Atom {
   def parse(str: String) = {
     val propPattern = "([A-z]+)".r
     val objPattern = "([A-z]+)\\[([A-z0-9,]+)*\\]".r
+    val idpred = IdentityPredicate.name
     str match {
+      case objPattern(`idpred`, argstr) => Atom(IdentityPredicate(), argstr.split(",").map { s => Term(s) }:_*)
       case objPattern(pred, argstr) => Atom(NamedPredicate(pred), argstr.split(",").map { s => Term(s) }:_*)
       case propPattern(pred) => Atom(NamedPredicate(pred))
       case _ => throw new Exception("invalid definition of atom: " + str)

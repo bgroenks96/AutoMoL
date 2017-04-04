@@ -21,12 +21,22 @@ abstract class UnaryConnective extends Connective
 abstract class BinaryConnective extends Connective
 
 case class NamedPredicate(val name: String) extends Predicate {
+  require(name != IdentityPredicate.name)
   def matches(op: Operator) = op match {
     case NamedPredicate(this.name) => true
     case _ => false
   }
   
   override def toString = name
+}
+
+case class IdentityPredicate() extends Predicate {
+  def matches(op: Operator) = op match {
+    case IdentityPredicate() => true
+    case _ => false
+  }
+  
+  override def toString = IdentityPredicate.name
 }
 
 case class NullOp() extends Operator {
@@ -36,4 +46,8 @@ case class NullOp() extends Operator {
   }
   
   override def toString() = ""
+}
+
+object IdentityPredicate {
+  def name = "I"
 }

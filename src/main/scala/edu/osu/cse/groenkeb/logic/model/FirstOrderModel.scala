@@ -17,18 +17,18 @@ case class FirstOrderModel(val diagram: AtomicDiagram) extends Model {
 
 object FirstOrderModel {
   def apply(sentences: Sentence*) = from(sentences:_*)
-  def from(sentences: Sentence*): FirstOrderModel = new FirstOrderModel(diagram(extract(sentences:_*), sentences:_*))
+  def from(sentences: Sentence*): FirstOrderModel = new FirstOrderModel(diagram(sentences:_*))
   def empty = from()
   
-  private def extract(sentences: Sentence*): Domain = sentences.toList match {
-    case Nil => Domain()
-    case AtomicSentence(atom) :: rem => Domain(atom.terms:_*) ++ extract(rem:_*)
-    case sentence :: rem => extract(sentence.decompose():_*) ++ extract(rem:_*)
-  }
+//  private def extract(sentences: Sentence*): Domain = sentences.toList match {
+//    case Nil => Domain()
+//    case AtomicSentence(atom) :: rem => Domain(atom.terms:_*) ++ extract(rem:_*)
+//    case sentence :: rem => extract(sentence.decompose():_*) ++ extract(rem:_*)
+//  }
   
-  private def diagram(domain: Domain, sentences: Sentence*): AtomicDiagram = sentences.toList match {
-    case Nil => AtomicDiagram(domain)
-    case AtomicSentence(atom) :: rem => AtomicDiagram(domain, atom.toRelation) ++ diagram(domain, rem:_*)
+  private def diagram(sentences: Sentence*): AtomicDiagram = sentences.toList match {
+    case Nil => AtomicDiagram(Domain())
+    case AtomicSentence(atom) :: rem => AtomicDiagram(Domain(atom.terms:_*), atom.toRelation) ++ diagram(rem:_*)
     case _ => throw ParserException("found non-atomic sentence in model declaration")
     //case sentence :: rem => diagram(domain, sentence.decompose():_*) ++ diagram(domain, rem:_*)
   }
