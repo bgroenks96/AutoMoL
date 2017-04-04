@@ -8,7 +8,7 @@ sourceCompatibility = 1.8
 version = '1.0'
 jar {
     manifest {
-        attributes 'Implementation-Title': 'PropLogic',
+        attributes 'Implementation-Title': 'AutoMoL',
                    'Implementation-Version': 0.1
     }
 }

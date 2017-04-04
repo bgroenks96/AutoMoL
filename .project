@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>PropLogic</name>
-	<comment></comment>
+	<name>AutoMoL</name>
+	<comment>Project AutoMoL created by Buildship.</comment>
 	<projects>
 	</projects>
 	<buildSpec>
@@ -17,8 +17,8 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
+		<nature>org.eclipse.buildship.core.gradleprojectnature</nature>
 		<nature>org.scala-ide.sdt.core.scalanature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
-		<nature>org.eclipse.buildship.core.gradleprojectnature</nature>
 	</natures>
 </projectDescription>

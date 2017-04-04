@@ -1,2 +1,2 @@
-# PropLogic
-A propositional logic engine implemented in the Scala programming language.
+# AutoMoL
+Automated Monadic Logic in the Scala programming language.
