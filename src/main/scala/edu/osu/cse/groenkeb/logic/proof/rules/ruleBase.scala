@@ -8,14 +8,14 @@ import edu.osu.cse.groenkeb.logic.proof.types.Premise
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
 
 abstract class AbstractRule extends Rule {
+  protected val absurdity = Sentences.absurdity()
+  
   def hasPremise(premises: Seq[Premise], sentence: Sentence) = {
     premises.exists(p => sentence.matches(p.sentence))
   }
 }
 
 final case class IdentityRule protected() extends AbstractRule {
-  def parity = None(this)
-
   def accepts(proof: Proof) = proof match {
     case CompleteProof(Conclusion(_, _, _), _) => true
     case _ => false
@@ -32,32 +32,7 @@ final case class IdentityRule protected() extends AbstractRule {
   override def toString = "<id>"
 }
 
-final case class NonContradictionRule protected() extends AbstractRule {
-  def parity = None(this)
-  
-  def accepts(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(_,_,_), _) => true
-    case _ => false
-  }
-  
-  def yields(sentence: Sentence) = sentence match { case s if s.matches(Sentences.absurdity()) => true; case _ => false }
-  
-  def infer(conc: Sentence)(args: RuleArgs) = {
-    val negation = Sentences.not(conc)
-    args match {
-      case BinaryArgs(CompleteProof(Conclusion(`conc`, _, _), pa),
-                      CompleteProof(Conclusion(`negation`, _, _), pb)) =>
-                        CompleteResult(CompleteProof(Sentences.absurdity(), this, args, pa ++ pb))
-      case _ => IncompleteResult(BinaryParams(AnyProof(conc), AnyProof(negation)))
-    }
-  }
-  
-  override def toString = "<!>"
-}
-
 final case class NullRule protected() extends AbstractRule {
-  def parity = None(this)
-
   def accepts(proof: Proof) = false
 
   def yields(sentence: Sentence) = false

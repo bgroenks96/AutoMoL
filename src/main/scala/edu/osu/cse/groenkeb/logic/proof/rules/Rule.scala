@@ -5,11 +5,6 @@ import edu.osu.cse.groenkeb.logic.proof.types.Proof
 
 trait Rule {
   /**
-   * The "parity" of this rule; must be either elimination, introduction, or none.
-   */
-  def parity: RuleParity
-
-  /**
    * True if this rule accepts the given proof as a premise, false otherwise.
    */
   def accepts(proof: Proof): Boolean

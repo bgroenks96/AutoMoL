@@ -9,7 +9,10 @@ import edu.osu.cse.groenkeb.logic.proof.rules.Rule
 import edu.osu.cse.groenkeb.logic.proof.rules.RuleArgs
 import edu.osu.cse.groenkeb.logic.proof.rules.UnaryArgs
 
-sealed abstract class Premise(val sentence: Sentence)
+sealed abstract class Premise(val sentence: Sentence) {
+  def matches(p: Premise) = this.equals(p)
+  def matches(s: Sentence) = s.matches(sentence)
+}
 case class NullPremise() extends Premise(Sentences.nil())
 case class Conclusion(val conclusion: Sentence,
                       val rule: Rule,

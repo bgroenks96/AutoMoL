@@ -4,15 +4,13 @@ import edu.osu.cse.groenkeb.logic.And
 import edu.osu.cse.groenkeb.logic.BinarySentence
 import edu.osu.cse.groenkeb.logic.Sentence
 import edu.osu.cse.groenkeb.logic.Sentences
+import edu.osu.cse.groenkeb.logic.proof.types.Assumption
 import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
 import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.types.Premise
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
-import edu.osu.cse.groenkeb.logic.proof.types.Assumption
 
 case class AndIntroductionRule() extends AbstractRule {
-  def parity = Introduction(AndEliminationRule())
-
   def accepts(proof: Proof) = proof match {
     case CompleteProof(Conclusion(_, _, _), _) => true
     case _ => false
@@ -39,8 +37,6 @@ case class AndIntroductionRule() extends AbstractRule {
 }
 
 case class AndEliminationRule() extends AbstractRule {
-  def parity = Elimination(AndIntroductionRule())
-
   def accepts(proof: Proof) = proof match {
     case CompleteProof(Conclusion(BinarySentence(a, b, And()), _, _), Nil) => true
     case _ => false
@@ -61,4 +57,25 @@ case class AndEliminationRule() extends AbstractRule {
   }
 
   override def toString = "<&-Elim>"
+}
+
+final case class NonContradictionRule() extends AbstractRule {
+  def accepts(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(_,_,_), _) => true
+    case _ => false
+  }
+  
+  def yields(sentence: Sentence) = sentence match { case s if s.matches(Sentences.absurdity()) => true; case _ => false }
+  
+  def infer(conc: Sentence)(args: RuleArgs) = {
+    val negation = Sentences.not(conc)
+    args match {
+      case BinaryArgs(CompleteProof(Conclusion(`conc`, _, _), pa),
+                      CompleteProof(Conclusion(`negation`, _, _), pb)) =>
+                        CompleteResult(CompleteProof(Sentences.absurdity(), this, args, pa ++ pb))
+      case _ => IncompleteResult(BinaryParams(AnyProof(conc), AnyProof(negation)))
+    }
+  }
+  
+  override def toString = "<!>"
 }
