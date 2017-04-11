@@ -13,6 +13,7 @@ import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
 import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.types.NullProof
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
+import edu.osu.cse.groenkeb.logic.Absurdity
 
 abstract class ModelRule(val model: FirstOrderModel) extends Rule
 case class ExistenceRule(m: FirstOrderModel) extends ModelRule(m) {
@@ -29,7 +30,7 @@ case class ExistenceRule(m: FirstOrderModel) extends ModelRule(m) {
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case AtomicSentence(atom) => args match {
       case EmptyArgs() if model.verify(conc) => CompleteResult(CompleteProof(Conclusion(conc, this, args), Nil))
-      case EmptyArgs() if !model.verify(conc) => CompleteResult(CompleteProof(Conclusion(Sentences.absurdity, this, args), Nil))
+      case EmptyArgs() if !model.verify(conc) => CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), Nil))
       case _ => NullResult()
     }
     case _ => NullResult()
