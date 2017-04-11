@@ -8,8 +8,6 @@ import edu.osu.cse.groenkeb.logic.proof.types.Premise
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
 
 abstract class AbstractRule extends Rule {
-  protected val absurdity = Sentences.absurdity()
-  
   def hasPremise(premises: Seq[Premise], sentence: Sentence) = {
     premises.exists(p => sentence.matches(p.sentence))
   }

@@ -13,6 +13,7 @@ import edu.osu.cse.groenkeb.logic.proof.rules.AbstractRule
 import edu.osu.cse.groenkeb.logic.proof.rules.CompleteResult
 import edu.osu.cse.groenkeb.logic.proof.rules.BinaryParams
 import edu.osu.cse.groenkeb.logic.Sentence
+import edu.osu.cse.groenkeb.logic.Absurdity
 
 final case class NegationFalsification() extends Rule {
   def accepts(proof: Proof) = proof match {
@@ -20,14 +21,14 @@ final case class NegationFalsification() extends Rule {
     case _ => false
   }
   
-  def yields(sentence: Sentence) = sentence match { case s if s.matches(Sentences.absurdity()) => true; case _ => false }
+  def yields(sentence: Sentence) = sentence match { case Absurdity() => true; case _ => false }
   
   def infer(conc: Sentence)(args: RuleArgs) = {
     val negation = Sentences.not(conc)
     args match {
       case BinaryArgs(CompleteProof(Conclusion(`conc`, _, _), pa),
                       CompleteProof(Conclusion(`negation`, _, _), pb)) =>
-                        CompleteResult(CompleteProof(Sentences.absurdity(), this, args, pa ++ pb))
+                        CompleteResult(CompleteProof(Absurdity(), this, args, pa ++ pb))
       case _ => IncompleteResult(BinaryParams(AnyProof(conc), AnyProof(negation)))
     }
   }

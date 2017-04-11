@@ -75,6 +75,22 @@ case class QuantifiedSentence(val operand: Sentence, val quantifier: Quantifier)
   override def toString() = String.format("%s(%s)", quantifier, operand)
 }
 
+case class Absurdity() extends Sentence
+{
+  def matches(s: Sentence) = s match {
+    case Absurdity() => true
+    case _ => false
+  }
+  
+  def contains(s: Sentence) = matches(s)
+  
+  def decompose() = List(this)
+  
+  def substitute(orig: Term, sub: Term) = this
+  
+  override def toString() = "!"
+}
+
 case class NullSentence() extends Sentence
 {
   def matches(s: Sentence) = s match {

@@ -17,8 +17,6 @@ case class Atom(val predicate: Predicate, val terms: Term*) {
 }
 
 object Atom {
-  final val absurdity = Atom(NamedPredicate("!"))
-  
   def parse(str: String) = {
     val propPattern = "([A-z]+)".r
     val objPattern = "([A-z]+)\\[([A-z0-9,]+)*\\]".r

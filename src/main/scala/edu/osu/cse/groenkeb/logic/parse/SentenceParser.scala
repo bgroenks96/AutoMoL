@@ -1,6 +1,19 @@
 package edu.osu.cse.groenkeb.logic.parse
 
-import edu.osu.cse.groenkeb.logic._
+import scala.Left
+import scala.Right
+
+import edu.osu.cse.groenkeb.logic.Absurdity
+import edu.osu.cse.groenkeb.logic.Atom
+import edu.osu.cse.groenkeb.logic.AtomicSentence
+import edu.osu.cse.groenkeb.logic.BinaryConnective
+import edu.osu.cse.groenkeb.logic.BinarySentence
+import edu.osu.cse.groenkeb.logic.NullOp
+import edu.osu.cse.groenkeb.logic.QuantifiedSentence
+import edu.osu.cse.groenkeb.logic.Quantifier
+import edu.osu.cse.groenkeb.logic.Sentence
+import edu.osu.cse.groenkeb.logic.UnaryConnective
+import edu.osu.cse.groenkeb.logic.UnarySentence
 
 class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) extends Parser[String, Sentence, SentenceParserOpts] {
   def this()(implicit opMatcher: OperatorMatcher) = this(new NodeRecursiveTokenizer())
@@ -64,6 +77,7 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
   private sealed abstract class NodeParser {
     def parseNode(node: NodeToken): Sentence
     protected def operand(token: Token) = token match {
+      case TerminalToken("!") => Absurdity()
       case TerminalToken(x) => AtomicSentence(matchAtom(x))
       case NodeToken(children) => parseNode(NodeToken(children))
     }
