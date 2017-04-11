@@ -9,6 +9,7 @@ import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
 import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.types.Premise
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
+import edu.osu.cse.groenkeb.logic.Absurdity
 
 case class AndIntroductionRule() extends AbstractRule {
   def accepts(proof: Proof) = proof match {
@@ -65,17 +66,17 @@ final case class NonContradictionRule() extends AbstractRule {
     case _ => false
   }
   
-  def yields(sentence: Sentence) = sentence match { case s if s.matches(Sentences.absurdity()) => true; case _ => false }
+  def yields(sentence: Sentence) = sentence match { case Absurdity() => true; case _ => false }
   
   def infer(conc: Sentence)(args: RuleArgs) = {
     val negation = Sentences.not(conc)
     args match {
       case BinaryArgs(CompleteProof(Conclusion(`conc`, _, _), pa),
                       CompleteProof(Conclusion(`negation`, _, _), pb)) =>
-                        CompleteResult(CompleteProof(Sentences.absurdity(), this, args, pa ++ pb))
+                        CompleteResult(CompleteProof(Absurdity(), this, args, pa ++ pb))
       case _ => IncompleteResult(BinaryParams(AnyProof(conc), AnyProof(negation)))
     }
   }
   
-  override def toString = "<!>"
+  override def toString = "<NonContradiction>"
 }

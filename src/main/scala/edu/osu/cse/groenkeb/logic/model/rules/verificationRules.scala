@@ -19,6 +19,9 @@ import edu.osu.cse.groenkeb.logic.proof.types.Assumption
 import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
 import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
+import edu.osu.cse.groenkeb.logic.proof.rules.BinaryArgs
+import edu.osu.cse.groenkeb.logic.proof.rules.BinaryParams
+import edu.osu.cse.groenkeb.logic.proof.rules.AnyProof
 
 case class NegationVerification() extends AbstractRule() {  
   def accepts(proof: Proof) = proof match {
@@ -48,9 +51,16 @@ case class AndVerification() extends AbstractRule() {
   }
   
   def yields(conc: Sentence) = conc match {
-    case BinarySentence(x, y, And()) => true
+    case BinarySentence(_, _, And()) => true
     case _ => false
   }
   
-  def infer(conc: Sentence)(args: RuleArgs) = NullResult()
+  def infer(conc: Sentence)(args: RuleArgs) = conc match {
+    case BinarySentence(left, right, And()) => args match {
+      case BinaryArgs(CompleteProof(Conclusion(`left`, _, _), pleft), CompleteProof(Conclusion(`right`, _, _), pright)) =>
+        CompleteResult(CompleteProof(Conclusion(conc, this, args), pleft ++ pright))
+      case _ => IncompleteResult(BinaryParams(AnyProof(left), AnyProof(right)))
+    }
+    case _ => NullResult()
+  }
 }

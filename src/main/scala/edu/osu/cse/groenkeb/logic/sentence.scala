@@ -29,6 +29,7 @@ case class AtomicSentence(atom: Atom) extends Sentence
 
 case class BinarySentence(val left: Sentence, val right: Sentence, val conn: BinaryConnective) extends Sentence
 {
+  require(left != Absurdity() && right != Absurdity())
   def matches(s: Sentence) = s match {
     case BinarySentence(left, right, conn) => this.left.matches(left) && this.right.matches(right) && this.conn.matches(conn)
     case _ => false
@@ -45,6 +46,7 @@ case class BinarySentence(val left: Sentence, val right: Sentence, val conn: Bin
 
 case class UnarySentence(val operand: Sentence, val conn: UnaryConnective) extends Sentence
 {
+  require(operand != Absurdity())
   def matches(s: Sentence) = s match {
     case UnarySentence(operand, conn) => this.operand.matches(operand) && this.conn.matches(conn)
     case _ => false
@@ -61,6 +63,7 @@ case class UnarySentence(val operand: Sentence, val conn: UnaryConnective) exten
 
 case class QuantifiedSentence(val operand: Sentence, val quantifier: Quantifier) extends Sentence
 {
+    require(operand != Absurdity())
     def matches(s: Sentence) = s match {
     case QuantifiedSentence(operand, quantifier) => this.operand.matches(operand) && this.quantifier.matches(quantifier)
     case _ => false
