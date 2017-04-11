@@ -4,8 +4,9 @@ import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof.rules.Rule
 import edu.osu.cse.groenkeb.logic.proof.types._
+import edu.osu.cse.groenkeb.logic.proof.rules.OptionParams
 
-case class PropSolver(implicit strategy: ProofStrategy) extends Solver {
+case class ProofSolver(implicit strategy: ProofStrategy) extends Solver {
   def proof(implicit context: ProofContext): ProofResult = strategy.decide(proofFromPremises(strategy.premises))
   
   private def then(result: ProofResult, continue: () => Proof = null): Proof = result match {
@@ -72,10 +73,11 @@ case class PropSolver(implicit strategy: ProofStrategy) extends Solver {
   }
 
   private def proof(params: RuleParams)(implicit context: ProofContext): RuleArgs = params match {
+    case EmptyParams() => EmptyArgs()
     case UnaryParams(p0) => UnaryArgs(proof(p0))
     case BinaryParams(p0, p1) => BinaryArgs(proof(p0), proof(p1))
     case TernaryParams(p0, p1, p2) => TernaryArgs(proof(p0), proof(p1), proof(p2))
-    case EmptyParams() => EmptyArgs()
+    case OptionParams(all@_*) => all.map(p => proof(p)).head // TODO fixme: good example of a need for better IoC
   }
 
   private def infer(rule: Rule, args: RuleArgs = EmptyArgs())(implicit context: ProofContext): Either[Proof, RuleParams] = {

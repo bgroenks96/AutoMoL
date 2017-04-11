@@ -7,7 +7,7 @@ import edu.osu.cse.groenkeb.logic.parse.SentenceParser
 import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
 import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
 import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
-import edu.osu.cse.groenkeb.logic.proof.PropSolver
+import edu.osu.cse.groenkeb.logic.proof.ProofSolver
 import edu.osu.cse.groenkeb.logic.proof.NaiveProofStrategy
 import edu.osu.cse.groenkeb.logic.proof.ProofUtils
 import edu.osu.cse.groenkeb.logic.proof.Success
@@ -26,7 +26,7 @@ object Main extends App {
   val sentenceABC = parser.parse("and (and A B) C")
   val complexSentence = parser.parse("and (or D A) (and (and A B) (and C B))")
   val rules = RuleSet(Seq(AndIntroductionRule(), AndEliminationRule()))
-  val propSolver = new PropSolver()
+  val propSolver = new ProofSolver()
  
   exapmleAndIntro
   println("--------")

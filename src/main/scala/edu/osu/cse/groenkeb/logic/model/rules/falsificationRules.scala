@@ -1,38 +1,67 @@
 package edu.osu.cse.groenkeb.logic.model.rules
 
-import edu.osu.cse.groenkeb.logic.proof.rules.Rule
-import edu.osu.cse.groenkeb.logic.Sentences
-import edu.osu.cse.groenkeb.logic.proof.types.Proof
-import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
-import edu.osu.cse.groenkeb.logic.proof.rules.IncompleteResult
-import edu.osu.cse.groenkeb.logic.proof.rules.BinaryArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.AnyProof
-import edu.osu.cse.groenkeb.logic.proof.rules.RuleArgs
-import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
-import edu.osu.cse.groenkeb.logic.proof.rules.AbstractRule
-import edu.osu.cse.groenkeb.logic.proof.rules.CompleteResult
-import edu.osu.cse.groenkeb.logic.proof.rules.BinaryParams
-import edu.osu.cse.groenkeb.logic.Sentence
 import edu.osu.cse.groenkeb.logic.Absurdity
+import edu.osu.cse.groenkeb.logic.And
+import edu.osu.cse.groenkeb.logic.BinarySentence
+import edu.osu.cse.groenkeb.logic.Sentence
+import edu.osu.cse.groenkeb.logic.Sentences
+import edu.osu.cse.groenkeb.logic.proof.rules.AnyProof
+import edu.osu.cse.groenkeb.logic.proof.rules.BinaryArgs
+import edu.osu.cse.groenkeb.logic.proof.rules.BinaryParams
+import edu.osu.cse.groenkeb.logic.proof.rules.CompleteResult
+import edu.osu.cse.groenkeb.logic.proof.rules.IncompleteResult
+import edu.osu.cse.groenkeb.logic.proof.rules.NullResult
+import edu.osu.cse.groenkeb.logic.proof.rules.Rule
+import edu.osu.cse.groenkeb.logic.proof.rules.RuleArgs
+import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
+import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
+import edu.osu.cse.groenkeb.logic.proof.types.Proof
+import edu.osu.cse.groenkeb.logic.proof.types.Assumption
+import edu.osu.cse.groenkeb.logic.proof.rules.RelevantProof
+import edu.osu.cse.groenkeb.logic.proof.rules.Variate
+import edu.osu.cse.groenkeb.logic.proof.rules.EmptyProof
+import edu.osu.cse.groenkeb.logic.proof.rules.UnaryArgs
 
-final case class NegationFalsification() extends Rule {
-  def accepts(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(_,_,_), _) => true
-    case _ => false
-  }
-  
+abstract class FalsificationRule extends Rule {
   def yields(sentence: Sentence) = sentence match { case Absurdity() => true; case _ => false }
+}
+
+case class NegationFalsification() extends FalsificationRule {
+  def accepts(proof: Proof) = proof match { case CompleteProof(_, _) => true; case _ => false }
   
-  def infer(conc: Sentence)(args: RuleArgs) = {
-    val negation = Sentences.not(conc)
-    args match {
-      case BinaryArgs(CompleteProof(Conclusion(`conc`, _, _), pa),
-                      CompleteProof(Conclusion(`negation`, _, _), pb)) =>
-                        CompleteResult(CompleteProof(Absurdity(), this, args, pa ++ pb))
-      case _ => IncompleteResult(BinaryParams(AnyProof(conc), AnyProof(negation)))
+  def infer(conc: Sentence)(args: RuleArgs) = conc match {
+    case Absurdity() => {
+      val negation = Sentences.not(conc)
+      args match {
+        case BinaryArgs(CompleteProof(Conclusion(`conc`, _, _), pa),
+                        CompleteProof(Conclusion(`negation`, _, _), pb)) =>
+                          CompleteResult(CompleteProof(Absurdity(), this, args, pa ++ pb))
+        case _ => IncompleteResult(BinaryParams(AnyProof(conc), AnyProof(negation)))
+      }
     }
+    case _ => NullResult()
   }
   
   override def toString = "<!>"
 }
 
+case class AndFalsification() extends FalsificationRule {
+  def accepts(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(BinarySentence(_, _, And()), _, _), _) => true
+    case CompleteProof(Conclusion(Absurdity(), _, _), _) => true
+    case _ => false
+  }
+  
+  def infer(conc: Sentence)(args: RuleArgs) = conc match {
+    case Absurdity() => args match {
+      case BinaryArgs(CompleteProof(Conclusion(BinarySentence(left, right, And()), _, _), Nil),
+                      CompleteProof(Conclusion(Absurdity(), _, _), prems)) if prems exists { p => p.matches(left) || p.matches(right) } =>
+                        CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), prems))
+      case UnaryArgs(CompleteProof(Conclusion(BinarySentence(left, right, And()), _, _), Nil)) => 
+        IncompleteResult(BinaryParams(EmptyProof(BinarySentence(left, right, And())),
+                                      RelevantProof(Absurdity(), Variate(Assumption(left), Assumption(right)))))
+      case _ => NullResult()
+    }
+    case _ => NullResult()
+  }
+}

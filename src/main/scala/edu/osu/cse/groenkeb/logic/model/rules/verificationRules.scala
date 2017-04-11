@@ -22,8 +22,13 @@ import edu.osu.cse.groenkeb.logic.proof.types.Proof
 import edu.osu.cse.groenkeb.logic.proof.rules.BinaryArgs
 import edu.osu.cse.groenkeb.logic.proof.rules.BinaryParams
 import edu.osu.cse.groenkeb.logic.proof.rules.AnyProof
+import edu.osu.cse.groenkeb.logic.proof.rules.Rule
+import edu.osu.cse.groenkeb.logic.Or
+import edu.osu.cse.groenkeb.logic.proof.rules.OptionParams
 
-case class NegationVerification() extends AbstractRule() {  
+abstract class VerificationRule extends Rule
+
+case class NegationVerification() extends VerificationRule() {  
   def accepts(proof: Proof) = proof match {
     case CompleteProof(Conclusion(Absurdity(), _, _), _) => true
     case _ => false
@@ -44,7 +49,7 @@ case class NegationVerification() extends AbstractRule() {
   }
 }
 
-case class AndVerification() extends AbstractRule() {
+case class AndVerification() extends VerificationRule() {
   def accepts(proof: Proof) = proof match {
     case CompleteProof(Conclusion(_, _, _), _) => true
     case _ => false
@@ -64,3 +69,26 @@ case class AndVerification() extends AbstractRule() {
     case _ => NullResult()
   }
 }
+
+case class OrVerification() extends VerificationRule() {
+  def accepts(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(_, _, _), _) => true
+    case _ => false
+  }
+  
+  def yields(conc: Sentence) = conc match {
+    case BinarySentence(_, _, Or()) => true
+    case _ => false
+  }
+  
+  def infer(conc: Sentence)(args: RuleArgs) = conc match {
+    case BinarySentence(left, right, Or()) => args match {
+      case UnaryArgs(CompleteProof(Conclusion(`left`, _, _), pleft)) =>
+        CompleteResult(CompleteProof(Conclusion(conc, this, args), pleft))
+      case _ => IncompleteResult(OptionParams(UnaryParams(AnyProof(left)),
+                                              UnaryParams(AnyProof(right))))
+    }
+    case _ => NullResult()
+  }
+}
+
