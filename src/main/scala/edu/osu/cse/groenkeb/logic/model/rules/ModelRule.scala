@@ -15,8 +15,7 @@ import edu.osu.cse.groenkeb.logic.proof.types.NullProof
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
 import edu.osu.cse.groenkeb.logic.Absurdity
 
-abstract class ModelRule(val model: FirstOrderModel) extends Rule
-case class ExistenceRule(m: FirstOrderModel) extends ModelRule(m) {
+case class ModelRule(val model: FirstOrderModel) extends Rule {
   def accepts(proof: Proof) = proof match {
     case NullProof(_) => true
     case _ => false

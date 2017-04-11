@@ -8,9 +8,7 @@ import edu.osu.cse.groenkeb.logic.proof.types.Premise
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
 
 abstract class AbstractRule extends Rule {
-  def hasPremise(premises: Seq[Premise], sentence: Sentence) = {
-    premises.exists(p => sentence.matches(p.sentence))
-  }
+  def exists(sentences: Sentence*) = CaseAssumptions(sentences:_*)
 }
 
 final case class IdentityRule protected() extends AbstractRule {
@@ -38,5 +36,9 @@ final case class NullRule protected() extends AbstractRule {
   def infer(conc: Sentence)(args: RuleArgs) = NullResult()
   
   override def toString = "<>"
+}
+
+protected case class CaseAssumptions(sentences: Sentence*) {
+  def in[T <: Premise](prems: Seq[T]) = prems.forall { p => sentences.forall { s => p.matches(s) } }
 }
 

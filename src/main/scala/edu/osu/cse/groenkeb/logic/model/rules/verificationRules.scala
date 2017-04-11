@@ -6,30 +6,23 @@ import edu.osu.cse.groenkeb.logic.BinarySentence
 import edu.osu.cse.groenkeb.logic.Not
 import edu.osu.cse.groenkeb.logic.Sentence
 import edu.osu.cse.groenkeb.logic.UnarySentence
-import edu.osu.cse.groenkeb.logic.proof.rules.AbstractRule
-import edu.osu.cse.groenkeb.logic.proof.rules.CompleteResult
-import edu.osu.cse.groenkeb.logic.proof.rules.IncompleteResult
-import edu.osu.cse.groenkeb.logic.proof.rules.NullResult
-import edu.osu.cse.groenkeb.logic.proof.rules.RelevantProof
-import edu.osu.cse.groenkeb.logic.proof.rules.Required
-import edu.osu.cse.groenkeb.logic.proof.rules.RuleArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.UnaryArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.UnaryParams
+import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof.types.Assumption
 import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
 import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
-import edu.osu.cse.groenkeb.logic.proof.rules.BinaryArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.BinaryParams
-import edu.osu.cse.groenkeb.logic.proof.rules.AnyProof
-import edu.osu.cse.groenkeb.logic.proof.rules.Rule
 import edu.osu.cse.groenkeb.logic.Or
-import edu.osu.cse.groenkeb.logic.proof.rules.OptionParams
+import edu.osu.cse.groenkeb.logic.Implies
 
-abstract class VerificationRule extends Rule
+abstract class VerificationRule extends AbstractRule {
+  def accepts(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(_, _, _), _) => true
+    case _ => false
+  }
+}
 
 case class NegationVerification() extends VerificationRule() {  
-  def accepts(proof: Proof) = proof match {
+  override def accepts(proof: Proof) = proof match {
     case CompleteProof(Conclusion(Absurdity(), _, _), _) => true
     case _ => false
   }
@@ -41,7 +34,7 @@ case class NegationVerification() extends VerificationRule() {
   
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case UnarySentence(sentence, Not()) => args match {
-      case UnaryArgs(CompleteProof(Conclusion(Absurdity(), _, _), prems)) if  prems exists { p => p.matches(sentence) } =>
+      case UnaryArgs(CompleteProof(Conclusion(Absurdity(), _, _), prems)) if  exists(sentence).in(prems) =>
         CompleteResult(CompleteProof(Conclusion(sentence, this, args), prems))
       case _ => IncompleteResult(UnaryParams(RelevantProof(Absurdity(), Required(Assumption(sentence)))))
     }
@@ -50,11 +43,6 @@ case class NegationVerification() extends VerificationRule() {
 }
 
 case class AndVerification() extends VerificationRule() {
-  def accepts(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(_, _, _), _) => true
-    case _ => false
-  }
-  
   def yields(conc: Sentence) = conc match {
     case BinarySentence(_, _, And()) => true
     case _ => false
@@ -71,11 +59,6 @@ case class AndVerification() extends VerificationRule() {
 }
 
 case class OrVerification() extends VerificationRule() {
-  def accepts(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(_, _, _), _) => true
-    case _ => false
-  }
-  
   def yields(conc: Sentence) = conc match {
     case BinarySentence(_, _, Or()) => true
     case _ => false
@@ -87,6 +70,24 @@ case class OrVerification() extends VerificationRule() {
         CompleteResult(CompleteProof(Conclusion(conc, this, args), pleft))
       case _ => IncompleteResult(OptionParams(UnaryParams(AnyProof(left)),
                                               UnaryParams(AnyProof(right))))
+    }
+    case _ => NullResult()
+  }
+}
+
+case class ConditionalVerification() extends VerificationRule() {
+  def yields(conc: Sentence) = conc match {
+    case BinarySentence(_, _, Implies()) => true
+    case _ => false
+  }
+  
+  def infer(conc: Sentence)(args: RuleArgs) = conc match {
+    case BinarySentence(ante, conseq, Implies()) => args match {
+      case UnaryArgs(CompleteProof(Conclusion(`conseq`, _, _), prems)) =>
+        CompleteResult(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), this, args), prems))
+      case UnaryArgs(CompleteProof(Conclusion(Absurdity(), _, _), prems)) if exists(ante).in(prems) =>
+        CompleteResult(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), this, args), prems))
+      case _ => NullResult()
     }
     case _ => NullResult()
   }

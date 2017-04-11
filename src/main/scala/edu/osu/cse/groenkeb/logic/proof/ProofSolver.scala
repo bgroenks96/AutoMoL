@@ -77,7 +77,8 @@ case class ProofSolver(implicit strategy: ProofStrategy) extends Solver {
     case UnaryParams(p0) => UnaryArgs(proof(p0))
     case BinaryParams(p0, p1) => BinaryArgs(proof(p0), proof(p1))
     case TernaryParams(p0, p1, p2) => TernaryArgs(proof(p0), proof(p1), proof(p2))
-    case OptionParams(all@_*) => all.map(p => proof(p)).head // TODO fixme: good example of a need for better IoC
+    // TODO fixme: good example of a need for better IoC
+    case OptionParams(all@_*) => all.map(p => proof(p)).find { arg => arg.prems forall { case CompleteProof(_,_) => true; case _ => false; }}.getOrElse(EmptyArgs())
   }
 
   private def infer(rule: Rule, args: RuleArgs = EmptyArgs())(implicit context: ProofContext): Either[Proof, RuleParams] = {
