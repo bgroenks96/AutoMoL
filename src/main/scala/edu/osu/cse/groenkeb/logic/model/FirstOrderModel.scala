@@ -2,6 +2,16 @@ package edu.osu.cse.groenkeb.logic.model
 
 import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.parse.ParserException
+import edu.osu.cse.groenkeb.logic.proof.rules.RuleSet
+import edu.osu.cse.groenkeb.logic.model.rules.ModelRule
+import edu.osu.cse.groenkeb.logic.model.rules.NegationFalsification
+import edu.osu.cse.groenkeb.logic.model.rules.NegationVerification
+import edu.osu.cse.groenkeb.logic.model.rules.AndVerification
+import edu.osu.cse.groenkeb.logic.model.rules.AndFalsification
+import edu.osu.cse.groenkeb.logic.model.rules.ConditionalFalsification
+import edu.osu.cse.groenkeb.logic.model.rules.OrFalsification
+import edu.osu.cse.groenkeb.logic.model.rules.ConditionalVerification
+import edu.osu.cse.groenkeb.logic.model.rules.OrVerification
 
 case class FirstOrderModel(val diagram: AtomicDiagram) extends Model {
   def domain = diagram.domain
@@ -13,6 +23,11 @@ case class FirstOrderModel(val diagram: AtomicDiagram) extends Model {
     case QuantifiedSentence(operand, quantifier) => quantifier.evaluate(diagram.domain, verify, operand)
     case NullSentence() => false
   }
+  def rules = RuleSet(Seq(ModelRule(this),
+                          NegationVerification(), NegationFalsification(),
+                          AndVerification(), AndFalsification(),
+                          OrVerification(), OrFalsification(),
+                          ConditionalVerification(), ConditionalFalsification()))
 }
 
 object FirstOrderModel {

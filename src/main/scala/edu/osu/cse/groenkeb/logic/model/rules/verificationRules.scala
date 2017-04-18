@@ -40,6 +40,8 @@ case class NegationVerification() extends VerificationRule() {
     }
     case _ => NullResult()
   }
+  
+  override def toString = "<Not-V>"
 }
 
 case class AndVerification() extends VerificationRule() {
@@ -56,6 +58,8 @@ case class AndVerification() extends VerificationRule() {
     }
     case _ => NullResult()
   }
+  
+  override def toString = "<And-V>"
 }
 
 case class OrVerification() extends VerificationRule() {
@@ -73,6 +77,8 @@ case class OrVerification() extends VerificationRule() {
     }
     case _ => NullResult()
   }
+  
+  override def toString = "<Or-V>"
 }
 
 case class ConditionalVerification() extends VerificationRule() {
@@ -87,9 +93,12 @@ case class ConditionalVerification() extends VerificationRule() {
         CompleteResult(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), this, args), prems))
       case UnaryArgs(CompleteProof(Conclusion(Absurdity(), _, _), prems)) if exists(ante).in(prems) =>
         CompleteResult(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), this, args), prems))
-      case _ => NullResult()
+      case _ => IncompleteResult(OptionParams(UnaryParams(AnyProof(conseq)),
+                                              UnaryParams(RelevantProof(Absurdity(), Required(Assumption(ante))))))
     }
     case _ => NullResult()
   }
+  
+  override def toString = "<Cond-V>"
 }
 

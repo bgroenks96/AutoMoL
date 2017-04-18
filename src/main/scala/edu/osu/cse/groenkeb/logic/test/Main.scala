@@ -1,18 +1,19 @@
 package edu.osu.cse.groenkeb.logic.test
 
-import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.parse.DefaultPropOpMatcher
 import edu.osu.cse.groenkeb.logic.parse.NodeRecursiveTokenizer
 import edu.osu.cse.groenkeb.logic.parse.SentenceParser
-import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
-import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
-import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
-import edu.osu.cse.groenkeb.logic.proof.ProofSolver
+import edu.osu.cse.groenkeb.logic.proof.Failure
 import edu.osu.cse.groenkeb.logic.proof.NaiveProofStrategy
+import edu.osu.cse.groenkeb.logic.proof.ProofSolver
 import edu.osu.cse.groenkeb.logic.proof.ProofUtils
 import edu.osu.cse.groenkeb.logic.proof.Success
-import edu.osu.cse.groenkeb.logic.proof.Failure
+import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof.types.Premises
+import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
+import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
+import edu.osu.cse.groenkeb.logic.proof.rules.AndIntroductionRule
+import edu.osu.cse.groenkeb.logic.proof.rules.AndEliminationRule
 
 object Main extends App {
   implicit val matcher = new DefaultPropOpMatcher()

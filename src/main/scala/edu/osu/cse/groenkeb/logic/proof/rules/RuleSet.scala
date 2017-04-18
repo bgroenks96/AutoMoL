@@ -3,8 +3,9 @@ package edu.osu.cse.groenkeb.logic.proof.rules
 import edu.osu.cse.groenkeb.logic.Sentence
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
 
-case class RuleSet private(val rules: Seq[Rule]) extends Seq[Rule] {
+case class RuleSet(val rules: Seq[Rule]) extends Seq[Rule] {
   def this(rules: Set[Rule]) = this(rules.toSeq)
+  def this(rules: RuleSet) = this(rules.rules)
   
   def iterator = rules.iterator
   
@@ -20,11 +21,12 @@ case class RuleSet private(val rules: Seq[Rule]) extends Seq[Rule] {
     subset { r => r.accepts(proof) }
   }
 
-  def subset(predicate: Rule => Boolean) = new RuleSet(rules.filter { predicate })
+  def subset(predicate: Rule => Boolean) = RuleSet(rules.filter { predicate })
   
   def without(rule: Rule) = subset { r => r.equals(rule) }
 }
 
 object RuleSet {
   def apply(rules: Set[Rule]) = new RuleSet(rules.toSeq)
+  def apply(rules: RuleSet) = new RuleSet(rules.rules)
 }

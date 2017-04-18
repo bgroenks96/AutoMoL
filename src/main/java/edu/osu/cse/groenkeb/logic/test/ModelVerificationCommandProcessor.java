@@ -12,6 +12,10 @@ import edu.osu.cse.groenkeb.logic.model.Domain;
 import edu.osu.cse.groenkeb.logic.model.FirstOrderModel;
 import edu.osu.cse.groenkeb.logic.parse.SentenceParser;
 import edu.osu.cse.groenkeb.logic.parse.SentenceParserOpts;
+import edu.osu.cse.groenkeb.logic.proof.NaiveProofStrategy;
+import edu.osu.cse.groenkeb.logic.proof.ProofSolver;
+import edu.osu.cse.groenkeb.logic.proof.ProofUtils;
+import edu.osu.cse.groenkeb.logic.proof.types.ProofContext;
 import edu.osu.cse.groenkeb.logic.utils.Convert;
 
 public class ModelVerificationCommandProcessor implements CommandProcessor<ModelVerificationContext>
@@ -88,6 +92,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
   private class QueryCommand implements Command<ModelVerificationContext>
   {
     private final Sentence sentence;
+    private final ProofSolver solver = new ProofSolver(new NaiveProofStrategy());
     
     QueryCommand(final Sentence sentence)
     {
@@ -97,7 +102,8 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
     @Override
     public ModelVerificationContext execute(ModelVerificationContext current)
     {
-      System.out.println(current.getModel().verify(this.sentence));
+      ProofContext context = new ProofContext(this.sentence, Convert.emptyScalaSeq(), current.getModel().rules());
+      ProofUtils.prettyPrint(solver.proof(context).proof());
       return current;
     }
   }

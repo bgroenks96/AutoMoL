@@ -50,7 +50,7 @@ case class NegationFalsification() extends FalsificationRule {
     case _ => NullResult()
   }
   
-  override def toString = "<!>"
+  override def toString = "<Not-F>"
 }
 
 case class AndFalsification() extends FalsificationRule {
@@ -72,6 +72,8 @@ case class AndFalsification() extends FalsificationRule {
     }
     case _ => NullResult()
   }
+  
+  override def toString = "<And-F>"
 }
 
 case class OrFalsification() extends FalsificationRule() {
@@ -96,6 +98,8 @@ case class OrFalsification() extends FalsificationRule() {
     }
     case _ => NullResult()
   }
+  
+  override def toString = "<Or-F>"
 }
 
 case class ConditionalFalsification() extends FalsificationRule() {
@@ -119,5 +123,7 @@ case class ConditionalFalsification() extends FalsificationRule() {
     }
     case _ => NullResult()
   }
+  
+  override def toString = "<Cond-F>"
 }
 

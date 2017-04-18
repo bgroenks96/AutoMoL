@@ -2,9 +2,9 @@ package edu.osu.cse.groenkeb.logic.proof
 
 import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.proof.rules._
+import edu.osu.cse.groenkeb.logic.proof.rules.OptionParams
 import edu.osu.cse.groenkeb.logic.proof.rules.Rule
 import edu.osu.cse.groenkeb.logic.proof.types._
-import edu.osu.cse.groenkeb.logic.proof.rules.OptionParams
 
 case class ProofSolver(implicit strategy: ProofStrategy) extends Solver {
   def proof(implicit context: ProofContext): ProofResult = strategy.decide(proofFromPremises(strategy.premises))

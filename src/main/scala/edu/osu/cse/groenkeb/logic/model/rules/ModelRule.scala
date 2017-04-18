@@ -34,4 +34,6 @@ case class ModelRule(val model: FirstOrderModel) extends Rule {
     }
     case _ => NullResult()
   }
+  
+  override def toString = "<Model>"
 }
