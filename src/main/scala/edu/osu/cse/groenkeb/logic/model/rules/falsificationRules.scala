@@ -36,16 +36,18 @@ abstract class FalsificationRule extends AbstractRule() {
 
 case class NegationFalsification() extends FalsificationRule {
   def accepts(proof: Proof) = proof match { case CompleteProof(_, _) => true; case _ => false }
-  
+
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
-    case Absurdity() => {
-      val negation = Sentences.not(conc)
-      args match {
-        case BinaryArgs(CompleteProof(Conclusion(`conc`, _, _), pa),
-                        CompleteProof(Conclusion(`negation`, _, _), pb)) =>
-                          CompleteResult(CompleteProof(Absurdity(), this, args, pa ++ pb))
-        case _ => IncompleteResult(BinaryParams(AnyProof(conc), AnyProof(negation)))
+    case Absurdity() => args match {
+      case BinaryArgs(CompleteProof(Conclusion(conc, _, _), pa), negProof) => {
+        val negation = Sentences.not(conc)
+        negProof match {
+          case CompleteProof(Conclusion(`negation`, _, _), pb) => CompleteResult(CompleteProof(Absurdity(), this, args, pa ++ pb))
+          case _ => IncompleteResult(BinaryParams(AnyProof(conc), AnyProof(negation)))
+        }
       }
+      case UnaryArgs(CompleteProof(Conclusion(conc, _, _), pa)) => IncompleteResult(BinaryParams(AnyProof(conc), AnyProof(Sentences.not(conc))))
+      case _ => NullResult()
     }
     case _ => NullResult()
   }

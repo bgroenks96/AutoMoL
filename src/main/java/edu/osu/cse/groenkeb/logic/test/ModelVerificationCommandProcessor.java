@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
+import edu.osu.cse.groenkeb.logic.Absurdity;
 import edu.osu.cse.groenkeb.logic.Sentence;
 import edu.osu.cse.groenkeb.logic.Term;
 import edu.osu.cse.groenkeb.logic.model.Domain;
@@ -13,8 +14,10 @@ import edu.osu.cse.groenkeb.logic.model.FirstOrderModel;
 import edu.osu.cse.groenkeb.logic.parse.SentenceParser;
 import edu.osu.cse.groenkeb.logic.parse.SentenceParserOpts;
 import edu.osu.cse.groenkeb.logic.proof.NaiveProofStrategy;
+import edu.osu.cse.groenkeb.logic.proof.ProofResult;
 import edu.osu.cse.groenkeb.logic.proof.ProofSolver;
 import edu.osu.cse.groenkeb.logic.proof.ProofUtils;
+import edu.osu.cse.groenkeb.logic.proof.Success;
 import edu.osu.cse.groenkeb.logic.proof.types.ProofContext;
 import edu.osu.cse.groenkeb.logic.utils.Convert;
 
@@ -102,8 +105,17 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
     @Override
     public ModelVerificationContext execute(ModelVerificationContext current)
     {
-      ProofContext context = new ProofContext(this.sentence, Convert.emptyScalaSeq(), current.getModel().rules());
-      ProofUtils.prettyPrint(solver.proof(context).proof());
+      final ProofContext verifyProofContext = new ProofContext(this.sentence, Convert.emptyScalaSeq(), current.getModel().rules());
+      final ProofContext falsifyProofContext = new ProofContext(new Absurdity(), Convert.emptyScalaSeq(), current.getModel().rules());
+      final ProofResult verifyResult = solver.proof(verifyProofContext);
+      if (verifyResult instanceof Success)
+      {
+        ProofUtils.prettyPrint(verifyResult.proof());
+        return current;
+      }
+      
+      final ProofResult falsifyResult = solver.proof(falsifyProofContext);
+      ProofUtils.prettyPrint(falsifyResult.proof());
       return current;
     }
   }

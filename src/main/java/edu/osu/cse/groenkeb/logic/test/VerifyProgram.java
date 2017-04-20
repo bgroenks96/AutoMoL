@@ -37,7 +37,8 @@ public class VerifyProgram
         }
         catch (Exception e)
         {
-          System.out.println(e.getMessage() + "\n");
+          e.printStackTrace();
+          System.out.println();
           next = null;
         }
       }

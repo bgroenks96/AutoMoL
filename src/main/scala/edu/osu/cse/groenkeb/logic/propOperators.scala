@@ -39,7 +39,7 @@ case class Implies() extends BinaryConnective {
     case _ => throw new IllegalArgumentException(args.toString)
   }
 
-  override def toString() = "=>"
+  override def toString() = "if"
 }
 
 case class Not() extends UnaryConnective {

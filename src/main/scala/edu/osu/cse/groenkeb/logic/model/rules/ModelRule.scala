@@ -1,8 +1,8 @@
 package edu.osu.cse.groenkeb.logic.model.rules
 
+import edu.osu.cse.groenkeb.logic.Absurdity
 import edu.osu.cse.groenkeb.logic.AtomicSentence
 import edu.osu.cse.groenkeb.logic.Sentence
-import edu.osu.cse.groenkeb.logic.Sentences
 import edu.osu.cse.groenkeb.logic.model.FirstOrderModel
 import edu.osu.cse.groenkeb.logic.proof.rules.CompleteResult
 import edu.osu.cse.groenkeb.logic.proof.rules.EmptyArgs
@@ -13,7 +13,7 @@ import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
 import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.types.NullProof
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
-import edu.osu.cse.groenkeb.logic.Absurdity
+import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
 
 case class ModelRule(val model: FirstOrderModel) extends Rule {
   def accepts(proof: Proof) = proof match {
