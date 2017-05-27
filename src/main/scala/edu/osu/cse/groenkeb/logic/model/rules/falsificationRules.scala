@@ -69,7 +69,7 @@ case class AndFalsification() extends FalsificationRule {
                         CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), prems))
       case UnaryArgs(CompleteProof(Conclusion(BinarySentence(left, right, And()), _, _), Nil)) => 
         IncompleteResult(BinaryParams(EmptyProof(BinarySentence(left, right, And())),
-                                      RelevantProof(Absurdity(), Variate(Assumption(left), Assumption(right)))))
+                                      RelevantProof(Absurdity(), Variate(Assumption(left), Assumption(right)), Assumption(BinarySentence(left, right, And())))))
       case _ => NullResult()
     }
     case _ => NullResult()

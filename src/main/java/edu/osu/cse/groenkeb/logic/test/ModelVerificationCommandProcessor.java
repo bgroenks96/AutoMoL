@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
+import com.google.common.collect.ImmutableList;
+
 import edu.osu.cse.groenkeb.logic.Absurdity;
 import edu.osu.cse.groenkeb.logic.Sentence;
 import edu.osu.cse.groenkeb.logic.Term;
@@ -19,6 +21,7 @@ import edu.osu.cse.groenkeb.logic.proof.ProofSolver;
 import edu.osu.cse.groenkeb.logic.proof.ProofUtils;
 import edu.osu.cse.groenkeb.logic.proof.Success;
 import edu.osu.cse.groenkeb.logic.proof.types.ProofContext;
+import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise;
 import edu.osu.cse.groenkeb.logic.utils.Convert;
 
 public class ModelVerificationCommandProcessor implements CommandProcessor<ModelVerificationContext>
@@ -106,7 +109,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
     public ModelVerificationContext execute(ModelVerificationContext current)
     {
       final ProofContext verifyProofContext = new ProofContext(this.sentence, Convert.emptyScalaSeq(), current.getModel().rules());
-      final ProofContext falsifyProofContext = new ProofContext(new Absurdity(), Convert.emptyScalaSeq(), current.getModel().rules());
+      final ProofContext falsifyProofContext = new ProofContext(new Absurdity(), Convert.toScalaSeq(ImmutableList.of(new ProudPremise(this.sentence))), current.getModel().rules());
       final ProofResult verifyResult = solver.proof(verifyProofContext);
       if (verifyResult instanceof Success)
       {

@@ -25,7 +25,7 @@ case class ProofSolver(implicit strategy: ProofStrategy) extends Solver {
         case BinaryArgs(proof0, proof1) => CompleteProof(s, rule, args, proof0.premises ++ proof1.premises)
         case TernaryArgs(proof0, proof1, proof2) => CompleteProof(s, rule, args, proof0.premises ++ proof1.premises ++ proof2.premises)
       }
-      case premise if premise.sentence.contains(context.goal) =>
+      case premise if premise.sentence.contains(context.goal) || context.goal.equals(Absurdity()) /* this causes recursion issues */ =>
         // if the premise contains our goal, attempt to infer conclusion from a rule that accepts the sentence as a major premise
         val proudProof = ProudPremise(premise.sentence).proof
         val relevantRules = strategy.rules(context.withRuleSet(context.rules.accepting(proudProof)))
@@ -49,7 +49,7 @@ case class ProofSolver(implicit strategy: ProofStrategy) extends Solver {
     }
   }
   
-  private def relevantProof(discharge: Discharge, restrict: Assumption*)(implicit context: ProofContext): Proof = {
+  private def relevantProof(discharge: Discharge, restrict: Seq[Assumption])(implicit context: ProofContext): Proof = {
       val newContext = context.lessAssumptions(restrict:_*)
       discharge match {
         case Vacuous(assumptions@_*) => then(proof(newContext.withAssumptions(assumptions:_*)))
@@ -68,7 +68,7 @@ case class ProofSolver(implicit strategy: ProofStrategy) extends Solver {
   private def proof(param: RuleParam)(implicit context: ProofContext): Proof = param match {
     case EmptyProof(conc) => ProudPremise(conc).proof
     case AnyProof(conc) => then(proof(context.withGoal(conc)))
-    case RelevantProof(conc, discharge, restrict) => relevantProof(discharge, restrict)(context.withGoal(conc))
+    case RelevantProof(conc, discharge, restrict@_*) => relevantProof(discharge, restrict)(context.withGoal(conc))
     case _ => NullProof(context.premises)
   }
 

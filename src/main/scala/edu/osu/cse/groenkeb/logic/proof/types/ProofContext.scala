@@ -9,9 +9,9 @@ import edu.osu.cse.groenkeb.logic.Sentence
 import edu.osu.cse.groenkeb.logic.Sentences
 import edu.osu.cse.groenkeb.logic.proof.rules.Rule
 
-case class ProofContext private (val goal: Sentence,
-                                 val premises: Seq[Premise],
-                                 val rules: RuleSet) {  
+case class ProofContext(val goal: Sentence,
+                        val premises: Seq[Premise],
+                        val rules: RuleSet) {  
   def withAssumptions(newAssumptions: Assumption*) = ProofContext(goal, premises ++ newAssumptions, rules)
   
   def withRuleSet(newRules: RuleSet) = ProofContext(goal, premises, newRules)
