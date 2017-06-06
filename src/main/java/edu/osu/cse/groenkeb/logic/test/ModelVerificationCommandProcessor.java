@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import edu.osu.cse.groenkeb.logic.Absurdity;
 import edu.osu.cse.groenkeb.logic.Sentence;
@@ -16,13 +16,15 @@ import edu.osu.cse.groenkeb.logic.model.FirstOrderModel;
 import edu.osu.cse.groenkeb.logic.parse.SentenceParser;
 import edu.osu.cse.groenkeb.logic.parse.SentenceParserOpts;
 import edu.osu.cse.groenkeb.logic.proof.NaiveProofStrategy;
+import edu.osu.cse.groenkeb.logic.proof.ProofContext;
 import edu.osu.cse.groenkeb.logic.proof.ProofResult;
 import edu.osu.cse.groenkeb.logic.proof.ProofSolver;
-import edu.osu.cse.groenkeb.logic.proof.ProofUtils;
 import edu.osu.cse.groenkeb.logic.proof.Success;
-import edu.osu.cse.groenkeb.logic.proof.types.ProofContext;
+import edu.osu.cse.groenkeb.logic.proof.types.Premise;
 import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise;
-import edu.osu.cse.groenkeb.logic.utils.Convert;
+import edu.osu.cse.groenkeb.logic.test.CommandProcessor.Command;
+import edu.osu.cse.groenkeb.utils.Convert;
+import scala.collection.JavaConversions;
 
 public class ModelVerificationCommandProcessor implements CommandProcessor<ModelVerificationContext>
 {
@@ -60,6 +62,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
     }
     catch (Exception e)
     {
+      e.printStackTrace ();
       throw new InvalidCommandException("unable to parse input: " + e.getMessage());
     }
     
@@ -74,7 +77,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
   
   public SetCommand parseSet(final String input)
   {
-    Domain auxDomain = new Domain(Convert.emptyScalaSeq());
+    Domain auxDomain = new Domain(Convert.emptyScalaSeq ());
     final List<Sentence> sentences = new ArrayList<Sentence>();
     for (final String pt : input.split(";"))
     {
@@ -83,7 +86,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
       {
         final List<String> termStrs = Arrays.asList(str.substring(1, str.length() - 1).split(","));
         final Stream<Term> terms = termStrs.stream().map((String s) -> new Term(s));
-        auxDomain = auxDomain.merge(new Domain(Convert.toScalaSeq(terms)));
+        auxDomain = auxDomain.merge(new Domain(Convert.toScalaSeq(terms::iterator)));
       }
       else
       {
@@ -108,17 +111,19 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
     @Override
     public ModelVerificationContext execute(ModelVerificationContext current)
     {
-      final ProofContext verifyProofContext = new ProofContext(this.sentence, Convert.emptyScalaSeq(), current.getModel().rules());
-      final ProofContext falsifyProofContext = new ProofContext(new Absurdity(), Convert.toScalaSeq(ImmutableList.of(new ProudPremise(this.sentence))), current.getModel().rules());
-      final ProofResult verifyResult = solver.proof(verifyProofContext);
-      if (verifyResult instanceof Success)
+      final ProofContext verifyProofContext = new ProofContext(this.sentence, current.getModel().rules(), Convert.<Premise>emptyScalaSet());
+      final ImmutableSet<Premise> falsifyPremiseSet = ImmutableSet.of (new ProudPremise(this.sentence));
+      final ProofContext falsifyProofContext = new ProofContext(new Absurdity(), current.getModel().rules(), Convert.toScalaSet (falsifyPremiseSet));
+      final scala.collection.immutable.Stream <ProofResult> verifyResults = solver.proofs(verifyProofContext);
+      final java.util.Iterator<ProofResult> results = JavaConversions.asJavaIterator (verifyResults.iterator ());
+      while (results.hasNext())
       {
-        ProofUtils.prettyPrint(verifyResult.proof());
-        return current;
+        ProofResult result = results.next();
+        if (result instanceof Success)
+        {
+          System.out.println(result);
+        }
       }
-      
-      final ProofResult falsifyResult = solver.proof(falsifyProofContext);
-      ProofUtils.prettyPrint(falsifyResult.proof());
       return current;
     }
   }

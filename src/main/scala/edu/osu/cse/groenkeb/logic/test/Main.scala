@@ -1,19 +1,10 @@
 package edu.osu.cse.groenkeb.logic.test
 
 import edu.osu.cse.groenkeb.logic.parse.DefaultPropOpMatcher
-import edu.osu.cse.groenkeb.logic.parse.NodeRecursiveTokenizer
 import edu.osu.cse.groenkeb.logic.parse.SentenceParser
-import edu.osu.cse.groenkeb.logic.proof.Failure
-import edu.osu.cse.groenkeb.logic.proof.NaiveProofStrategy
-import edu.osu.cse.groenkeb.logic.proof.ProofSolver
-import edu.osu.cse.groenkeb.logic.proof.ProofUtils
-import edu.osu.cse.groenkeb.logic.proof.Success
+import edu.osu.cse.groenkeb.logic.proof._
+import edu.osu.cse.groenkeb.logic.proof.types._
 import edu.osu.cse.groenkeb.logic.proof.rules._
-import edu.osu.cse.groenkeb.logic.proof.types.Premises
-import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
-import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
-import edu.osu.cse.groenkeb.logic.proof.rules.AndIntroductionRule
-import edu.osu.cse.groenkeb.logic.proof.rules.AndEliminationRule
 
 object Main extends App {
   implicit val matcher = new DefaultPropOpMatcher()
@@ -37,30 +28,30 @@ object Main extends App {
   println("--------")
 
   def run(implicit context: ProofContext) {
-    propSolver.proof match {
-      case Success(proof, _) => {
+    propSolver.proofs.filter { x => x.isInstanceOf[Success] }.head match {
+      case Success(proof, context, _) => {
         println("Success")
         ProofUtils.prettyPrint(proof)
       }
       case Failure(nullProof, _) => {
         println("Failure")
-        println(String.format("No proof of %s given premises [%s]", context.goal, nullProof.prems.mkString(", ")))
+        println(String.format("No proof of %s given premises [%s]", context.goal, context.premises))
       }
     }
   }
 
   def exampleAndElim {
-    implicit val proofContext = ProofContext(sentenceA, Premises.proud(complexSentence), rules)
+    implicit val proofContext = ProofContext(sentenceA, rules, Premises.proud(complexSentence))
     run
   }
   
   def exapmleAndIntro {
-    implicit val proofContext = ProofContext(sentenceABC, Premises.proud(sentenceA, sentenceB, sentenceC), rules)
+    implicit val proofContext = ProofContext(sentenceABC, rules, Premises.proud(sentenceA, sentenceB, sentenceC))
     run
   }
   
   def exampleAndElimWithInto {
-    implicit val proofContext = ProofContext(sentenceBD, Premises.proud(sentenceD, sentenceABC), rules)
+    implicit val proofContext = ProofContext(sentenceBD, rules, Premises.proud(sentenceD, sentenceABC))
     run
   }
 }

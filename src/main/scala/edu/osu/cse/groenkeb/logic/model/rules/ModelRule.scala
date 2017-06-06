@@ -14,22 +14,35 @@ import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.types.NullProof
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
 import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
+import edu.osu.cse.groenkeb.logic.proof.rules.IdentityRule
+import edu.osu.cse.groenkeb.logic.proof.rules.UnaryArgs
+import edu.osu.cse.groenkeb.logic.proof.types.Assumption
+import edu.osu.cse.groenkeb.logic.utils.Empty
 
 case class ModelRule(val model: FirstOrderModel) extends Rule {
-  def accepts(proof: Proof) = proof match {
-    case NullProof(_) => true
+  def major(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(AtomicSentence(_), IdentityRule(), _), Empty()) => true
+    case NullProof() => true
     case _ => false
   }
   
+  def minor(proof: Proof) = false
+  
   def yields(conc: Sentence) = conc match {
     case AtomicSentence(atom) => model.verify(conc)
+    case Absurdity() => true
     case _ => false
   }
   
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case AtomicSentence(atom) => args match {
-      case EmptyArgs() if model.verify(conc) => CompleteResult(CompleteProof(Conclusion(conc, this, args), Nil))
-      case EmptyArgs() if !model.verify(conc) => CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), Nil))
+      case EmptyArgs() if model.verify(conc) => CompleteResult(CompleteProof(Conclusion(conc, this, args), Set()))
+      //case EmptyArgs() if !model.verify(conc) => CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), Nil))
+      case _ => NullResult()
+    }
+    case Absurdity() => args match {
+      case UnaryArgs(CompleteProof(c, Empty())) if !model.verify(c.sentence) =>
+        CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), Set(Assumption(c.sentence))))
       case _ => NullResult()
     }
     case _ => NullResult()

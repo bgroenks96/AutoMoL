@@ -1,21 +1,29 @@
 package edu.osu.cse.groenkeb.logic.proof.rules
 
+import edu.osu.cse.groenkeb.logic.Absurdity
 import edu.osu.cse.groenkeb.logic.And
 import edu.osu.cse.groenkeb.logic.BinarySentence
+import edu.osu.cse.groenkeb.logic.Not
 import edu.osu.cse.groenkeb.logic.Sentence
 import edu.osu.cse.groenkeb.logic.Sentences
+import edu.osu.cse.groenkeb.logic.UnarySentence
 import edu.osu.cse.groenkeb.logic.proof.types.Assumption
 import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
 import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.types.Premise
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
-import edu.osu.cse.groenkeb.logic.Absurdity
+import edu.osu.cse.groenkeb.logic.utils.Empty
+
+import scala.collection.immutable.Set
 
 case class AndIntroductionRule() extends AbstractRule {
-  def accepts(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(_, _, _), _) => true
+  def major(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(s, _, _), _) if !s.isInstanceOf[Absurdity] => true
     case _ => false
   }
+  
+  // and-intro criteria for minor premise identical to major
+  def minor(proof: Proof) = major(proof)
 
   def yields(sentence: Sentence) = sentence match {
     case BinarySentence(_, _, And()) => true
@@ -38,20 +46,25 @@ case class AndIntroductionRule() extends AbstractRule {
 }
 
 case class AndEliminationRule() extends AbstractRule {
-  def accepts(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(BinarySentence(a, b, And()), _, _), Nil) => true
+  def major(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(BinarySentence(a, b, And()), _, _), Empty()) => true
+    case _ => false
+  }
+  
+  def minor(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(s,_,_), _) if s.isNotAbsurdity => true
     case _ => false
   }
 
   def yields(sentence: Sentence) = true
 
   def infer(conc: Sentence)(args: RuleArgs) = args match {
-    case BinaryArgs(CompleteProof(Conclusion(BinarySentence(a, b, And()), _, _), Nil), proof) => proof match {
+    case BinaryArgs(CompleteProof(Conclusion(BinarySentence(a, b, And()), _, _), Empty()), proof) => proof match {
       case CompleteProof(Conclusion(`conc`, _, _), prems) if prems.exists(p => p.sentence.matches(a) || p.sentence.matches(b)) =>
         CompleteResult(CompleteProof(conc, this, args, prems))
       case _ => NullResult()
     }
-    case UnaryArgs(CompleteProof(Conclusion(BinarySentence(a, b, And()), _, _), Nil)) =>
+    case UnaryArgs(CompleteProof(Conclusion(BinarySentence(a, b, And()), _, _), Empty())) =>
       IncompleteResult(BinaryParams(EmptyProof(BinarySentence(a, b, And())),
         RelevantProof(conc, Variate(Assumption(a), Assumption(b)), Assumption(BinarySentence(a, b, And())))))
     case _ => NullResult()
@@ -61,8 +74,13 @@ case class AndEliminationRule() extends AbstractRule {
 }
 
 final case class NonContradictionRule() extends AbstractRule {
-  def accepts(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(_,_,_), _) => true
+  def major(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(s,_,_), _) if !s.isInstanceOf[Absurdity] => true
+    case _ => false
+  }
+  
+  def minor(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(UnarySentence(_, Not()),_,_), _) => true
     case _ => false
   }
   

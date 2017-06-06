@@ -14,18 +14,16 @@ import edu.osu.cse.groenkeb.logic.proof.types.Proof
 import edu.osu.cse.groenkeb.logic.Or
 import edu.osu.cse.groenkeb.logic.Implies
 
-abstract class VerificationRule extends AbstractRule {
-  def accepts(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(_, _, _), _) => true
-    case _ => false
-  }
-}
+abstract class VerificationRule extends AbstractRule
 
 case class NegationVerification() extends VerificationRule() {  
-  override def accepts(proof: Proof) = proof match {
+  def major(proof: Proof) = proof match {
     case CompleteProof(Conclusion(Absurdity(), _, _), _) => true
     case _ => false
   }
+  
+  // not-v accepts only one premise
+  def minor(proof: Proof) = false
   
   def yields(conc: Sentence) = conc match {
     case UnarySentence(_, Not()) => true
@@ -45,6 +43,14 @@ case class NegationVerification() extends VerificationRule() {
 }
 
 case class AndVerification() extends VerificationRule() {
+  def major(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(s,_,_), _) if !s.isInstanceOf[Absurdity] => true
+    case _ => false
+  }
+  
+  // acceptance form for minor proof identical to major
+  def minor(proof: Proof) = major(proof)
+  
   def yields(conc: Sentence) = conc match {
     case BinarySentence(_, _, And()) => true
     case _ => false
@@ -63,6 +69,14 @@ case class AndVerification() extends VerificationRule() {
 }
 
 case class OrVerification() extends VerificationRule() {
+  def major(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(s,_,_), _) if !s.isInstanceOf[Absurdity] => true
+    case _ => false
+  }
+  
+  // or-v accepts only one premise
+  def minor(proof: Proof) = false
+  
   def yields(conc: Sentence) = conc match {
     case BinarySentence(_, _, Or()) => true
     case _ => false
@@ -70,8 +84,8 @@ case class OrVerification() extends VerificationRule() {
   
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case BinarySentence(left, right, Or()) => args match {
-      case UnaryArgs(CompleteProof(Conclusion(`left`, _, _), pleft)) =>
-        CompleteResult(CompleteProof(Conclusion(conc, this, args), pleft))
+      case UnaryArgs(CompleteProof(Conclusion(c, _, _), prems)) if c.matches(left) || c.matches(right) =>
+        CompleteResult(CompleteProof(Conclusion(conc, this, args), prems))
       case _ => IncompleteResult(OptionParams(UnaryParams(AnyProof(left)),
                                               UnaryParams(AnyProof(right))))
     }
@@ -82,6 +96,14 @@ case class OrVerification() extends VerificationRule() {
 }
 
 case class ConditionalVerification() extends VerificationRule() {
+  def major(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(_,_,_), _) => true
+    case _ => false
+  }
+  
+  // cond-v accepts only one premise in either case
+  def minor(proof: Proof) = false
+  
   def yields(conc: Sentence) = conc match {
     case BinarySentence(_, _, Implies()) => true
     case _ => false
