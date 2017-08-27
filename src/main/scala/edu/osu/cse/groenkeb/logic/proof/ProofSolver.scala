@@ -1,36 +1,85 @@
 package edu.osu.cse.groenkeb.logic.proof
 
-import scala.collection.immutable._
+import scala.Left
+import scala.Right
+import scala.collection.immutable.Nil
+import scala.collection.immutable.Seq
+import scala.collection.immutable.Set
+import scala.collection.immutable.Stream
 
-import edu.osu.cse.groenkeb.logic._
-import edu.osu.cse.groenkeb.logic.proof.rules._
-import edu.osu.cse.groenkeb.logic.proof.types._
+import edu.osu.cse.groenkeb.logic.Absurdity
+import edu.osu.cse.groenkeb.logic.Sentence
+import edu.osu.cse.groenkeb.logic.proof.rules.AnyProof
+import edu.osu.cse.groenkeb.logic.proof.rules.BinaryArgs
+import edu.osu.cse.groenkeb.logic.proof.rules.BinaryParams
+import edu.osu.cse.groenkeb.logic.proof.rules.CompleteResult
+import edu.osu.cse.groenkeb.logic.proof.rules.EmptyArgs
+import edu.osu.cse.groenkeb.logic.proof.rules.EmptyParams
+import edu.osu.cse.groenkeb.logic.proof.rules.EmptyProof
+import edu.osu.cse.groenkeb.logic.proof.rules.IncompleteResult
+import edu.osu.cse.groenkeb.logic.proof.rules.NullResult
+import edu.osu.cse.groenkeb.logic.proof.rules.OptionArgs
+import edu.osu.cse.groenkeb.logic.proof.rules.OptionParams
+import edu.osu.cse.groenkeb.logic.proof.rules.RelevantProof
+import edu.osu.cse.groenkeb.logic.proof.rules.Rule
+import edu.osu.cse.groenkeb.logic.proof.rules.RuleArgs
+import edu.osu.cse.groenkeb.logic.proof.rules.RuleParam
+import edu.osu.cse.groenkeb.logic.proof.rules.RuleParams
+import edu.osu.cse.groenkeb.logic.proof.rules.RuleSet
+import edu.osu.cse.groenkeb.logic.proof.rules.TernaryArgs
+import edu.osu.cse.groenkeb.logic.proof.rules.TernaryParams
+import edu.osu.cse.groenkeb.logic.proof.rules.UnaryArgs
+import edu.osu.cse.groenkeb.logic.proof.rules.UnaryParams
+import edu.osu.cse.groenkeb.logic.proof.types.Assumption
+import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
+import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
+import edu.osu.cse.groenkeb.logic.proof.types.NullProof
+import edu.osu.cse.groenkeb.logic.proof.types.Premise
+import edu.osu.cse.groenkeb.logic.proof.types.Proof
+import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
 
 class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
   
-  def proofs(implicit context: ProofContext): Stream[ProofResult] = ProofSearch(step { tryPremises(strategy.premises) } )()
+  def prove(context: ProofContext): Stream[ProofResult] = {
+    implicit val cntxt = context
+    ProofSearch(step { proof(strategy.premises) } )()
+  }
   
-  private def tryPremises(premises: scala.Seq[Premise])(implicit context: ProofContext): ProofResult = premises match {
-    case Nil => tryInference(RuleSet(strategy.rules))
-    case Seq(head, rem@_*) => head match {
-      case ProudPremise(s) if context.hasGoal(s) => success(ProudPremise(s).proof, tryPremises(rem))
-      case Assumption(s) if context.hasGoal(s) => success(ProudPremise(s).proof, tryPremises(rem))
-      case Conclusion(s, rule, args) if context.hasGoal(s) => args match {
-        case EmptyArgs() => success(CompleteProof(s, rule, args, Set()), tryPremises(rem))
-        case UnaryArgs(proof0) => success(CompleteProof(s, rule, args, proof0.premises), tryPremises(rem))
-        case BinaryArgs(proof0, proof1) => 
-          success(CompleteProof(s, rule, args, proof0.premises ++ proof1.premises), tryPremises(rem))
-        case TernaryArgs(proof0, proof1, proof2) =>
-          success(CompleteProof(s, rule, args, proof0.premises ++ proof1.premises ++ proof2.premises), tryPremises(rem))
-        case OptionArgs(proofs@_*) =>
-          success(CompleteProof(s, rule, args, proofs flatMap { p => p.premises } toSet), tryPremises(rem))
+  private def proof(premises: scala.Seq[Premise])(implicit context: ProofContext): ProofResult = context.goal match {
+    case Absurdity() => premises match {
+      case Nil => failure()
+      case Seq(head, rem@_*) => head match {
+        case s => {
+          var relevantRules = strategy.rules.acceptingMajor(ProudPremise(s.sentence).proof).yielding(Absurdity())
+                  inferFrom(relevantRules, UnaryArgs(ProudPremise(s.sentence).proof)) match {
+                    case Success(cp, cntxt, prems) => success(cp, { proof(rem) })
+                    case Failure(cntxt, hint) => failure(hint -> Continue(step({ proof(rem) })))
+                    case pending:Pending => pending
+          }}
       }
-      case _ => tryPremises(rem)
+    }
+    case goal => premises match {
+      case Nil => inferFrom(RuleSet(strategy.rules))
+      case Seq(head, rem@_*) => head match {
+        case ProudPremise(s) if context.hasGoal(s) => success(ProudPremise(s).proof, proof(rem))
+        case Assumption(s) if context.hasGoal(s) => success(ProudPremise(s).proof, proof(rem))
+        case Conclusion(s, rule, args) if context.hasGoal(s) => args match {
+          case EmptyArgs() => success(CompleteProof(s, rule, args, Set()), proof(rem))
+          case UnaryArgs(proof0) => success(CompleteProof(s, rule, args, proof0.premises), proof(rem))
+          case BinaryArgs(proof0, proof1) => 
+            success(CompleteProof(s, rule, args, proof0.premises ++ proof1.premises), proof(rem))
+          case TernaryArgs(proof0, proof1, proof2) =>
+            success(CompleteProof(s, rule, args, proof0.premises ++ proof1.premises ++ proof2.premises), proof(rem))
+          case OptionArgs(proofs@_*) =>
+            success(CompleteProof(s, rule, args, proofs flatMap { p => p.premises } toSet), proof(rem))
+        }
+        case _ => proof(rem)
+      }
     }
   }
   
   // NOT DONE YET!
-  private def tryInference(rules: RuleSet, args: RuleArgs = EmptyArgs())(implicit context: ProofContext): ProofResult = {
+  private def inferFrom(rules: RuleSet, args: RuleArgs = EmptyArgs())(implicit context: ProofContext): ProofResult = {
     // inferFromResults matches the given sequence of Success results to a RuleArgs type and performs the final inference
     // step. It is assumed that the given result has already been validated to fulfill the necessary inference requirements.
     // Failure to meet this precondition is an error on the part of the caller.
@@ -136,8 +185,8 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
     rules match {
       case RuleSet(Nil) => failure()
       case RuleSet(Seq(head, rem @ _*)) => infer(head, args) match {
-        case Left(proof:NullProof) => failure(tryInference(RuleSet(rem), args))
-        case Left(proof:CompleteProof) => success(proof, tryInference(RuleSet(rem), args))
+        case Left(proof:NullProof) => failure(inferFrom(RuleSet(rem), args))
+        case Left(proof:CompleteProof) => success(proof, inferFrom(RuleSet(rem), args))
         case Right(params) => pendingParams(params)(head)
       }
     }
@@ -147,16 +196,12 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
     case EmptyProof(conc) => success(ProudPremise(conc).proof)
     case AnyProof(conc) => {
       implicit val newContext = context.withGoal(conc)
-      tryPremises(strategy.premises(newContext))(newContext)
+      proof(strategy.premises(newContext))(newContext)
     }
     case RelevantProof(conc, discharges, restrict@_*) => {
       implicit val newContext = context.withGoal(conc).withAssumptions(discharges.assumptions:_*).lessPremises(restrict:_*)
-      tryPremises(strategy.premises(newContext))(newContext)
+      proof(strategy.premises(newContext))(newContext)
     }
-  }
-  
-  private def tryOptionParams(params: OptionParams)(implicit context: ProofContext): ProofResult = {
-    null
   }
   
   private def infer(rule: Rule, args: RuleArgs = EmptyArgs())(implicit context: ProofContext): Either[Proof, RuleParams] = {

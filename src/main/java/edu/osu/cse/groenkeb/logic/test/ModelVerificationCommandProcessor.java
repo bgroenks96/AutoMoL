@@ -114,7 +114,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
       final ProofContext verifyProofContext = new ProofContext(this.sentence, current.getModel().rules(), Convert.<Premise>emptyScalaSet());
       final ImmutableSet<Premise> falsifyPremiseSet = ImmutableSet.of (new ProudPremise(this.sentence));
       final ProofContext falsifyProofContext = new ProofContext(new Absurdity(), current.getModel().rules(), Convert.toScalaSet (falsifyPremiseSet));
-      final scala.collection.immutable.Stream <ProofResult> verifyResults = solver.proofs(verifyProofContext);
+      final scala.collection.immutable.Stream <ProofResult> verifyResults = solver.prove(verifyProofContext);
       final java.util.Iterator<ProofResult> results = JavaConversions.asJavaIterator (verifyResults.iterator ());
       while (results.hasNext())
       {

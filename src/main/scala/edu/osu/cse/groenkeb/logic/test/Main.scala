@@ -27,8 +27,8 @@ object Main extends App {
   exampleAndElimWithInto
   println("--------")
 
-  def run(implicit context: ProofContext) {
-    propSolver.proofs.filter { x => x.isInstanceOf[Success] }.head match {
+  def run(context: ProofContext) {
+    propSolver.prove(context).filter { x => x.isInstanceOf[Success] }.head match {
       case Success(proof, context, _) => {
         println("Success")
         ProofUtils.prettyPrint(proof)
@@ -41,17 +41,17 @@ object Main extends App {
   }
 
   def exampleAndElim {
-    implicit val proofContext = ProofContext(sentenceA, rules, Premises.proud(complexSentence))
-    run
+    val proofContext = ProofContext(sentenceA, rules, Premises.proud(complexSentence))
+    run(proofContext)
   }
   
   def exapmleAndIntro {
-    implicit val proofContext = ProofContext(sentenceABC, rules, Premises.proud(sentenceA, sentenceB, sentenceC))
-    run
+    val proofContext = ProofContext(sentenceABC, rules, Premises.proud(sentenceA, sentenceB, sentenceC))
+    run(proofContext)
   }
   
   def exampleAndElimWithInto {
-    implicit val proofContext = ProofContext(sentenceBD, rules, Premises.proud(sentenceD, sentenceABC))
-    run
+    val proofContext = ProofContext(sentenceBD, rules, Premises.proud(sentenceD, sentenceABC))
+    run(proofContext)
   }
 }

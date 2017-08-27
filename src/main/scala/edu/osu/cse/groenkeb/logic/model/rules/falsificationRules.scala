@@ -111,8 +111,8 @@ case class OrFalsification() extends FalsificationRule() {
       }
       case UnaryArgs(CompleteProof(Conclusion(BinarySentence(left, right, Or()), _, _), Empty())) =>
         IncompleteResult(TernaryParams(EmptyProof(BinarySentence(left, right, Or())),
-                                       RelevantProof(Absurdity(), Required(Assumption(left))),
-                                       RelevantProof(Absurdity(), Required(Assumption(right)))))
+                                       RelevantProof(Absurdity(), Required(Assumption(left)), Assumption(BinarySentence(left, right, Or()))),
+                                       RelevantProof(Absurdity(), Required(Assumption(right)), Assumption(BinarySentence(left, right, Or())))))
       case _ => NullResult()
     }
     case _ => NullResult()
