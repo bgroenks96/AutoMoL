@@ -12,10 +12,12 @@ abstract class AbstractRule extends Rule {
 }
 
 final case class IdentityRule protected() extends AbstractRule {
-  def accepts(proof: Proof) = proof match {
+  def major(proof: Proof) = proof match {
     case CompleteProof(Conclusion(_, _, _), _) => true
     case _ => false
   }
+  
+  def minor(proof: Proof) = false
 
   def yields(sentence: Sentence) = true
 
@@ -29,7 +31,9 @@ final case class IdentityRule protected() extends AbstractRule {
 }
 
 final case class NullRule protected() extends AbstractRule {
-  def accepts(proof: Proof) = false
+  def major(proof: Proof) = false
+  
+  def minor(proof: Proof) = false
 
   def yields(sentence: Sentence) = false
 
@@ -39,6 +43,6 @@ final case class NullRule protected() extends AbstractRule {
 }
 
 protected case class CaseAssumptions(sentences: Sentence*) {
-  def in[T <: Premise](prems: Seq[T]) = prems.forall { p => sentences.forall { s => p.matches(s) } }
+  def in[T <: Premise](prems: Traversable[T]) = prems.forall { p => sentences.forall { s => p.matches(s) } }
 }
 

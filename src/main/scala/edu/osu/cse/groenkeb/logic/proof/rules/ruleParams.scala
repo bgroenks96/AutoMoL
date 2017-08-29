@@ -3,20 +3,20 @@ package edu.osu.cse.groenkeb.logic.proof.rules
 import edu.osu.cse.groenkeb.logic.Sentence
 import edu.osu.cse.groenkeb.logic.proof.types.Assumption
 
-sealed abstract class RuleParam
+sealed abstract class RuleParam(val goal: Sentence)
 /**
- * Parameter that requires any proof of 'conc' from any set of premises.
+ * Parameter that requires any proof of 'c' from any set of premises.
  */
-case class AnyProof(val conc: Sentence) extends RuleParam
+case class AnyProof(c: Sentence) extends RuleParam(c)
 /**
- * Parameter that requires a relevant proof of 'conc' from a set of premises that has at least those
+ * Parameter that requires a relevant proof of 'c' from a set of premises that has at least those
  * specified by 'discharge' and omits any premises included in 'restrict'.
  */
-case class RelevantProof(val conc: Sentence, val from: Discharge, val restrict: Assumption*) extends RuleParam
+case class RelevantProof(c: Sentence, val from: Discharge, val restrict: Assumption*) extends RuleParam(c)
 /**
  * Parameter that requires the given sentence to "stand proud" as the major premise in the rule.
  */
-case class EmptyProof(val conc: Sentence) extends RuleParam
+case class EmptyProof(c: Sentence) extends RuleParam(c)
 
 sealed abstract class RuleParams
 case class EmptyParams() extends RuleParams
