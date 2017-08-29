@@ -17,6 +17,7 @@ import edu.osu.cse.groenkeb.logic.model.FirstOrderModel
 import edu.osu.cse.groenkeb.logic.model.rules.AndFalsification
 import edu.osu.cse.groenkeb.logic.model.rules.AndVerification
 import edu.osu.cse.groenkeb.logic.model.rules.ModelRule
+import edu.osu.cse.groenkeb.logic.model.rules.NegationFalsification
 import edu.osu.cse.groenkeb.logic.model.rules.NegationVerification
 import edu.osu.cse.groenkeb.logic.model.rules.OrFalsification
 import edu.osu.cse.groenkeb.logic.model.rules.OrVerification
@@ -25,7 +26,7 @@ import edu.osu.cse.groenkeb.logic.parse.NodeRecursiveTokenizer
 import edu.osu.cse.groenkeb.logic.parse.SentenceParser
 import edu.osu.cse.groenkeb.logic.proof.rules.RuleSet
 import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
-import edu.osu.cse.groenkeb.logic.model.rules.NegationFalsification
+import edu.osu.cse.groenkeb.logic.model.rules.ConditionalVerification
 
 
 class ModelVerificationTests {
@@ -163,6 +164,34 @@ class ModelVerificationTests {
     val model = FirstOrderModel.from(parser.parse("R[a]"))
     val rules = RuleSet(Seq(ModelRule(model), NegationFalsification()))
     val context = ProofContext(Absurdity(), rules, Seq(ProudPremise(parser.parse(sentence))))
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testVerifyConditionalMethod1() {
+    implicit val opMatcher = new DefaultPropOpMatcher()
+    val sentence = "(if R[a] R[b])"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel.from(parser.parse("R[a]"), parser.parse("R[b]"))
+    val rules = RuleSet(Seq(ModelRule(model), ConditionalVerification()))
+    val context = ProofContext(parser.parse(sentence), rules, Nil)
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testVerifyConditionalMethod2() {
+    implicit val opMatcher = new DefaultPropOpMatcher()
+    val sentence = "(if R[a] R[b])"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel();
+    val rules = RuleSet(Seq(ModelRule(model), ConditionalVerification()))
+    val context = ProofContext(parser.parse(sentence), rules, Nil)
     val solver = new ProofSolver(new NaiveProofStrategy())
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
     Assert.assertFalse(results.isEmpty)

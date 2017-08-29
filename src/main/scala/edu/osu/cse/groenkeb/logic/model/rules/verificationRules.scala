@@ -116,7 +116,7 @@ case class ConditionalVerification() extends VerificationRule() {
       case UnaryArgs(CompleteProof(Conclusion(Absurdity(), _, _), prems)) if exists(ante).in(prems) =>
         CompleteResult(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), this, args), prems))
       case _ => IncompleteResult(OptionParams(UnaryParams(AnyProof(conseq)),
-                                              UnaryParams(RelevantProof(Absurdity(), Required(Assumption(ante))))))
+                                              UnaryParams(RelevantProof(Absurdity(), Required(Assumption(ante)), Assumption(BinarySentence(ante, conseq, Implies()))))))
     }
     case _ => NullResult()
   }
