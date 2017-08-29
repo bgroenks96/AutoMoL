@@ -7,6 +7,10 @@ sealed abstract class Sentence
   def substitute(orig: Term, sub: Term): Sentence
   def decompose(): Seq[Sentence]
   override def toString: String
+  
+  def isAbsurdity = this.isInstanceOf[Absurdity]
+  
+  def isNotAbsurdity = !this.isAbsurdity
 }
 
 case class AtomicSentence(atom: Atom) extends Sentence

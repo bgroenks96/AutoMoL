@@ -17,8 +17,12 @@ case class RuleSet(val rules: Seq[Rule]) extends Seq[Rule] {
     subset { r => r.yields(sentence) }
   }
 
-  def accepting(proof: Proof) = {
-    subset { r => r.accepts(proof) }
+  def acceptingMajor(proof: Proof) = {
+    subset { r => r.major(proof) }
+  }
+  
+  def acceptingMinor(proof: Proof) = {
+    subset { r => r.minor(proof) }
   }
 
   def subset(predicate: Rule => Boolean) = RuleSet(rules.filter { predicate })

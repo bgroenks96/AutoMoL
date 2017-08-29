@@ -10,7 +10,7 @@ import edu.osu.cse.groenkeb.logic.proof.rules.RuleArgs
 import edu.osu.cse.groenkeb.logic.proof.rules.UnaryArgs
 
 sealed abstract class Premise(val sentence: Sentence) {
-  def matches(p: Premise) = this.equals(p)
+  def matches(p: Premise) = this.sentence.matches(p.sentence)
   def matches(s: Sentence) = s.matches(sentence)
 }
 case class NullPremise() extends Premise(Sentences.nil())
@@ -23,11 +23,11 @@ case class Conclusion(val conclusion: Sentence,
 }
 case class Assumption(s: Sentence) extends Premise(s) {
   // default proof from identity for assumption
-  def proof = CompleteProof(s, IdentityRule(), Default.args(s, this), Seq(this))
+  def proof = CompleteProof(s, IdentityRule(), Default.args(s, this), Set(this))
 }
 case class ProudPremise(s: Sentence) extends Premise(s) {
   // default proof from identity for "proud" premise
-  def proof = CompleteProof(s, IdentityRule(), Default.args(s, this), Nil)
+  def proof = CompleteProof(s, IdentityRule(), Default.args(s, this), Set())
 }
 
 object Premises {
@@ -36,5 +36,5 @@ object Premises {
 }
 
 private object Default {
-  def args(s: Sentence, p: Premise) = UnaryArgs(CompleteProof(Conclusion(s, NullRule(), EmptyArgs()), Nil))
+  def args(s: Sentence, p: Premise) = UnaryArgs(CompleteProof(Conclusion(s, NullRule(), EmptyArgs()), Set()))
 }

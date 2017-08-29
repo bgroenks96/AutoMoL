@@ -23,7 +23,7 @@ case class FirstOrderModel(val diagram: AtomicDiagram) extends Model {
     case QuantifiedSentence(operand, quantifier) => quantifier.evaluate(diagram.domain, verify, operand)
     case NullSentence() => false
   }
-  def rules = RuleSet(Seq(ModelRule(this),
+  def rules: RuleSet = RuleSet(Seq(ModelRule(this),
                           NegationVerification(), NegationFalsification(),
                           AndVerification(), AndFalsification(),
                           OrVerification(), OrFalsification(),

@@ -1,6 +1,8 @@
 package edu.osu.cse.groenkeb.logic.parse
 
 import edu.osu.cse.groenkeb.logic._
+import edu.osu.cse.groenkeb.logic.ExistentialQuantifier
+import edu.osu.cse.groenkeb.logic.UniversalQuantifier
 
 class DefaultPropOpMatcher() extends OperatorMatcher {
   def opFor(str: String): Operator = str match {

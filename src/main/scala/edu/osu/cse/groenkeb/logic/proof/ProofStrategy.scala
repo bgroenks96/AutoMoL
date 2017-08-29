@@ -1,10 +1,11 @@
 package edu.osu.cse.groenkeb.logic.proof
 
-import edu.osu.cse.groenkeb.logic.proof.types.ProofContext
 import edu.osu.cse.groenkeb.logic.proof.rules.Rule
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
 import edu.osu.cse.groenkeb.logic.proof.types.Premise
 import edu.osu.cse.groenkeb.logic.proof.rules.RuleSet
+
+import scala.collection.immutable.Seq
 
 trait ProofStrategy {
   /**
@@ -20,7 +21,9 @@ trait ProofStrategy {
   def premises(implicit context: ProofContext): Seq[Premise]
   
   /**
-   * Determines an appropriate search result for the given proof in the current context.
+   * Returns an appropriate final ProofResult for the given ProofResult, according to this strategy.
+   * This allows the ProofStrategy to make any necessary changes to the status of the proof result (like
+   * Cut where the search engine would have defaulted to Continue, etc).
    */
-  def decide(proof: Proof)(implicit context: ProofContext): ProofResult
+  def decide(result: ProofResult)(implicit context: ProofContext): ProofResult
 }
