@@ -16,6 +16,7 @@ import edu.osu.cse.groenkeb.logic.model.Domain
 import edu.osu.cse.groenkeb.logic.model.FirstOrderModel
 import edu.osu.cse.groenkeb.logic.model.rules.AndFalsification
 import edu.osu.cse.groenkeb.logic.model.rules.AndVerification
+import edu.osu.cse.groenkeb.logic.model.rules.ConditionalVerification
 import edu.osu.cse.groenkeb.logic.model.rules.ModelRule
 import edu.osu.cse.groenkeb.logic.model.rules.NegationFalsification
 import edu.osu.cse.groenkeb.logic.model.rules.NegationVerification
@@ -26,8 +27,8 @@ import edu.osu.cse.groenkeb.logic.parse.NodeRecursiveTokenizer
 import edu.osu.cse.groenkeb.logic.parse.SentenceParser
 import edu.osu.cse.groenkeb.logic.proof.rules.RuleSet
 import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
-import edu.osu.cse.groenkeb.logic.model.rules.ConditionalVerification
-
+import edu.osu.cse.groenkeb.logic.model.rules.ConditionalFalsification
+import edu.osu.cse.groenkeb.logic.proof.types.Assumption
 
 class ModelVerificationTests {
   val _name = new TestName()
@@ -197,4 +198,67 @@ class ModelVerificationTests {
     Assert.assertFalse(results.isEmpty)
     ProofUtils.prettyPrint(results.head.proof)
   }
+  
+  @Test
+  def testFalsifyConditional() {
+    implicit val opMatcher = new DefaultPropOpMatcher()
+    val sentence = "(if R[a] R[b])"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("R[a]"));
+    val rules = RuleSet(Seq(ModelRule(model), ConditionalFalsification()))
+    val context = ProofContext(Absurdity(), rules, Seq(ProudPremise(parser.parse(sentence))))
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testSimpleVerificationProof1() {
+    implicit val opMatcher = new DefaultPropOpMatcher()
+    val sentence = "(and R[b] (if R[a] Q[a]))"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("R[b]"), parser.parse("Q[a]"));
+    val rules = standardRules(model)
+    val context = ProofContext(parser.parse(sentence), rules, Nil)
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testSimpleVerificationProof2() {
+    implicit val opMatcher = new DefaultPropOpMatcher()
+    val sentence = "(or (and R[a] Q[b]) (if R[a] Q[a]))"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("Q[a]"));
+    val rules = standardRules(model)
+    val context = ProofContext(parser.parse(sentence), rules, Nil)
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testSimpleFalsificationProof1() {
+    implicit val opMatcher = new DefaultPropOpMatcher()
+    val sentence = "(if (and R[a] R[b]) Q[b])"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("R[b]"), parser.parse("Q[a]"));
+    val rules = standardRules(model)
+    val context = ProofContext(Absurdity(), rules, Seq(ProudPremise(parser.parse(sentence))))
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  private def standardRules(model: FirstOrderModel) =
+    RuleSet(Seq(ModelRule(model),
+    NegationVerification(), NegationFalsification(),
+    AndVerification(), AndFalsification(),
+    OrVerification(), OrFalsification(),
+    ConditionalVerification(), ConditionalFalsification()))
 }

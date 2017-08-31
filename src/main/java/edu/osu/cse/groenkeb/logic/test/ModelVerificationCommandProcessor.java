@@ -15,14 +15,9 @@ import edu.osu.cse.groenkeb.logic.model.Domain;
 import edu.osu.cse.groenkeb.logic.model.FirstOrderModel;
 import edu.osu.cse.groenkeb.logic.parse.SentenceParser;
 import edu.osu.cse.groenkeb.logic.parse.SentenceParserOpts;
-import edu.osu.cse.groenkeb.logic.proof.NaiveProofStrategy;
-import edu.osu.cse.groenkeb.logic.proof.ProofContext;
-import edu.osu.cse.groenkeb.logic.proof.ProofResult;
-import edu.osu.cse.groenkeb.logic.proof.ProofSolver;
-import edu.osu.cse.groenkeb.logic.proof.Success;
+import edu.osu.cse.groenkeb.logic.proof.*;
 import edu.osu.cse.groenkeb.logic.proof.types.Premise;
 import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise;
-import edu.osu.cse.groenkeb.logic.test.CommandProcessor.Command;
 import edu.osu.cse.groenkeb.utils.Convert;
 import scala.collection.JavaConversions;
 
@@ -115,15 +110,29 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
       final ImmutableSet<Premise> falsifyPremiseSet = ImmutableSet.of (new ProudPremise(this.sentence));
       final ProofContext falsifyProofContext = new ProofContext(new Absurdity(), current.getModel().rules(), Convert.toScalaSet (falsifyPremiseSet));
       final scala.collection.immutable.Stream <ProofResult> verifyResults = solver.prove(verifyProofContext);
-      final java.util.Iterator<ProofResult> results = JavaConversions.asJavaIterator (verifyResults.iterator ());
+      java.util.Iterator<ProofResult> results = JavaConversions.asJavaIterator (verifyResults.iterator ());
       while (results.hasNext())
       {
         ProofResult result = results.next();
         if (result instanceof Success)
         {
-          System.out.println(result);
+          ProofUtils.prettyPrint (((Success) result).proof ());
+          return current;
         }
       }
+      
+      final scala.collection.immutable.Stream<ProofResult> falsifyResults = solver.prove(falsifyProofContext);
+      results = JavaConversions.asJavaIterator (falsifyResults.iterator());
+      while (results.hasNext())
+      {
+        ProofResult result = results.next();
+        if (result instanceof Success)
+        {
+          ProofUtils.prettyPrint (((Success) result).proof ());
+          return current;
+        }
+      }
+      
       return current;
     }
   }

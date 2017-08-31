@@ -145,7 +145,7 @@ case class ConditionalFalsification() extends FalsificationRule() {
       case UnaryArgs(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), _, _), Empty())) =>
         IncompleteResult(TernaryParams(EmptyProof(BinarySentence(ante, conseq, Implies())),
                                        AnyProof(ante),
-                                       RelevantProof(Absurdity(), Required(Assumption(conseq)))))
+                                       RelevantProof(Absurdity(), Required(Assumption(conseq)), Assumption(BinarySentence(ante, conseq, Implies())))))
       case _ => NullResult()
     }
     case _ => NullResult()
