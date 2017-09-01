@@ -11,12 +11,12 @@ abstract class AbstractRule extends Rule {
   def exists(sentences: Sentence*) = CaseAssumptions(sentences:_*)
 }
 
-final case class IdentityRule protected() extends AbstractRule {
+final case class IdentityRule() extends AbstractRule {
   def major(proof: Proof) = proof match {
     case CompleteProof(Conclusion(_, _, _), _) => true
     case _ => false
   }
-  
+
   def minor(proof: Proof) = false
 
   def yields(sentence: Sentence) = true
@@ -26,23 +26,22 @@ final case class IdentityRule protected() extends AbstractRule {
       CompleteResult(CompleteProof(`conc`, this, args, prems))
     case _ => IncompleteResult(UnaryParams(AnyProof(conc)))
   }
-  
+
   override def toString = "<id>"
 }
 
-final case class NullRule protected() extends AbstractRule {
+final case class NullRule() extends AbstractRule {
   def major(proof: Proof) = false
-  
+
   def minor(proof: Proof) = false
 
   def yields(sentence: Sentence) = false
 
   def infer(conc: Sentence)(args: RuleArgs) = NullResult()
-  
+
   override def toString = "<>"
 }
 
 protected case class CaseAssumptions(sentences: Sentence*) {
   def in[T <: Premise](prems: Traversable[T]) = prems.forall { p => sentences.forall { s => p.matches(s) } }
 }
-
