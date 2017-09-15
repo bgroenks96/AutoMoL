@@ -242,9 +242,37 @@ class ModelVerificationTests {
   }
   
   @Test
+  def testSimpleVerificationProof3_LEM() {
+    implicit val opMatcher = new DefaultPropOpMatcher()
+    val sentence = "(or F[a] (not F[a]))"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel();
+    val rules = standardRules(model)
+    val context = ProofContext(parser.parse(sentence), rules, Nil)
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
   def testSimpleFalsificationProof1() {
     implicit val opMatcher = new DefaultPropOpMatcher()
     val sentence = "(if (and R[a] R[b]) Q[b])"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("R[b]"), parser.parse("Q[a]"));
+    val rules = standardRules(model)
+    val context = ProofContext(Absurdity(), rules, Seq(ProudPremise(parser.parse(sentence))))
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testSimpleFalsificationProof2() {
+        implicit val opMatcher = new DefaultPropOpMatcher()
+    val sentence = "or Q[b] (if Q[a] R[c])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
     val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("R[b]"), parser.parse("Q[a]"));
     val rules = standardRules(model)

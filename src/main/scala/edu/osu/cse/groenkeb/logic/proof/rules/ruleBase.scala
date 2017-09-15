@@ -43,5 +43,5 @@ final case class NullRule() extends AbstractRule {
 }
 
 protected case class CaseAssumptions(sentences: Sentence*) {
-  def in[T <: Premise](prems: Traversable[T]) = prems.forall { p => sentences.forall { s => p.matches(s) } }
+  def in[T <: Premise](prems: Traversable[T]) = sentences forall { s => prems exists { p => p.matches(s) }}
 }

@@ -40,7 +40,7 @@ case class NegationFalsification() extends FalsificationRule {
     case CompleteProof(Conclusion(UnarySentence(_, Not()),_,_), _) => true
     case _ => false
   }
-  
+
   def minor(proof: Proof) = proof match {
     // any complete proof is a candidate for minor subproof of not-f
     case CompleteProof(Conclusion(_,_,_), _) => true
@@ -60,7 +60,7 @@ case class NegationFalsification() extends FalsificationRule {
     }
     case _ => NullResult()
   }
-  
+
   override def toString = "<Not-F>"
 }
 
@@ -69,25 +69,25 @@ case class AndFalsification() extends FalsificationRule {
     case CompleteProof(Conclusion(BinarySentence(_, _, And()), _, _), _) => true
     case _ => false
   }
-  
+
   def minor(proof: Proof) = proof match {
     case CompleteProof(Conclusion(Absurdity(), _, _), _) => true
     case _ => false
   }
-  
+
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity() => args match {
       case BinaryArgs(CompleteProof(Conclusion(BinarySentence(left, right, And()), _, _), Empty()),
                       CompleteProof(Conclusion(Absurdity(), _, _), prems)) if prems exists { p => p.matches(left) || p.matches(right) } =>
-                        CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), prems))
-      case UnaryArgs(CompleteProof(Conclusion(BinarySentence(left, right, And()), _, _), Empty())) => 
+                        CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), prems + Assumption(BinarySentence(left, right, And()))))
+      case UnaryArgs(CompleteProof(Conclusion(BinarySentence(left, right, And()), _, _), Empty())) =>
         IncompleteResult(BinaryParams(EmptyProof(BinarySentence(left, right, And())),
                                       RelevantProof(Absurdity(), Variate(Assumption(left), Assumption(right)), Assumption(BinarySentence(left, right, And())))))
       case _ => NullResult()
     }
     case _ => NullResult()
   }
-  
+
   override def toString = "<And-F>"
 }
 
@@ -96,18 +96,19 @@ case class OrFalsification() extends FalsificationRule() {
     case CompleteProof(Conclusion(BinarySentence(x, y, Or()), _, _), Empty()) => true
     case _ => false
   }
-  
+
   def minor(proof: Proof) = proof match {
     case CompleteProof(Conclusion(Absurdity(), _, _), _) => true
     case _ => false
   }
-  
+
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity() => args match {
       case TernaryArgs(CompleteProof(Conclusion(BinarySentence(left, right, Or()), _, _), Empty()), arg1, arg2) => (arg1, arg2) match {
         case (CompleteProof(Conclusion(Absurdity(), _, _), pleft), CompleteProof(Conclusion(Absurdity(), _, _), pright))
           if exists(left).in(pleft) && exists(right).in(pright) =>
-            CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), pleft ++ pright))
+            CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), (pleft ++ pright) + Assumption(BinarySentence(left, right, Or()))))
+        case _ => NullResult()
       }
       case UnaryArgs(CompleteProof(Conclusion(BinarySentence(left, right, Or()), _, _), Empty())) =>
         IncompleteResult(TernaryParams(EmptyProof(BinarySentence(left, right, Or())),
@@ -117,7 +118,7 @@ case class OrFalsification() extends FalsificationRule() {
     }
     case _ => NullResult()
   }
-  
+
   override def toString = "<Or-F>"
 }
 
@@ -126,7 +127,7 @@ case class ConditionalFalsification() extends FalsificationRule() {
     case CompleteProof(Conclusion(BinarySentence(_,_, Implies()),_,_), _) => true
     case _ => false
   }
-  
+
   def minor(proof: Proof) = proof match {
     // case for complete minor sub-proof of antecedent
     case CompleteProof(Conclusion(s,_,_), _) if !s.isInstanceOf[Absurdity] => true
@@ -134,13 +135,13 @@ case class ConditionalFalsification() extends FalsificationRule() {
     case CompleteProof(Conclusion(Absurdity(),_,_), _) => true
     case _ => false
   }
-  
+
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity() => args match {
       case TernaryArgs(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), _, _), Empty()), arg1, arg2) => (arg1, arg2) match {
         case (CompleteProof(Conclusion(`ante`, _, _), aprems), CompleteProof(Conclusion(Absurdity(), _, _), cprems))
           if exists(conseq).in(cprems) =>
-            CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), aprems ++ cprems))
+            CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), (aprems ++ cprems) + Assumption(BinarySentence(ante, conseq, Implies()))))
       }
       case UnaryArgs(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), _, _), Empty())) =>
         IncompleteResult(TernaryParams(EmptyProof(BinarySentence(ante, conseq, Implies())),
@@ -150,7 +151,6 @@ case class ConditionalFalsification() extends FalsificationRule() {
     }
     case _ => NullResult()
   }
-  
+
   override def toString = "<Cond-F>"
 }
-

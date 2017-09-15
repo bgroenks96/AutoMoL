@@ -33,7 +33,7 @@ case class NegationVerification() extends VerificationRule() {
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case UnarySentence(sentence, Not()) => args match {
       case UnaryArgs(CompleteProof(Conclusion(Absurdity(), _, _), prems)) if  exists(sentence).in(prems) =>
-        CompleteResult(CompleteProof(Conclusion(sentence, this, args), prems))
+        CompleteResult(CompleteProof(Conclusion(conc, this, args), prems))
       case _ => IncompleteResult(UnaryParams(RelevantProof(Absurdity(), Required(Assumption(sentence)))))
     }
     case _ => NullResult()

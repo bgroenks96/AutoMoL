@@ -39,12 +39,12 @@ import edu.osu.cse.groenkeb.logic.proof.types.Proof
 import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
 
 class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
-  
+
   def prove(context: ProofContext): Stream[ProofResult] = {
     implicit val cntxt = context
     ProofSearch(step { proof(strategy.premises) } )()
   }
-  
+
   private def proof(premises: scala.Seq[Premise])(implicit context: ProofContext): ProofResult = context.goal match {
     case Absurdity() => premises match {
       case Nil => failure()
@@ -66,7 +66,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
         case Conclusion(s, rule, args) if context.hasGoal(s) => args match {
           case EmptyArgs() => success(CompleteProof(s, rule, args, Set()), proof(rem))
           case UnaryArgs(proof0) => success(CompleteProof(s, rule, args, proof0.premises), proof(rem))
-          case BinaryArgs(proof0, proof1) => 
+          case BinaryArgs(proof0, proof1) =>
             success(CompleteProof(s, rule, args, proof0.premises ++ proof1.premises), proof(rem))
           case TernaryArgs(proof0, proof1, proof2) =>
             success(CompleteProof(s, rule, args, proof0.premises ++ proof1.premises ++ proof2.premises), proof(rem))
@@ -77,7 +77,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
       }
     }
   }
-  
+
   // NOT DONE YET!
   private def inferFrom(rules: RuleSet, args: RuleArgs = EmptyArgs())(implicit context: ProofContext): ProofResult = {
     // inferFromResults matches the given sequence of Success results to a RuleArgs type and performs the final inference
@@ -88,24 +88,24 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
         case Left(proof:CompleteProof) => proof
         // Exceptional case: one or more of the supplied Success results failed to satisfy the precondition.
         // This would indicate a bug in the calling code.
-        case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + r)
+        case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + args)
       }
       case Seq(res0, res1) => infer(rule, BinaryArgs(res0.proof, res1.proof)) match {
         case Left(proof:CompleteProof) => proof
-        case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + r)
+        case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + args)
       }
       case Seq(res0, res1, res2) => infer(rule, TernaryArgs(res0.proof, res1.proof, res2.proof)) match {
         case Left(proof:CompleteProof) => proof
-        case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + r)
+        case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + args)
       }
       // TODO handle multi-arg case
     }
-    
+
     // filterSuccess filters the given proof results to include only those that are both successful and yield the given conclusion.
-    def filterSuccess(results: Stream[ProofResult], conc: Sentence): Stream[Success] = results collect { 
+    def filterSuccess(results: Stream[ProofResult], conc: Sentence): Stream[Success] = results collect {
       case r:Success if r.proof.conc.matches(conc) || r.proof.conc.conclusion.isAbsurdity => r.asInstanceOf[Success]
     }
-    
+
     // advance discards the head of the first Stream in 'paramResults' that has more than a single result, leaving the remainder
     // of the Streams unchanged.
     def advance(paramResults: scala.collection.Seq[Stream[ProofResult]]): Seq[Stream[ProofResult]] = paramResults match {
@@ -113,9 +113,9 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
       case Seq(Stream(head, next, tail@_*), rem@_*) => Seq(Stream.cons(next, { tail.toStream })) ++ rem
       case Seq(Stream(head), rem@_*) => Seq(Stream(head)) ++ advance(rem)
     }
-    
+
     // ------ Aggregator Functions ------- //
-    
+
     def unaryResults(p0: RuleParam)(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])(implicit rule: Rule): ProofResult =
       paramResults match {
         case Seq(results0) => filterSuccess(results0, p0.goal) match {
@@ -126,44 +126,44 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
         // unaryResults only supports a single set of results for a single parameter
         case _ => throw new IllegalArgumentException("unexpected parameter count for unary results")
       }
-    
-    
+
+
     def binaryResults(p0: RuleParam, p1: RuleParam)(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])
                      (implicit rule: Rule): ProofResult = {
       paramResults match {
         case Seq(results0, results1) => (filterSuccess(results0, p0.goal), filterSuccess(results1, p1.goal)) match {
           case (filtered0, filtered1) if filtered0.isEmpty || filtered1.isEmpty => failure()
           case (Stream(head0), Stream(head1)) => success(inferFromResults(head0, head1))
-          case (filtered0, filtered1) => 
+          case (filtered0, filtered1) =>
             success(inferFromResults(filtered0.head, filtered1.head), { binaryResults(p0, p1)(resultContext, advance(paramResults)) })
         }
         // binaryResults only supports two results for two parameters
         case _ => throw new IllegalArgumentException("unexpected parameter count for binary results")
       }
     }
-    
+
     def ternaryResults(p0: RuleParam, p1: RuleParam, p2: RuleParam)
                       (resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])
                       (implicit rule: Rule): ProofResult = {
       paramResults match {
         case Seq(r0, r1, r2) => (filterSuccess(r0, p0.goal), filterSuccess(r1, p1.goal), filterSuccess(r2, p2.goal)) match {
-          case (f0, f1, f2) if f0.isEmpty || f0.isEmpty => failure()
+          case (f0, f1, f2) if f0.isEmpty || f1.isEmpty || f2.isEmpty => failure()
           case (Stream(head0), Stream(head1), Stream(head2)) => success(inferFromResults(head0, head1, head2))
-          case (f0, f1, f2) => 
+          case (f0, f1, f2) =>
             success(inferFromResults(f0.head, f1.head, f2.head), { ternaryResults(p0, p1, p2)(resultContext, advance(paramResults)) })
         }
         // ternaryResults only supports three results for two parameters
         case _ => throw new IllegalArgumentException("unexpected parameter count for binary results")
       }
     }
-    
+
     def optionResults(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]]): ProofResult = paramResults match {
       case Seq(res) => res.head
       case _ => throw new IllegalArgumentException("unexpected parameter count for binary results")
     }
-    
+
     // ------------------------- //
-    
+
     // pendingParams creates a new 'Pending' instance for the given RuleParams and Rule
     def pendingParams(params: RuleParams)(implicit rule: Rule): Pending = params match {
       case UnaryParams(param0) => pending(unaryResults(param0), step { tryParam(param0) })
@@ -181,7 +181,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
       // TODO Make sure EmptyParams/EmptyArgs is actually necessary; I can't remember why they were added. ¯\(°_o)/¯
       case EmptyParams() => throw new RuntimeException("infer returned invalid parameters")
     }
-    
+
     rules match {
       case RuleSet(Nil) => failure()
       case RuleSet(Seq(head, rem @ _*)) => infer(head, args) match {
@@ -191,7 +191,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
       }
     }
   }
-  
+
   private def tryParam(param: RuleParam)(implicit context: ProofContext): ProofResult = param match {
     case EmptyProof(conc) => success(ProudPremise(conc).proof)
     case AnyProof(conc) => {
@@ -203,7 +203,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
       proof(strategy.premises(newContext))(newContext)
     }
   }
-  
+
   private def infer(rule: Rule, args: RuleArgs = EmptyArgs())(implicit context: ProofContext): Either[Proof, RuleParams] = {
     rule.infer(context.goal)(args) match {
       // case for trivial (tautological) proof
@@ -216,40 +216,40 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
   }
 
   ///////// Utility Methods ///////////
-  
+
   // convenience method that creates a new ProofStep instance from a call-by-name parameter
   private def step(stepFunc: => ProofResult)(implicit context: ProofContext) = ProofStep { stepFunc }
-  
+
   private def success(proof: CompleteProof, hint: SearchHint)(implicit context: ProofContext) = {
     strategy.decide(Success(proof, context, hint))
   }
-  
+
   private def success(proof: CompleteProof, continuation: => ProofResult)(implicit context: ProofContext) = {
     strategy.decide(Success(proof, context, Continue(step(continuation))))
   }
-  
+
   private def success(proof: CompleteProof)(implicit context: ProofContext) = strategy.decide(Success(proof, context, Cut()))
-  
+
   private def failure(hint: SearchHint)(implicit context: ProofContext) = strategy.decide(Failure(context, hint))
-  
+
   private def failure(continuation: => ProofResult)(implicit context: ProofContext) = {
     strategy.decide(Failure(context, Continue(step(continuation))))
   }
-  
+
   private def failure()(implicit context: ProofContext) = strategy.decide(Failure(context, Cut()))
-  
+
   private def pending(aggregator: (ProofContext, Seq[Stream[ProofResult]]) => ProofResult,
                       steps: ProofStep*)(implicit context: ProofContext) = {
     Pending(context, immutable(steps), aggregator)
   }
-  
+
   private def immutable[T](seq: scala.Seq[T]) = scala.collection.immutable.Seq(seq:_*)
-  
+
 //  private def then(result: ProofResult, continue: () => Proof = null): Proof = result match {
 //    case Failure(proof, Continue()) if continue != null => continue()
 //    case finish => finish.proof
 //  }
-//  
+//
 //  private def proofFromPremises(premises: Seq[Premise])(implicit context: ProofContext): Proof = premises match {
 //    case Nil => proofFromInference(RuleSet(strategy.rules))
 //    case Seq(head, rem@_*) => head match {
@@ -280,7 +280,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
 //      case _ => proofFromPremises(rem)
 //    }
 //  }
-//  
+//
 //  private def proofFromInference(rules: RuleSet, args: RuleArgs = EmptyArgs())(implicit context: ProofContext): Proof = rules match {
 //    case RuleSet(Nil) => NullProof(context.premises)
 //    case RuleSet(Seq(head, rem@_*)) => infer(head, args) match {
@@ -292,7 +292,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
 //      }
 //    }
 //  }
-//  
+//
 //  private def relevantProof(discharge: Discharge, restrict: Seq[Assumption])(implicit context: ProofContext): Proof = {
 //      val newContext = context.lessAssumptions(restrict:_*)
 //      discharge match {
