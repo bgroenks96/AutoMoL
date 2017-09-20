@@ -30,4 +30,9 @@ public class Convert
   {
     return new scala.collection.immutable.HashSet<> ();
   }
+  
+  public static <T> scala.collection.Iterable<T> toScalaItr(java.lang.Iterable <T> itr)
+  {
+    return JavaConversions.iterableAsScalaIterable(itr);
+  }
 }

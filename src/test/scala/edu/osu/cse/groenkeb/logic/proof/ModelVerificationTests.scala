@@ -29,6 +29,8 @@ import edu.osu.cse.groenkeb.logic.proof.rules.RuleSet
 import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
 import edu.osu.cse.groenkeb.logic.model.rules.ConditionalFalsification
 import edu.osu.cse.groenkeb.logic.proof.types.Assumption
+import edu.osu.cse.groenkeb.logic.model.rules.UniversalVerification
+import edu.osu.cse.groenkeb.logic.parse.DefaultFirstOrderOpMatcher
 
 class ModelVerificationTests {
   val _name = new TestName()
@@ -271,7 +273,7 @@ class ModelVerificationTests {
   
   @Test
   def testSimpleFalsificationProof2() {
-        implicit val opMatcher = new DefaultPropOpMatcher()
+    implicit val opMatcher = new DefaultPropOpMatcher()
     val sentence = "or Q[b] (if Q[a] R[c])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
     val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("R[b]"), parser.parse("Q[a]"));
@@ -283,10 +285,25 @@ class ModelVerificationTests {
     ProofUtils.prettyPrint(results.head.proof)
   }
   
+  @Test
+  def testVerifyUniversal() {
+    implicit val opMatcher = new DefaultFirstOrderOpMatcher()
+    val sentence = "Ux (or R[x] Q[x])"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("R[b]"), parser.parse("Q[a]"));
+    val rules = standardRules(model)
+    val context = ProofContext(parser.parse(sentence), rules, Seq())
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
   private def standardRules(model: FirstOrderModel) =
     RuleSet(Seq(ModelRule(model),
     NegationVerification(), NegationFalsification(),
     AndVerification(), AndFalsification(),
     OrVerification(), OrFalsification(),
-    ConditionalVerification(), ConditionalFalsification()))
+    ConditionalVerification(), ConditionalFalsification(),
+    UniversalVerification(model.domain)))
 }

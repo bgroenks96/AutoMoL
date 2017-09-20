@@ -18,7 +18,7 @@ import edu.osu.cse.groenkeb.logic.proof.rules.EmptyParams
 import edu.osu.cse.groenkeb.logic.proof.rules.EmptyProof
 import edu.osu.cse.groenkeb.logic.proof.rules.IncompleteResult
 import edu.osu.cse.groenkeb.logic.proof.rules.NullResult
-import edu.osu.cse.groenkeb.logic.proof.rules.OptionArgs
+import edu.osu.cse.groenkeb.logic.proof.rules.NArgs
 import edu.osu.cse.groenkeb.logic.proof.rules.OptionParams
 import edu.osu.cse.groenkeb.logic.proof.rules.RelevantProof
 import edu.osu.cse.groenkeb.logic.proof.rules.Rule
@@ -37,6 +37,7 @@ import edu.osu.cse.groenkeb.logic.proof.types.NullProof
 import edu.osu.cse.groenkeb.logic.proof.types.Premise
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
 import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
+import edu.osu.cse.groenkeb.logic.proof.rules.NParams
 
 class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
 
@@ -71,7 +72,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
             success(CompleteProof(s, rule, args, proof0.premises ++ proof1.premises), proof(rem))
           case TernaryArgs(proof0, proof1, proof2) =>
             success(CompleteProof(s, rule, args, proof0.premises ++ proof1.premises ++ proof2.premises), proof(rem))
-          case OptionArgs(proofs@_*) =>
+          case NArgs(proofs) =>
             success(CompleteProof(s, rule, args, proofs flatMap { p => p.premises } toSet), proof(rem))
         }
         case _ => proof(rem)
@@ -84,23 +85,31 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
     // inferFromResults matches the given sequence of Success results to a RuleArgs type and performs the final inference
     // step. It is assumed that the given result has already been validated to fulfill the necessary inference requirements.
     // Failure to meet this precondition is an error on the part of the caller.
-    def inferFromResults(completed: Success*)(implicit rule: Rule): CompleteProof = immutable(completed) match {
-      case Seq(res0) => infer(rule, UnaryArgs(res0.proof)) match {
-        case Left(proof:CompleteProof) => proof
+    def inferFromUnaryResult(res0: Success)(implicit rule: Rule): CompleteProof =
+      infer(rule, UnaryArgs(res0.proof)) match {
+        case Left(proof: CompleteProof) => proof
         // Exceptional case: one or more of the supplied Success results failed to satisfy the precondition.
         // This would indicate a bug in the calling code.
         case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + args)
       }
-      case Seq(res0, res1) => infer(rule, BinaryArgs(res0.proof, res1.proof)) match {
-        case Left(proof:CompleteProof) => proof
+
+    def inferFromBinaryResults(res0: Success, res1: Success)(implicit rule: Rule): CompleteProof =
+      infer(rule, BinaryArgs(res0.proof, res1.proof)) match {
+        case Left(proof: CompleteProof) => proof
         case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + args)
       }
-      case Seq(res0, res1, res2) => infer(rule, TernaryArgs(res0.proof, res1.proof, res2.proof)) match {
-        case Left(proof:CompleteProof) => proof
+
+    def inferFromTernaryResults(res0: Success, res1: Success, res2: Success)(implicit rule: Rule): CompleteProof =
+      infer(rule, TernaryArgs(res0.proof, res1.proof, res2.proof)) match {
+        case Left(proof: CompleteProof) => proof
         case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + args)
       }
-      // TODO handle multi-arg case
-    }
+    
+    def inferFromNResults(resN: Seq[Success])(implicit rule: Rule): CompleteProof =
+      infer(rule, NArgs(resN.map { s => s.proof })) match {
+        case Left(proof: CompleteProof) => proof
+        case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + args)
+      }
 
     // filterSuccess filters the given proof results to include only those that are both successful and yield the given conclusion.
     def filterSuccess(results: Stream[ProofResult], conc: Sentence): Stream[Success] = results collect {
@@ -121,8 +130,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
       paramResults match {
         case Seq(results0) => filterSuccess(results0, p0.goal) match {
           case Stream() => failure()
-          case Stream(head, rem@_*) => success(inferFromResults(head), { unaryResults(p0)(resultContext, Seq(rem.toStream)) })
-          case Stream(head) => success(inferFromResults(head))
+          case Stream(head, rem@_*) => success(inferFromUnaryResult(head), { unaryResults(p0)(resultContext, Seq(rem.toStream)) })
         }
         // unaryResults only supports a single set of results for a single parameter
         case _ => throw new IllegalArgumentException("unexpected parameter count for unary results")
@@ -134,9 +142,8 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
       paramResults match {
         case Seq(results0, results1) => (filterSuccess(results0, p0.goal), filterSuccess(results1, p1.goal)) match {
           case (filtered0, filtered1) if filtered0.isEmpty || filtered1.isEmpty => failure()
-          case (Stream(head0), Stream(head1)) => success(inferFromResults(head0, head1))
           case (filtered0, filtered1) =>
-            success(inferFromResults(filtered0.head, filtered1.head), { binaryResults(p0, p1)(resultContext, advance(paramResults)) })
+            success(inferFromBinaryResults(filtered0.head, filtered1.head), { binaryResults(p0, p1)(resultContext, advance(paramResults)) })
         }
         // binaryResults only supports two results for two parameters
         case _ => throw new IllegalArgumentException("unexpected parameter count for binary results")
@@ -149,12 +156,23 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
       paramResults match {
         case Seq(r0, r1, r2) => (filterSuccess(r0, p0.goal), filterSuccess(r1, p1.goal), filterSuccess(r2, p2.goal)) match {
           case (f0, f1, f2) if f0.isEmpty || f1.isEmpty || f2.isEmpty => failure()
-          case (Stream(head0), Stream(head1), Stream(head2)) => success(inferFromResults(head0, head1, head2))
           case (f0, f1, f2) =>
-            success(inferFromResults(f0.head, f1.head, f2.head), { ternaryResults(p0, p1, p2)(resultContext, advance(paramResults)) })
+            success(inferFromTernaryResults(f0.head, f1.head, f2.head), { ternaryResults(p0, p1, p2)(resultContext, advance(paramResults)) })
         }
         // ternaryResults only supports three results for two parameters
         case _ => throw new IllegalArgumentException("unexpected parameter count for binary results")
+      }
+    }
+    
+    def nResults(params: Seq[RuleParam])
+                (resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])(implicit rule: Rule): ProofResult = {
+      val filtered = for ((res, p) <- (paramResults zip params)) yield filterSuccess(res, p.goal)
+      filtered match {
+        case anyMissing if anyMissing.length < params.length => failure()
+        case all if all.forall { res => !res.isEmpty } =>
+          success(inferFromNResults(filtered.map { r => r.head }),
+          { nResults(params)(resultContext, advance(paramResults)) })
+        case _ => failure()
       }
     }
 
@@ -174,11 +192,11 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
                 step { tryParam(param0) },
                 step { tryParam(param1) },
                 step { tryParam(param2) })
-      case OptionParams(opts @ _*) => {
+      case NParams(params) => pending(nResults(immutable(params)), params.map { p => step { tryParam(p) }}:_*)
+      case OptionParams(opts @ _*) =>
         pending(optionResults, opts.map {
           params => step({ pendingParams(params) })
         }.reduce((acc, step) => acc.then(step)))
-      }
       // TODO Make sure EmptyParams/EmptyArgs is actually necessary; I can't remember why they were added. ¯\(°_o)/¯
       case EmptyParams() => throw new RuntimeException("infer returned invalid parameters")
     }
@@ -196,11 +214,11 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
   private def tryParam(param: RuleParam)(implicit context: ProofContext): ProofResult = param match {
     case EmptyProof(conc) => success(ProudPremise(conc).proof)
     case AnyProof(conc) => {
-      implicit val newContext = context.withGoal(conc)
+      val newContext = context.withGoal(conc)
       proof(strategy.premises(newContext))(newContext)
     }
     case RelevantProof(conc, discharges, restrict@_*) => {
-      implicit val newContext = context.withGoal(conc).withAssumptions(discharges.assumptions:_*).lessPremises(restrict:_*)
+      val newContext = context.withGoal(conc).withAssumptions(discharges.assumptions:_*).lessPremises(restrict:_*)
       proof(strategy.premises(newContext))(newContext)
     }
   }

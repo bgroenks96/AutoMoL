@@ -71,7 +71,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
   
   public SetCommand parseSet(final String input)
   {
-    Domain auxDomain = new Domain(Convert.emptyScalaSeq ());
+    Domain auxDomain = new Domain();
     final List<Sentence> sentences = new ArrayList<Sentence>();
     for (final String pt : input.split(";"))
     {
@@ -80,7 +80,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
       {
         final List<String> termStrs = Arrays.asList(str.substring(1, str.length() - 1).split(","));
         final Stream<Term> terms = termStrs.stream().map((String s) -> new Term(s));
-        auxDomain = auxDomain.merge(new Domain(Convert.toScalaSeq(terms::iterator)));
+        auxDomain = auxDomain.merge(Domain.apply(Convert.toScalaItr(terms::iterator)));
       }
       else
       {

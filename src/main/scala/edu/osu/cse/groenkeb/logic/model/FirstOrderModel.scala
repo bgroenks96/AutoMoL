@@ -43,7 +43,7 @@ object FirstOrderModel {
   
   private def diagram(sentences: Sentence*): AtomicDiagram = sentences.toList match {
     case Nil => AtomicDiagram(Domain())
-    case AtomicSentence(atom) :: rem => AtomicDiagram(Domain(atom.terms:_*), atom.toRelation) ++ diagram(rem:_*)
+    case AtomicSentence(atom) :: rem => AtomicDiagram(Domain(atom.terms.toSet), atom.toRelation) ++ diagram(rem:_*)
     case _ => throw ParserException("found non-atomic sentence in model declaration")
     //case sentence :: rem => diagram(domain, sentence.decompose():_*) ++ diagram(domain, rem:_*)
   }
