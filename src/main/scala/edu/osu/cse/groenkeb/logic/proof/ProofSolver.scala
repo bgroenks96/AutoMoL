@@ -46,16 +46,17 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
   }
 
   private def proof(premises: scala.Seq[Premise])(implicit context: ProofContext): ProofResult = context.goal match {
-    case Absurdity() => premises match {
+    case Absurdity => premises match {
       case Nil => failure()
-      case Seq(head, rem@_*) => head match {
+      case Seq(head, rem @ _*) => head match {
         case s => {
-          var relevantRules = strategy.rules.acceptingMajor(ProudPremise(s.sentence).proof).yielding(Absurdity())
-                  inferFrom(relevantRules, UnaryArgs(ProudPremise(s.sentence).proof)) match {
-                    case Success(cp, cntxt, prems) => success(cp, { proof(rem) })
-                    case Failure(cntxt, hint) => failure(hint -> Continue(step({ proof(rem) })))
-                    case pending:Pending => pending
-          }}
+          var relevantRules = strategy.rules.acceptingMajor(ProudPremise(s.sentence).proof).yielding(Absurdity)
+          inferFrom(relevantRules, UnaryArgs(ProudPremise(s.sentence).proof)) match {
+            case Success(cp, cntxt, prems) => success(cp, { proof(rem) })
+            case Failure(cntxt, hint) => failure(hint -> Continue(step({ proof(rem) })))
+            case pending: Pending => pending
+          }
+        }
       }
     }
     case goal => premises match {
@@ -103,7 +104,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
 
     // filterSuccess filters the given proof results to include only those that are both successful and yield the given conclusion.
     def filterSuccess(results: Stream[ProofResult], conc: Sentence): Stream[Success] = results collect {
-      case r:Success if r.proof.conc.matches(conc) || r.proof.conc.conclusion.isAbsurdity => r.asInstanceOf[Success]
+      case r:Success if r.proof.conc.matches(conc) || r.proof.conc.conclusion == Absurdity => r.asInstanceOf[Success]
     }
 
     // advance discards the head of the first Stream in 'paramResults' that has more than a single result, leaving the remainder

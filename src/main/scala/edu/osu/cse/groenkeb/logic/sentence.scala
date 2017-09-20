@@ -7,10 +7,24 @@ sealed abstract class Sentence
   def substitute(orig: Term, sub: Term): Sentence
   def decompose(): Seq[Sentence]
   override def toString: String
+}
+
+case object Absurdity extends Sentence
+{
+  def matches(s: Sentence) = s match {
+    case Absurdity => true
+    case _ => false
+  }
   
-  def isAbsurdity = this.isInstanceOf[Absurdity]
+  def contains(s: Sentence) = matches(s)
   
-  def isNotAbsurdity = !this.isAbsurdity
+  def decompose() = List(this)
+  
+  def substitute(orig: Term, sub: Term) = this
+  
+  def ref = this
+  
+  override def toString() = "!"
 }
 
 case class AtomicSentence(atom: Atom) extends Sentence
@@ -33,7 +47,7 @@ case class AtomicSentence(atom: Atom) extends Sentence
 
 case class BinarySentence(val left: Sentence, val right: Sentence, val conn: BinaryConnective) extends Sentence
 {
-  require(left != Absurdity() && right != Absurdity())
+  require(left != Absurdity && right != Absurdity)
   def matches(s: Sentence) = s match {
     case BinarySentence(left, right, conn) => this.left.matches(left) && this.right.matches(right) && this.conn.matches(conn)
     case _ => false
@@ -50,7 +64,7 @@ case class BinarySentence(val left: Sentence, val right: Sentence, val conn: Bin
 
 case class UnarySentence(val operand: Sentence, val conn: UnaryConnective) extends Sentence
 {
-  require(operand != Absurdity())
+  require(operand != Absurdity)
   def matches(s: Sentence) = s match {
     case UnarySentence(operand, conn) => this.operand.matches(operand) && this.conn.matches(conn)
     case _ => false
@@ -67,7 +81,7 @@ case class UnarySentence(val operand: Sentence, val conn: UnaryConnective) exten
 
 case class QuantifiedSentence(val operand: Sentence, val quantifier: Quantifier) extends Sentence
 {
-    require(operand != Absurdity())
+    require(operand != Absurdity)
     def matches(s: Sentence) = s match {
     case QuantifiedSentence(operand, quantifier) => this.operand.matches(operand) && this.quantifier.matches(quantifier)
     case _ => false
@@ -80,22 +94,6 @@ case class QuantifiedSentence(val operand: Sentence, val quantifier: Quantifier)
   def decompose() = List(operand)
   
   override def toString() = String.format("%s(%s)", quantifier, operand)
-}
-
-case class Absurdity() extends Sentence
-{
-  def matches(s: Sentence) = s match {
-    case Absurdity() => true
-    case _ => false
-  }
-  
-  def contains(s: Sentence) = matches(s)
-  
-  def decompose() = List(this)
-  
-  def substitute(orig: Term, sub: Term) = this
-  
-  override def toString() = "!"
 }
 
 case class NullSentence() extends Sentence

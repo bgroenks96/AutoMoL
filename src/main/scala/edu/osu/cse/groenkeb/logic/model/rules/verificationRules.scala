@@ -18,12 +18,9 @@ abstract class VerificationRule extends AbstractRule
 
 case class NegationVerification() extends VerificationRule() {  
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(Absurdity(), _, _), _) => true
+    case CompleteProof(Conclusion(Absurdity, _, _), _) => true
     case _ => false
   }
-  
-  // not-v accepts only one premise
-  def minor(proof: Proof) = false
   
   def yields(conc: Sentence) = conc match {
     case UnarySentence(_, Not()) => true
@@ -32,24 +29,22 @@ case class NegationVerification() extends VerificationRule() {
   
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case UnarySentence(sentence, Not()) => args match {
-      case UnaryArgs(CompleteProof(Conclusion(Absurdity(), _, _), prems)) if  exists(sentence).in(prems) =>
-        CompleteResult(CompleteProof(Conclusion(conc, this, args), prems))
-      case _ => IncompleteResult(UnaryParams(RelevantProof(Absurdity(), Required(Assumption(sentence)))))
+      case UnaryArgs(CompleteProof(Conclusion(Absurdity, _, _), prems)) if  exists(sentence).in(prems) =>
+        val discharge = Assumption(sentence)
+        CompleteResult(CompleteProof(Conclusion(conc, this, args), prems - discharge))
+      case _ => IncompleteResult(UnaryParams(RelevantProof(Absurdity, Required(Assumption(sentence)))))
     }
     case _ => NullResult()
   }
   
-  override def toString = "<Not-V>"
+  override def toString = "~v"
 }
 
 case class AndVerification() extends VerificationRule() {
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(s,_,_), _) if !s.isInstanceOf[Absurdity] => true
+    case CompleteProof(Conclusion(s,_,_), _) if s != Absurdity => true
     case _ => false
   }
-  
-  // acceptance form for minor proof identical to major
-  def minor(proof: Proof) = major(proof)
   
   def yields(conc: Sentence) = conc match {
     case BinarySentence(_, _, And()) => true
@@ -65,17 +60,14 @@ case class AndVerification() extends VerificationRule() {
     case _ => NullResult()
   }
   
-  override def toString = "<And-V>"
+  override def toString = "&v"
 }
 
 case class OrVerification() extends VerificationRule() {
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(s,_,_), _) if !s.isInstanceOf[Absurdity] => true
+    case CompleteProof(Conclusion(s,_,_), _) if s != Absurdity => true
     case _ => false
   }
-  
-  // or-v accepts only one premise
-  def minor(proof: Proof) = false
   
   def yields(conc: Sentence) = conc match {
     case BinarySentence(_, _, Or()) => true
@@ -92,7 +84,7 @@ case class OrVerification() extends VerificationRule() {
     case _ => NullResult()
   }
   
-  override def toString = "<Or-V>"
+  override def toString = "+v"
 }
 
 case class ConditionalVerification() extends VerificationRule() {
@@ -100,9 +92,6 @@ case class ConditionalVerification() extends VerificationRule() {
     case CompleteProof(Conclusion(_,_,_), _) => true
     case _ => false
   }
-  
-  // cond-v accepts only one premise in either case
-  def minor(proof: Proof) = false
   
   def yields(conc: Sentence) = conc match {
     case BinarySentence(_, _, Implies()) => true
@@ -113,14 +102,15 @@ case class ConditionalVerification() extends VerificationRule() {
     case BinarySentence(ante, conseq, Implies()) => args match {
       case UnaryArgs(CompleteProof(Conclusion(`conseq`, _, _), prems)) =>
         CompleteResult(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), this, args), prems))
-      case UnaryArgs(CompleteProof(Conclusion(Absurdity(), _, _), prems)) if exists(ante).in(prems) =>
-        CompleteResult(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), this, args), prems))
+      case UnaryArgs(CompleteProof(Conclusion(Absurdity, _, _), prems)) if exists(ante).in(prems) =>
+        val discharge = Assumption(ante)
+        CompleteResult(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), this, args), prems - discharge))
       case _ => IncompleteResult(OptionParams(UnaryParams(AnyProof(conseq)),
-                                              UnaryParams(RelevantProof(Absurdity(), Required(Assumption(ante)), Assumption(BinarySentence(ante, conseq, Implies()))))))
+                                              UnaryParams(RelevantProof(Absurdity, Required(Assumption(ante)), Assumption(BinarySentence(ante, conseq, Implies()))))))
     }
     case _ => NullResult()
   }
   
-  override def toString = "<Cond-V>"
+  override def toString = ">V"
 }
 

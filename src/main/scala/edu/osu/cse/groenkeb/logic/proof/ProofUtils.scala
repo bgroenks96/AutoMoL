@@ -22,6 +22,6 @@ object ProofUtils {
     var conclusion = proof.conclusion.get
     if (conclusion.rule.isInstanceOf[NullRule]) return;
     println(String.format("%s %s %s {%s}\n", prefix, conclusion.sentence, conclusion.rule, proof.premises.mkString(", ")))
-    conclusion.args.prems foreach { p => prettyPrint(itr, prefix + ":") }
+    conclusion.args.prems foreach { p => prettyPrint(itr, prefix + "   ") }
   }
 }

@@ -30,7 +30,7 @@ case class ModelRule(val model: FirstOrderModel) extends Rule {
   
   def yields(conc: Sentence) = conc match {
     case AtomicSentence(atom) => model.verify(conc)
-    case Absurdity() => true
+    case Absurdity => true
     case _ => false
   }
   
@@ -40,9 +40,9 @@ case class ModelRule(val model: FirstOrderModel) extends Rule {
       //case EmptyArgs() if !model.verify(conc) => CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), Nil))
       case _ => NullResult()
     }
-    case Absurdity() => args match {
+    case Absurdity => args match {
       case UnaryArgs(CompleteProof(c, Empty())) if !model.verify(c.sentence) =>
-        CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), Set(Assumption(c.sentence))))
+        CompleteResult(CompleteProof(Conclusion(Absurdity, this, args), Set(Assumption(c.sentence))))
       case _ => NullResult()
     }
     case _ => NullResult()

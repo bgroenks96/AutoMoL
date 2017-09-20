@@ -20,10 +20,6 @@ case class RuleSet(val rules: Seq[Rule]) extends Seq[Rule] {
   def acceptingMajor(proof: Proof) = {
     subset { r => r.major(proof) }
   }
-  
-  def acceptingMinor(proof: Proof) = {
-    subset { r => r.minor(proof) }
-  }
 
   def subset(predicate: Rule => Boolean) = RuleSet(rules.filter { predicate })
   

@@ -77,7 +77,7 @@ class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) 
   private sealed abstract class NodeParser {
     def parseNode(node: NodeToken): Sentence
     protected def operand(token: Token) = token match {
-      case TerminalToken("!") => Absurdity()
+      case TerminalToken("!") => Absurdity
       case TerminalToken(x) => AtomicSentence(matchAtom(x))
       case NodeToken(children) => parseNode(NodeToken(children))
     }

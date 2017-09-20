@@ -17,8 +17,6 @@ final case class IdentityRule() extends AbstractRule {
     case _ => false
   }
 
-  def minor(proof: Proof) = false
-
   def yields(sentence: Sentence) = true
 
   def infer(conc: Sentence)(args: RuleArgs) = args match {
@@ -32,8 +30,6 @@ final case class IdentityRule() extends AbstractRule {
 
 final case class NullRule() extends AbstractRule {
   def major(proof: Proof) = false
-
-  def minor(proof: Proof) = false
 
   def yields(sentence: Sentence) = false
 

@@ -8,11 +8,6 @@ trait Rule {
    * True if this rule accepts the given proof as a MAJOR premise, false otherwise.
    */
   def major(proof: Proof): Boolean
-  
-  /**
-   * True if this rule accepts the given proof as a MINOR premise, false otherwise.
-   */
-  def minor(proof: Proof): Boolean
 
   /**
    * True if this rule yields the given sentence as a conclusion, false otherwise.

@@ -18,7 +18,7 @@ import scala.collection.immutable.Set
 
 case class AndIntroductionRule() extends AbstractRule {
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(s, _, _), _) if !s.isInstanceOf[Absurdity] => true
+    case CompleteProof(Conclusion(s, _, _), _) if s != Absurdity => true
     case _ => false
   }
   
@@ -52,7 +52,7 @@ case class AndEliminationRule() extends AbstractRule {
   }
   
   def minor(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(s,_,_), _) if s.isNotAbsurdity => true
+    case CompleteProof(Conclusion(s,_,_), _) if s != Absurdity => true
     case _ => false
   }
 
@@ -75,7 +75,7 @@ case class AndEliminationRule() extends AbstractRule {
 
 final case class NonContradictionRule() extends AbstractRule {
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(s,_,_), _) if !s.isInstanceOf[Absurdity] => true
+    case CompleteProof(Conclusion(s,_,_), _) if s != Absurdity => true
     case _ => false
   }
   
@@ -84,14 +84,14 @@ final case class NonContradictionRule() extends AbstractRule {
     case _ => false
   }
   
-  def yields(sentence: Sentence) = sentence match { case Absurdity() => true; case _ => false }
+  def yields(sentence: Sentence) = sentence match { case Absurdity => true; case _ => false }
   
   def infer(conc: Sentence)(args: RuleArgs) = {
     val negation = Sentences.not(conc)
     args match {
       case BinaryArgs(CompleteProof(Conclusion(`conc`, _, _), pa),
                       CompleteProof(Conclusion(`negation`, _, _), pb)) =>
-                        CompleteResult(CompleteProof(Absurdity(), this, args, pa ++ pb))
+                        CompleteResult(CompleteProof(Absurdity, this, args, pa ++ pb))
       case _ => IncompleteResult(BinaryParams(AnyProof(conc), AnyProof(negation)))
     }
   }

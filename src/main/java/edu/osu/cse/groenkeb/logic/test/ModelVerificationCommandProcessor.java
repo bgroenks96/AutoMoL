@@ -8,7 +8,6 @@ import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableSet;
 
-import edu.osu.cse.groenkeb.logic.Absurdity;
 import edu.osu.cse.groenkeb.logic.Sentence;
 import edu.osu.cse.groenkeb.logic.Term;
 import edu.osu.cse.groenkeb.logic.model.Domain;
@@ -108,7 +107,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
     {
       final ProofContext verifyProofContext = new ProofContext(this.sentence, current.getModel().rules(), Convert.<Premise>emptyScalaSet());
       final ImmutableSet<Premise> falsifyPremiseSet = ImmutableSet.of (new ProudPremise(this.sentence));
-      final ProofContext falsifyProofContext = new ProofContext(new Absurdity(), current.getModel().rules(), Convert.toScalaSet (falsifyPremiseSet));
+      final ProofContext falsifyProofContext = new ProofContext(null, current.getModel().rules(), Convert.toScalaSet (falsifyPremiseSet));
       final scala.collection.immutable.Stream <ProofResult> verifyResults = solver.prove(verifyProofContext);
       java.util.Iterator<ProofResult> results = JavaConversions.asJavaIterator (verifyResults.iterator ());
       while (results.hasNext())
