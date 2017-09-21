@@ -12,6 +12,10 @@ import edu.osu.cse.groenkeb.logic.model.rules.ConditionalFalsification
 import edu.osu.cse.groenkeb.logic.model.rules.OrFalsification
 import edu.osu.cse.groenkeb.logic.model.rules.ConditionalVerification
 import edu.osu.cse.groenkeb.logic.model.rules.OrVerification
+import edu.osu.cse.groenkeb.logic.model.rules.UniversalFalsification
+import edu.osu.cse.groenkeb.logic.model.rules.UniversalVerification
+import edu.osu.cse.groenkeb.logic.model.rules.ExistentialVerification
+import edu.osu.cse.groenkeb.logic.model.rules.ExistentialFalsification
 
 case class FirstOrderModel(val diagram: AtomicDiagram) extends Model {
   def domain = diagram.domain
@@ -21,13 +25,16 @@ case class FirstOrderModel(val diagram: AtomicDiagram) extends Model {
     case UnarySentence(operand, conn) => conn.evaluate(verify, operand)
     case BinarySentence(left, right, conn) => conn.evaluate(verify, left, right)
     case QuantifiedSentence(operand, quantifier) => quantifier.evaluate(diagram.domain, verify, operand)
+    case Absurdity => false
     case NullSentence() => false
   }
   def rules: RuleSet = RuleSet(Seq(ModelRule(this),
                           NegationVerification(), NegationFalsification(),
                           AndVerification(), AndFalsification(),
                           OrVerification(), OrFalsification(),
-                          ConditionalVerification(), ConditionalFalsification()))
+                          ConditionalVerification(), ConditionalFalsification(),
+                          UniversalVerification(domain), UniversalFalsification(domain),
+                          ExistentialVerification(domain), ExistentialFalsification(domain)))
 }
 
 object FirstOrderModel {
