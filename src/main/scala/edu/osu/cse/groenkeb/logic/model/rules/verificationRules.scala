@@ -109,22 +109,22 @@ case class UniversalVerification(domain: Domain) extends VerificationRule() {
   def major(proof: Proof) = true
   
   def yields(conc: Sentence) = conc match {
-    case QuantifiedSentence(_,_) => true
+    case QuantifiedSentence(_, UniversalQuantifier(_)) => true
     case _ => false
   }
   
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case QuantifiedSentence(sentence, UniversalQuantifier(term)) => args match {
-      case NArgs(proofs) if verify(proofs, sentence, term) =>
+      case NArgs(proofs) if validate(proofs, sentence, term) =>
         CompleteResult(CompleteProof(Conclusion(conc, this, args), proofs.flatMap { p => p.premises }.toSet))
       case _ => IncompleteResult(NParams(this.domain.terms.toSeq.map { 
-          t => AnyProof(sentence.substitute(term, t)).asInstanceOf[RuleParam]
+          t => AnyProof(sentence.substitute(term, t))
         }))
     }
     case _ => NullResult()
   }
   
-  private def verify(proofs: Seq[Proof], sentence: Sentence, term: Term): Boolean = 
+  private def validate(proofs: Seq[Proof], sentence: Sentence, term: Term): Boolean = 
     proofs.length == this.domain.size && this.domain.terms.forall {
       t => proofs.exists { p => p.conclusion match {
         case Some(conc) => conc.sentence.matches(sentence.substitute(term, t))
@@ -133,5 +133,32 @@ case class UniversalVerification(domain: Domain) extends VerificationRule() {
   }
   
   override def toString = "UV"
+}
+
+case class ExistentialVerification(domain: Domain) extends VerificationRule() {
+  def major(proof: Proof) = true
+  
+  def yields(conc: Sentence) = conc match {
+    case QuantifiedSentence(_, ExistentialQuantifier(_)) => true
+    case _ => false
+  }
+  
+  def infer(conc: Sentence)(args: RuleArgs) = conc match {
+    case QuantifiedSentence(sentence, ExistentialQuantifier(term)) => args match {
+      case UnaryArgs(proof) if validate(proof, sentence, term) =>
+        CompleteResult(CompleteProof(Conclusion(conc, this, args), proof.premises))
+      case _ => IncompleteResult(OptionParams(this.domain.terms.toSeq.map {
+        t => UnaryParams(AnyProof(sentence.substitute(term, t)))
+      }:_*))
+    }
+    case _ => NullResult()
+  }
+  
+  private def validate(proof: Proof, sentence: Sentence, term: Term): Boolean = proof.conclusion match {
+    case Some(conc) => this.domain.terms.exists { t => sentence.substitute(term, t).matches(conc.sentence) }
+    case None => false
+  }
+  
+  override def toString = "EV"
 }
 

@@ -196,7 +196,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
       case OptionParams(opts @ _*) =>
         pending(optionResults, opts.map {
           params => step({ pendingParams(params) })
-        }.reduce((acc, step) => acc.then(step)))
+        }.par.reduce((acc, step) => acc.then(step)))
       // TODO Make sure EmptyParams/EmptyArgs is actually necessary; I can't remember why they were added. ¯\(°_o)/¯
       case EmptyParams() => throw new RuntimeException("infer returned invalid parameters")
     }
