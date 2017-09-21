@@ -29,6 +29,11 @@ import edu.osu.cse.groenkeb.logic.proof.rules.RuleSet
 import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise
 import edu.osu.cse.groenkeb.logic.model.rules.ConditionalFalsification
 import edu.osu.cse.groenkeb.logic.proof.types.Assumption
+import edu.osu.cse.groenkeb.logic.model.rules.UniversalVerification
+import edu.osu.cse.groenkeb.logic.parse.DefaultFirstOrderOpMatcher
+import edu.osu.cse.groenkeb.logic.model.rules.UniversalFalsification
+import edu.osu.cse.groenkeb.logic.model.rules.ExistentialVerification
+import edu.osu.cse.groenkeb.logic.model.rules.ExistentialFalsification
 
 class ModelVerificationTests {
   val _name = new TestName()
@@ -271,10 +276,80 @@ class ModelVerificationTests {
   
   @Test
   def testSimpleFalsificationProof2() {
-        implicit val opMatcher = new DefaultPropOpMatcher()
+    implicit val opMatcher = new DefaultPropOpMatcher()
     val sentence = "or Q[b] (if Q[a] R[c])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
     val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("R[b]"), parser.parse("Q[a]"));
+    val rules = standardRules(model)
+    val context = ProofContext(Absurdity, rules, Seq(ProudPremise(parser.parse(sentence))))
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testVerifyUniversal() {
+    implicit val opMatcher = new DefaultFirstOrderOpMatcher()
+    val sentence = "Ux (or R[x] Q[x])"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("R[b]"), parser.parse("Q[a]"));
+    val rules = standardRules(model)
+    val context = ProofContext(parser.parse(sentence), rules, Seq())
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testFalsifyUniversal() {
+    implicit val opMatcher = new DefaultFirstOrderOpMatcher()
+    val sentence = "Ux R[x]"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("Q[b]"));
+    val rules = standardRules(model)
+    val context = ProofContext(Absurdity, rules, Seq(ProudPremise(parser.parse(sentence))))
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testVerifyExistential() {
+    implicit val opMatcher = new DefaultFirstOrderOpMatcher()
+    val sentence = "Ex (or R[x] Q[x])"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("R[a]"));
+    val rules = standardRules(model)
+    val context = ProofContext(parser.parse(sentence), rules, Seq())
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testVerifyExistential2() {
+    implicit val opMatcher = new DefaultFirstOrderOpMatcher()
+    val sentence = "Ex (or Q[d] R[x])"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("Q[b]"), parser.parse("Q[c]"));
+    val rules = standardRules(model)
+    val context = ProofContext(parser.parse(sentence), rules, Seq())
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testFalsifyExistential() {
+    implicit val opMatcher = new DefaultFirstOrderOpMatcher()
+    val sentence = "Ex R[x]"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("Q[a]"), parser.parse("Q[b]"));
     val rules = standardRules(model)
     val context = ProofContext(Absurdity, rules, Seq(ProudPremise(parser.parse(sentence))))
     val solver = new ProofSolver(new NaiveProofStrategy())
@@ -288,5 +363,7 @@ class ModelVerificationTests {
     NegationVerification(), NegationFalsification(),
     AndVerification(), AndFalsification(),
     OrVerification(), OrFalsification(),
-    ConditionalVerification(), ConditionalFalsification()))
+    ConditionalVerification(), ConditionalFalsification(),
+    UniversalVerification(model.domain), UniversalFalsification(model.domain),
+    ExistentialVerification(model.domain), ExistentialFalsification(model.domain)))
 }

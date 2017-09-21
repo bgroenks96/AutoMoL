@@ -30,6 +30,11 @@ public final class Sentences
     return new NullSentence();
   }
   
+  public static Sentence absurdity()
+  {
+    return Absurdity$.MODULE$;
+  }
+  
 //  private Sentence result;
 //  
 //  public SentenceBuilder atom(String name)

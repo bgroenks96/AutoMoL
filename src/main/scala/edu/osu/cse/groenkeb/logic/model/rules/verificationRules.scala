@@ -1,18 +1,9 @@
 package edu.osu.cse.groenkeb.logic.model.rules
 
-import edu.osu.cse.groenkeb.logic.Absurdity
-import edu.osu.cse.groenkeb.logic.And
-import edu.osu.cse.groenkeb.logic.BinarySentence
-import edu.osu.cse.groenkeb.logic.Not
-import edu.osu.cse.groenkeb.logic.Sentence
-import edu.osu.cse.groenkeb.logic.UnarySentence
+import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.proof.rules._
-import edu.osu.cse.groenkeb.logic.proof.types.Assumption
-import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
-import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
-import edu.osu.cse.groenkeb.logic.proof.types.Proof
-import edu.osu.cse.groenkeb.logic.Or
-import edu.osu.cse.groenkeb.logic.Implies
+import edu.osu.cse.groenkeb.logic.proof.types._
+import edu.osu.cse.groenkeb.logic.model.Domain
 
 abstract class VerificationRule extends AbstractRule
 
@@ -37,7 +28,7 @@ case class NegationVerification() extends VerificationRule() {
     case _ => NullResult()
   }
   
-  override def toString = "~v"
+  override def toString = "~V"
 }
 
 case class AndVerification() extends VerificationRule() {
@@ -60,7 +51,7 @@ case class AndVerification() extends VerificationRule() {
     case _ => NullResult()
   }
   
-  override def toString = "&v"
+  override def toString = "&V"
 }
 
 case class OrVerification() extends VerificationRule() {
@@ -84,7 +75,7 @@ case class OrVerification() extends VerificationRule() {
     case _ => NullResult()
   }
   
-  override def toString = "+v"
+  override def toString = "+V"
 }
 
 case class ConditionalVerification() extends VerificationRule() {
@@ -112,5 +103,62 @@ case class ConditionalVerification() extends VerificationRule() {
   }
   
   override def toString = ">V"
+}
+
+case class UniversalVerification(domain: Domain) extends VerificationRule() {
+  def major(proof: Proof) = true
+  
+  def yields(conc: Sentence) = conc match {
+    case QuantifiedSentence(_, UniversalQuantifier(_)) => true
+    case _ => false
+  }
+  
+  def infer(conc: Sentence)(args: RuleArgs) = conc match {
+    case QuantifiedSentence(sentence, UniversalQuantifier(term)) => args match {
+      case NArgs(proofs) if validate(proofs, sentence, term) =>
+        CompleteResult(CompleteProof(Conclusion(conc, this, args), proofs.flatMap { p => p.premises }.toSet))
+      case _ => IncompleteResult(NParams(this.domain.terms.toSeq.map { 
+          t => AnyProof(sentence.substitute(term, t))
+        }))
+    }
+    case _ => NullResult()
+  }
+  
+  private def validate(proofs: Seq[Proof], sentence: Sentence, term: Term): Boolean = 
+    proofs.length == this.domain.size && this.domain.terms.forall {
+      t => proofs.exists { p => p.conclusion match {
+        case Some(conc) => conc.sentence.matches(sentence.substitute(term, t))
+        case None => false
+      }}
+  }
+  
+  override def toString = "UV"
+}
+
+case class ExistentialVerification(domain: Domain) extends VerificationRule() {
+  def major(proof: Proof) = true
+  
+  def yields(conc: Sentence) = conc match {
+    case QuantifiedSentence(_, ExistentialQuantifier(_)) => true
+    case _ => false
+  }
+  
+  def infer(conc: Sentence)(args: RuleArgs) = conc match {
+    case QuantifiedSentence(sentence, ExistentialQuantifier(term)) => args match {
+      case UnaryArgs(proof) if validate(proof, sentence, term) =>
+        CompleteResult(CompleteProof(Conclusion(conc, this, args), proof.premises))
+      case _ => IncompleteResult(OptionParams(this.domain.terms.toSeq.map {
+        t => UnaryParams(AnyProof(sentence.substitute(term, t)))
+      }:_*))
+    }
+    case _ => NullResult()
+  }
+  
+  private def validate(proof: Proof, sentence: Sentence, term: Term): Boolean = proof.conclusion match {
+    case Some(conc) => this.domain.terms.exists { t => sentence.substitute(term, t).matches(conc.sentence) }
+    case None => false
+  }
+  
+  override def toString = "EV"
 }
 

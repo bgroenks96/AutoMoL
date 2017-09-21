@@ -20,7 +20,8 @@ case class EmptyProof(c: Sentence) extends RuleParam(c)
 
 sealed abstract class RuleParams
 case class EmptyParams() extends RuleParams
-case class UnaryParams(val param0: RuleParam) extends RuleParams
-case class BinaryParams(val param0: RuleParam, val param1: RuleParam) extends RuleParams
-case class TernaryParams(val param0: RuleParam, val param1: RuleParam, val param2: RuleParam) extends RuleParams
-case class OptionParams(val paramSets: RuleParams*) extends RuleParams
+case class UnaryParams(param0: RuleParam) extends RuleParams
+case class BinaryParams(param0: RuleParam, param1: RuleParam) extends RuleParams
+case class TernaryParams(param0: RuleParam, param1: RuleParam, param2: RuleParam) extends RuleParams
+case class NParams(params: Seq[RuleParam]) extends RuleParams
+case class OptionParams(paramSets: RuleParams*) extends RuleParams

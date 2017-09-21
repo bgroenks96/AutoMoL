@@ -30,6 +30,16 @@ import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
 import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
 import edu.osu.cse.groenkeb.logic.utils.Empty
+import edu.osu.cse.groenkeb.logic.Term
+import edu.osu.cse.groenkeb.logic.QuantifiedSentence
+import edu.osu.cse.groenkeb.logic.ExistentialQuantifier
+import edu.osu.cse.groenkeb.logic.proof.rules.NParams
+import edu.osu.cse.groenkeb.logic.proof.rules.OptionParams
+import edu.osu.cse.groenkeb.logic.UniversalQuantifier
+import edu.osu.cse.groenkeb.logic.model.Domain
+import edu.osu.cse.groenkeb.logic.proof.rules.NArgs
+import edu.osu.cse.groenkeb.logic.proof.rules.RuleParam
+import edu.osu.cse.groenkeb.logic.proof.rules.UnaryParams
 
 abstract class FalsificationRule extends AbstractRule() {
   def yields(sentence: Sentence) = sentence match { case Absurdity => true; case _ => false }
@@ -126,6 +136,7 @@ case class ConditionalFalsification() extends FalsificationRule() {
             val major = Assumption(BinarySentence(ante, conseq, Implies()))
             val discharges = Set(Assumption(conseq))
             CompleteResult(CompleteProof(Conclusion(Absurdity, this, args), aprems ++ cprems -- discharges + major))
+        case _ => NullResult()
       }
       case UnaryArgs(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), _, _), Empty())) =>
         IncompleteResult(TernaryParams(EmptyProof(BinarySentence(ante, conseq, Implies())),
@@ -138,3 +149,94 @@ case class ConditionalFalsification() extends FalsificationRule() {
 
   override def toString = ">F"
 }
+
+case class UniversalFalsification(domain: Domain) extends FalsificationRule() {
+  def major(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(QuantifiedSentence(_, UniversalQuantifier(_)), _, _), _) => true
+    case _ => false
+  }
+  
+  def infer(conc: Sentence)(args: RuleArgs) = conc match {
+    case Absurdity => args match {
+      case BinaryArgs(CompleteProof(Conclusion(QuantifiedSentence(sentence, UniversalQuantifier(term)), _, _), Empty()), arg1) =>
+        // Validate proof and extract relevant assumption for this falsification from the set of premises, if available.
+        // If no match is found, the proof is not valid.
+        validate(arg1, sentence, term) match {
+          case Some(falsified) =>
+            val major = Assumption(QuantifiedSentence(sentence, UniversalQuantifier(term)))
+            val discharge = Assumption(falsified)
+            CompleteResult(CompleteProof(Conclusion(Absurdity, this, args), arg1.premises - discharge + major))
+          case None => NullResult()
+        }
+      case UnaryArgs(CompleteProof(Conclusion(QuantifiedSentence(sentence, UniversalQuantifier(term)), _, _), Empty())) =>
+        IncompleteResult(OptionParams(this.domain.terms.toSeq.map {
+          t => BinaryParams(EmptyProof(QuantifiedSentence(sentence, UniversalQuantifier(term))),
+                            RelevantProof(Absurdity,
+                                          Required(Assumption(sentence.substitute(term, t))),
+                                          Assumption(QuantifiedSentence(sentence, UniversalQuantifier(term)))))
+        }:_*))
+    }
+    case _ => NullResult()
+  }
+  
+  // Like 'validate' for the other quantifier v/f rules except that it attempts to extract the relevant
+  // falsified sentence from the premise set of the proof (there could be any number of valid options).
+  private def validate(proof: Proof, sentence: Sentence, term: Term): Option[Sentence] = {
+    def sub(t: Term) = sentence.substitute(term, t)
+    proof.conclusion match {
+      case Some(conc) if conc.sentence == Absurdity => this.domain.terms.collectFirst {
+        case t if exists(sub(t)).in(proof.premises) => sub(t)
+      }
+      case _ => None
+    }
+  }
+  
+  override def toString = "UF"
+}
+
+case class ExistentialFalsification(domain: Domain) extends FalsificationRule() {
+  def major(proof: Proof) = proof match {
+    case CompleteProof(Conclusion(QuantifiedSentence(_, ExistentialQuantifier(_)), _, _), _) => true
+    case _ => false
+  }
+  
+  def infer(conc: Sentence)(args: RuleArgs) = conc match {
+    case Absurdity => args match {
+      case NArgs(Seq(CompleteProof(Conclusion(QuantifiedSentence(sentence, ExistentialQuantifier(term)),_,_), _),
+                     proofs@_*)) =>
+        val discharges = validate(proofs, sentence, term).map { s => Assumption(s) }
+        discharges match {
+          // Make sure all proofs have a corresponding discharge; otherwise fail.
+          case d if d.length == proofs.length =>
+            CompleteResult(CompleteProof(Conclusion(conc, this, args),
+                                         proofs.flatMap { p => p.premises }.toSet -- discharges))
+          case _ => NullResult()
+        }
+      case UnaryArgs(CompleteProof(Conclusion(QuantifiedSentence(sentence, ExistentialQuantifier(term)),_,_), _)) =>
+        val disproofs = this.domain.terms.toSeq.map { 
+          t => RelevantProof(Absurdity,
+                             Required(Assumption(sentence.substitute(term, t))),
+                             Assumption(QuantifiedSentence(sentence, ExistentialQuantifier(term))))
+        }
+        // Construct incomplete result with NParams, where first parameter is the standard proud premise
+        // for falsification proofs, in this case our existential sentence. The disproofs are appended onto
+        // the end to form the full sequence of required proofs.
+        IncompleteResult(NParams(Seq(EmptyProof(QuantifiedSentence(sentence, ExistentialQuantifier(term))))
+                                 ++ disproofs))
+      case _ => NullResult()
+    }
+    case _ => NullResult()
+  }
+  
+  private def validate(proofs: Seq[Proof], sentence: Sentence, term: Term): Seq[Sentence] = 
+    this.domain.terms.toSeq.flatMap {
+      t =>
+        val sub = sentence.substitute(term, t)
+        proofs.collect { case CompleteProof(Conclusion(Absurdity,_,_), premises) =>
+          premises.collect { case p if p.matches(sub) => sub }
+        }.flatten
+  }
+  
+  override def toString = "EF"
+}
+
