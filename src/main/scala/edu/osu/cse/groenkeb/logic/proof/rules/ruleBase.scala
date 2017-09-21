@@ -6,6 +6,7 @@ import edu.osu.cse.groenkeb.logic.proof.types.CompleteProof
 import edu.osu.cse.groenkeb.logic.proof.types.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.types.Premise
 import edu.osu.cse.groenkeb.logic.proof.types.Proof
+import edu.osu.cse.groenkeb.logic.proof.types.Assumption
 
 abstract class AbstractRule extends Rule {
   def exists(sentences: Sentence*) = CaseAssumptions(sentences:_*)
@@ -21,11 +22,11 @@ final case class IdentityRule() extends AbstractRule {
 
   def infer(conc: Sentence)(args: RuleArgs) = args match {
     case UnaryArgs(CompleteProof(Conclusion(`conc`, _, _), prems)) =>
-      CompleteResult(CompleteProof(`conc`, this, args, prems))
+      CompleteResult(CompleteProof(`conc`, this, args, prems + Assumption(conc)))
     case _ => IncompleteResult(UnaryParams(AnyProof(conc)))
   }
 
-  override def toString = "<id>"
+  override def toString = "id"
 }
 
 final case class NullRule() extends AbstractRule {
@@ -35,7 +36,7 @@ final case class NullRule() extends AbstractRule {
 
   def infer(conc: Sentence)(args: RuleArgs) = NullResult()
 
-  override def toString = "<>"
+  override def toString = "nil"
 }
 
 protected case class CaseAssumptions(sentences: Sentence*) {
