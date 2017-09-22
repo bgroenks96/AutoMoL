@@ -40,6 +40,7 @@ import edu.osu.cse.groenkeb.logic.model.Domain
 import edu.osu.cse.groenkeb.logic.proof.rules.NArgs
 import edu.osu.cse.groenkeb.logic.proof.rules.RuleParam
 import edu.osu.cse.groenkeb.logic.proof.rules.UnaryParams
+import edu.osu.cse.groenkeb.logic.proof.rules.Vacuous
 
 abstract class FalsificationRule extends AbstractRule() {
   def yields(sentence: Sentence) = sentence match { case Absurdity => true; case _ => false }
@@ -53,15 +54,16 @@ case class NegationFalsification() extends FalsificationRule {
 
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity => args match {
-      case BinaryArgs(CompleteProof(Conclusion(UnarySentence(operand, Not()), _, _), pa), minorProof) => {
+      case BinaryArgs(CompleteProof(Conclusion(UnarySentence(operand, Not()), _, _), pa), minorProof) =>
         minorProof match {
           case CompleteProof(Conclusion(`operand`, _, _), pb) => 
-            val major = Assumption(UnarySentence(operand, Not()))
-            CompleteResult(CompleteProof(Absurdity, this, args, pa ++ pb + major))
-          case _ => IncompleteResult(BinaryParams(AnyProof(Sentences.not(operand)), AnyProof(operand)))
+            val major = UnarySentence(operand, Not())
+            CompleteResult(CompleteProof(Absurdity, this, args, pa ++ pb + Assumption(major)))
+          case _ => NullResult()
         }
-      }
-      case UnaryArgs(CompleteProof(Conclusion(UnarySentence(s, Not()), _, _), pa)) => IncompleteResult(BinaryParams(EmptyProof(Sentences.not(s)), AnyProof(s)))
+      case UnaryArgs(CompleteProof(Conclusion(UnarySentence(operand, Not()), _, _), pa)) =>
+        val major = UnarySentence(operand, Not())
+        IncompleteResult(BinaryParams(EmptyProof(major), RelevantProof(operand, Vacuous(), Assumption(major))))
       case _ => NullResult()
     }
     case _ => NullResult()

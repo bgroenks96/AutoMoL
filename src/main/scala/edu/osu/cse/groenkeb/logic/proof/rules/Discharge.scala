@@ -32,3 +32,4 @@ case class Variate(assmp: Assumption*) extends Discharge(assmp:_*) {
     case any => Some(any)
   }
 }
+

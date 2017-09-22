@@ -358,6 +358,34 @@ class ModelVerificationTests {
     ProofUtils.prettyPrint(results.head.proof)
   }
   
+  @Test
+  def testVerifyNegationNestedWithAllRules() {
+    implicit val opMatcher = new DefaultPropOpMatcher()
+    val sentence = "(not (not (not R[a])))"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel()
+    val rules = standardRules(model)
+    val context = ProofContext(parser.parse(sentence), rules, Seq())
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testFalsifyNegationNestedWithAllRules() {
+    implicit val opMatcher = new DefaultPropOpMatcher()
+    val sentence = "(not (not (not (not R[a]))))"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel()
+    val rules = standardRules(model)
+    val context = ProofContext(Absurdity, rules, Seq(ProudPremise(parser.parse(sentence))))
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
   private def standardRules(model: FirstOrderModel) =
     RuleSet(Seq(ModelRule(model),
     NegationVerification(), NegationFalsification(),
