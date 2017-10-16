@@ -2,11 +2,10 @@ package edu.osu.cse.groenkeb.logic.test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Stream;
-
-import com.google.common.collect.ImmutableSet;
 
 import edu.osu.cse.groenkeb.logic.Sentence;
 import edu.osu.cse.groenkeb.logic.Sentences;
@@ -23,6 +22,7 @@ import edu.osu.cse.groenkeb.logic.proof.ProofUtils;
 import edu.osu.cse.groenkeb.logic.proof.Success;
 import edu.osu.cse.groenkeb.logic.proof.types.Premise;
 import edu.osu.cse.groenkeb.logic.proof.types.ProudPremise;
+import edu.osu.cse.groenkeb.logic.test.CommandProcessor.Command;
 import edu.osu.cse.groenkeb.utils.Convert;
 import scala.collection.JavaConversions;
 
@@ -112,7 +112,8 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
     public ModelVerificationContext execute(ModelVerificationContext current)
     {
       final ProofContext verifyProofContext = new ProofContext(this.sentence, current.getModel().rules(), Convert.<Premise>emptyScalaSet());
-      final ImmutableSet<Premise> falsifyPremiseSet = ImmutableSet.of (new ProudPremise(this.sentence));
+      final HashSet<Premise> falsifyPremiseSet = new HashSet<Premise> ();
+      falsifyPremiseSet.add (new ProudPremise(this.sentence));
       final ProofContext falsifyProofContext = new ProofContext(Sentences.absurdity (), current.getModel().rules(), Convert.toScalaSet (falsifyPremiseSet));
       java.util.Iterator<ProofResult> results;
       final scala.collection.immutable.Stream <ProofResult> verifyResults = solver.prove(verifyProofContext);

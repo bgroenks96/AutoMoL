@@ -6,13 +6,12 @@ import edu.osu.cse.groenkeb.logic.proof.types.NullProof
 
 object ProofUtils {
   def prettyPrint(proof: Proof) {
-    var traverser = new ProofTraverser()
-    var itr = traverser.preOrderTraversal(proof).iterator()
+    var itr = ProofTraverser.preOrderTraversal(proof).iterator
     prettyPrint(itr, "")
   }
   
-  private def prettyPrint(itr: java.util.Iterator[Proof], prefix: String) {
-    if (!itr.hasNext()) return
+  private def prettyPrint(itr: Iterator[Proof], prefix: String) {
+    if (!itr.hasNext) return
     var proof = itr.next()
     if (proof.isInstanceOf[NullProof]) {
       println("No proof.")
