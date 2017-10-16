@@ -85,9 +85,9 @@ case class AndFalsification() extends FalsificationRule {
                         val major = Assumption(BinarySentence(left, right, And()))
                         val discharges = Set(Assumption(left), Assumption(right))
                         CompleteResult(CompleteProof(Conclusion(Absurdity, this, args), prems -- discharges + major))
-      case UnaryArgs(CompleteProof(Conclusion(BinarySentence(left, right, And()), _, _), Empty())) =>
+      case UnaryArgs(CompleteProof(Conclusion(s@BinarySentence(left, right, And()), _, _), Empty())) =>
         IncompleteResult(BinaryParams(EmptyProof(BinarySentence(left, right, And())),
-                                      RelevantProof(Absurdity, Variate(Assumption(left), Assumption(right)), Assumption(BinarySentence(left, right, And())))))
+                                      RelevantProof(Absurdity, Variate(Assumption(left), Assumption(right)), Assumption(s))))
       case _ => NullResult()
     }
     case _ => NullResult()
