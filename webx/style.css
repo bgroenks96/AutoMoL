@@ -1,0 +1,26 @@
+#top,
+#bottom {
+	position: fixed;
+	left: 0;
+	right: 0;
+	height: 50%;
+}
+
+#top {
+	top: 0;
+	border: 1px solid black;
+	overflow-x: auto;
+	overflow-y: auto;
+	text-align: center;
+	vertical-align: middle;
+}
+
+#bottom {
+	bottom: 0;
+}
+
+#button1 {
+	position: relative;
+	left: 18%;
+	top: 15%;
+}

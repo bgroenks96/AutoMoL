@@ -1,7 +1,7 @@
 apply plugin: 'scala'
 apply plugin: 'eclipse'
 
-sourceSets.main.scala.srcDir "src/main/java"
+sourceSets.main.scala.srcDir "core/src/main/java"
 sourceSets.main.java.srcDirs = []
 
 sourceCompatibility = 1.8

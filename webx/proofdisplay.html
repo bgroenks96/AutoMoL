@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Gavagai</title>
+		<link rel="stylesheet" type="text/css" href="style.css">
+		<script type="text/javascript" async
+  			src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+		</script>
+	</head>
+	<body>
+	<script src="scripts.js"></script>
+		<div id="top">Proofs go here</div>
+		<div id="bottom">
+			Goal: <input id="goal_id" type="text"><br>
+			Premises: <input id="prem_id" type="text"><br>
+			
+			<button id="button1" type="button" 
+					onclick="search();updateProof()">
+				Search
+			</button>
+			<!-- test --!>
+		</div>
+		<script type-"text/javascript" src="./target/scala-2.11/automol_gui-fastopt.js"></script>
+	</body>
+</html>
