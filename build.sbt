@@ -9,27 +9,27 @@ lazy val commonSettings = Seq(
     )
 )
 
-lazy val core = project
+lazy val core = project.enablePlugins(ScalaJSPlugin)
   .settings(
     commonSettings,
     name := "automol-core"
   )
-  
+
 lazy val proofEngine = project.in(file("proof-engine")).dependsOn(core)
     .settings(
       commonSettings,
       name := "automol-proof-engine"
     )
-    
+
 lazy val modelvf = project.dependsOn(proofEngine)
     .settings(
       commonSettings,
       name := "automol-modelvf"
     )
-  
+
 // In the future, to avoid forcing the proof engine to be ScalaJS compatible, we should make webx
 // only rely on 'core' and send messages to a server to do the proof work for us.
-lazy val webx = project.dependsOn(modelvf).enablePlugins(ScalaJSPlugin)
+lazy val webx = project.dependsOn(core).enablePlugins(ScalaJSPlugin)
   .settings(
     commonSettings,
     name := "automol-webx",
