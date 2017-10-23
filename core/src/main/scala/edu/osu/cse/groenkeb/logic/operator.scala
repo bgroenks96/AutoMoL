@@ -5,8 +5,6 @@ trait Operator {
   override def toString(): String
 }
 
-trait Predicate extends Operator
-
 trait Quantifier extends Operator {
   def evaluate(domain: Domain, functor: Sentence => Boolean, arg: Sentence): Boolean
 }
@@ -18,6 +16,7 @@ trait Connective extends Operator {
 abstract class UnaryConnective extends Connective
 abstract class BinaryConnective extends Connective
 
+sealed abstract class Predicate extends Operator
 case class NamedPredicate(val name: String) extends Predicate {
   require(name != IdentityPredicate.name)
   def matches(op: Operator) = op match {
@@ -27,7 +26,6 @@ case class NamedPredicate(val name: String) extends Predicate {
   
   override def toString = name
 }
-
 case class IdentityPredicate() extends Predicate {
   def matches(op: Operator) = op match {
     case IdentityPredicate() => true
@@ -37,6 +35,10 @@ case class IdentityPredicate() extends Predicate {
   override def toString = IdentityPredicate.name
 }
 
+object IdentityPredicate {
+  def name = "I"
+}
+
 case class NullOp() extends Operator {
   def matches(op: Operator) = op match {
     case NullOp() => true
@@ -44,8 +46,4 @@ case class NullOp() extends Operator {
   }
   
   override def toString() = ""
-}
-
-object IdentityPredicate {
-  def name = "I"
 }
