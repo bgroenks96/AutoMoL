@@ -2,6 +2,7 @@ package edu.osu.cse.groenkeb.automol.webx
 
 import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.proof.rules._
+import edu.osu.cse.groenkeb.logic.model.rules._
 import edu.osu.cse.groenkeb.logic._
 
 object Latexifier {
@@ -33,9 +34,14 @@ object Latexifier {
   
   private def ruleToString(rule: Rule): String = {
     rule match {
-      case AndIntroductionRule() => "\\wedge -I"
-      case AndEliminationRule()  => "\\wedge -E"
-      case IdentityRule()        => "id"
+      case AndVerification() => "\\wedge V"
+      case AndFalsification()  => "\\wedge F"
+      case OrVerification() => "\\vee V"
+      case OrFalsification() => "\\vee F"
+      case NegationVerification() => "\\not V"
+      case NegationFalsification() => "\\not F"
+      case ModelRule(_) => " M"
+      case IdentityRule()        => " id"
       case NullRule()            => ""
       //others go here...      
     }

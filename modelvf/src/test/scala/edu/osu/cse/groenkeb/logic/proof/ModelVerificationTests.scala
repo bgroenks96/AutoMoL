@@ -69,6 +69,7 @@ class ModelVerificationTests {
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
     Assert.assertFalse(results.isEmpty)
     ProofUtils.prettyPrint(results.head.proof)
+    println(results.head.proof)
   }
   
   @Test

@@ -11,7 +11,7 @@ object TestObject {
     
     var result = ProverStub.proveStub("P", "P")
     println(result)
-    result = Latexifier.latexPrint(SampleProofs.Id)
+    result = Latexifier.latexPrint(SampleProofs.VerifyAnd_1)
     println(result)
     updateText(document.getElementById("top"), result)
   }
