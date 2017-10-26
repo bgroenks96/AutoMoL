@@ -1,14 +1,19 @@
-package main.scala.proofdisplay
+package edu.osu.cse.groenkeb.automol.webx
 
 import org.scalajs.dom
 import org.scalajs.dom.html
-import dom.document
+import org.scalajs.dom.document
 import scala.scalajs.js.annotation.JSExportTopLevel
-import proofdisplay.ProverStub
 
 object TestObject {
   def main(args: Array[String]): Unit = {
 //       appendPar(document.body, "$$\\mathcal{test}$$")
+    
+    var result = ProverStub.proveStub("P", "P")
+    println(result)
+    result = Latexifier.latexPrint(SampleProofs.Id)
+    println(result)
+    updateText(document.getElementById("top"), result)
   }
   
   def appendPar(targetNode: dom.Node, text: String) = {
@@ -33,10 +38,10 @@ object TestObject {
     //pass input to proof facade for processing    
    
     //fastOptJS fails on this - 'linking error'
-    val result = ProverStub.prove(goal, splitPrem:_*) 
+    //val result = ProverStub.prove(goal, splitPrem:_*) 
     
     //but not this
-    //val result = ProverStub.proveStub(goal, splitPrem:_*) 
+    val result = ProverStub.proveStub(goal, splitPrem:_*) 
 
     
     updateText(document.getElementById("top"), result)

@@ -1,4 +1,4 @@
-package proofdisplay
+package edu.osu.cse.groenkeb.automol.webx
 
 import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.proof.rules._
@@ -7,9 +7,9 @@ import edu.osu.cse.groenkeb.logic._
 object Latexifier {
   
   
-    def latexPrint(proof: Proof): String = {
+  def latexPrint(proof: Proof): String = {
     var itr = ProofTraverser.preOrderTraversal(proof).iterator
-    latexPrint(itr, "\\\\[") ++ "\\\\]"
+    latexPrint(itr, "\\[") ++ "\\]"
   }
   
   //all this stuff probably deserves its own object 
@@ -24,7 +24,7 @@ object Latexifier {
     if (conclusion.rule.isInstanceOf[NullRule]) 
       proofString;
     
-    var newString = proofString.concat(String.format("\\\\infer[%s]{%s}{%s} ", 
+    var newString = proofString.concat(String.format("\\infer[%s]{%s}{%s} ", 
                                           ruleToString(conclusion.rule), 
                                           sentenceToString(conclusion.sentence),
         		                              (conclusion.args.prems map {p => latexPrint(itr, "")}).fold("")((x, y) => x ++ y)))
@@ -33,8 +33,8 @@ object Latexifier {
   
   private def ruleToString(rule: Rule): String = {
     rule match {
-      case AndIntroductionRule() => "\\\\wedge -I"
-      case AndEliminationRule()  => "\\\\wedge -E"
+      case AndIntroductionRule() => "\\wedge -I"
+      case AndEliminationRule()  => "\\wedge -E"
       case IdentityRule()        => "id"
       case NullRule()            => ""
       //others go here...      
@@ -44,7 +44,7 @@ object Latexifier {
   private def sentenceToString(sentence: Sentence): String = {
     
     sentence match {
-      case Absurdity                 => "\\\\bot"
+      case Absurdity                 => "\\bot"
       case AtomicSentence(x)         => x.toString()
       case UnarySentence(x, y)       => unaryConnectiveToString(y) ++ sentenceToString(x) 
       case BinarySentence(x, y, z)   => sentenceToString(x) ++ binaryConnectiveToString(z) ++ sentenceToString(y)
@@ -55,24 +55,24 @@ object Latexifier {
   
   private def unaryConnectiveToString(conn: UnaryConnective): String = {
     conn match{
-      case Not() => "\\\\neg "
+      case Not() => "\\neg "
       case _     => "un:Error"
     }
   }
   
   private def binaryConnectiveToString(conn: BinaryConnective): String = {
     conn match{
-      case And()     => "\\\\wedge "
-      case Or()      => "\\\\vee "
-      case Implies() => "\\\\rightarrow "
+      case And()     => "\\wedge "
+      case Or()      => "\\vee "
+      case Implies() => "\\rightarrow "
       case _         => "bin:Error"
     }
   }
   
   private def quantifiedSentenceToString(quant: Quantifier): String = {
     quant match{
-      case ExistentialQuantifier(t) => "\\\\exists " + t.name.toString()
-      case UniversalQuantifier(t)   => "\\\\forall " + t.name.toString()
+      case ExistentialQuantifier(t) => "\\exists " + t.name.toString()
+      case UniversalQuantifier(t)   => "\\forall " + t.name.toString()
       case _                        => "quant:error"
     }
   }

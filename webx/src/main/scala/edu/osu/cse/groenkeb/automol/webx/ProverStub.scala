@@ -1,4 +1,4 @@
-package proofdisplay
+package edu.osu.cse.groenkeb.automol.webx
 
 import edu.osu.cse.groenkeb.logic.proof._
 
