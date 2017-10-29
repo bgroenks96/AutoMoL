@@ -12,6 +12,8 @@
 	<script src="scripts.js"></script>
 		<div id="top">Proofs go here</div>
 		<div id="bottom">
+			
+
 			Goal: <input id="goal_id" type="text"><br>
 			Premises: <input id="prem_id" type="text"><br>
 			
@@ -19,7 +21,24 @@
 					onclick="search();updateProof()">
 				Search
 			</button>
-			<!-- test --!>
+
+			
+			
+			<button id="button2" type="button" 
+					onclick="atomicButton_1();updateProof()">
+				Demo: atomic-V
+			</button>
+			
+			<button id="button3" type="button" 
+					onclick="andButton_1();updateProof()">
+				Demo: And-V 1
+			</button>
+			<button id="button4" type="button" 
+					onclick="andButton_2();updateProof()">
+				Demo: And-V 2
+			</button>
+			
+			
 		</div>
 		<script type-"text/javascript" src="./target/scala-2.11/automol-webx-fastopt.js"></script>
 	</body>

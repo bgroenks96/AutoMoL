@@ -6,8 +6,8 @@ import org.scalajs.dom.document
 import scala.scalajs.js.annotation.JSExportTopLevel
 
 object TestObject {
+  
   def main(args: Array[String]): Unit = {
-//       appendPar(document.body, "$$\\mathcal{test}$$")
     
     var result = ProverStub.proveStub("P", "P")
     println(result)
@@ -27,6 +27,24 @@ object TestObject {
     targetNode.textContent = text
   }
   
+  //some buttons to make demoing easier
+  @JSExportTopLevel("atomicButton_1")
+  def atomicVerificationButton(): Unit = {
+    updateText(document.getElementById("top"), Latexifier.latexPrint(SampleProofs.VerifyAtom_1))
+  }
+  
+  @JSExportTopLevel("andButton_1")
+  def andVerificationButton(): Unit = {
+    updateText(document.getElementById("top"), Latexifier.latexPrint(SampleProofs.VerifyAnd_1))    
+  }
+  
+  @JSExportTopLevel("andButton_2")
+  def andVerificationButton1(): Unit = {
+    updateText(document.getElementById("top"), Latexifier.latexPrint(SampleProofs.VerifyAnd_2))    
+  }
+  
+  
+  
   @JSExportTopLevel("search")
   def search(): Unit = {
     val input1 = document.getElementById("goal_id").asInstanceOf[html.Input]
@@ -35,14 +53,7 @@ object TestObject {
     val premises = input2.value
     val splitPrem = premises.split(',')
 
-    //pass input to proof facade for processing    
-   
-    //fastOptJS fails on this - 'linking error'
-    //val result = ProverStub.prove(goal, splitPrem:_*) 
-    
-    //but not this
-    val result = ProverStub.proveStub(goal, splitPrem:_*) 
-
+    val result = ProverStub.prove(goal, splitPrem:_*) 
     
     updateText(document.getElementById("top"), result)
   }
