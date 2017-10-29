@@ -9,7 +9,7 @@ object Sentences {
   
   def not(s: Sentence) = UnarySentence(s, Not());
   
-  def nil() = NullSentence();
+  def nil() = NullSentence;
   
   def absurdity = Absurdity
 }

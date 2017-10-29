@@ -26,7 +26,7 @@ case class FirstOrderModel(val diagram: AtomicDiagram) extends Model {
     case BinarySentence(left, right, conn) => conn.evaluate(verify, left, right)
     case QuantifiedSentence(operand, quantifier) => quantifier.evaluate(diagram.domain, verify, operand)
     case Absurdity => false
-    case NullSentence() => false
+    case NullSentence => false
   }
   def rules: RuleSet = RuleSet(Seq(ModelRule(this),
                           NegationVerification(), NegationFalsification(),

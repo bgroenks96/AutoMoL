@@ -8,6 +8,8 @@ object ProofContext {
             rules: RuleSet,
             premises: Seq[Premise]) = new ProofContext(goal, rules, premises.toSet)
   
+  def apply(goal: Sentence, premises: Seq[Premise] = Nil)(implicit rules: RuleSet) = new ProofContext(goal, rules, premises.toSet)
+  
   private def apply(goal: Sentence,
                     rules: RuleSet,
                     premises: Seq[Premise],

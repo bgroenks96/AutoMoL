@@ -27,7 +27,7 @@ case object Absurdity extends Sentence
   override def toString() = "!"
 }
 
-case class AtomicSentence(atom: Atom) extends Sentence
+final case class AtomicSentence(atom: Atom) extends Sentence
 {
   def matches(s: Sentence) = s match {
     case AtomicSentence(atom) => this.atom.matches(atom)
@@ -45,7 +45,7 @@ case class AtomicSentence(atom: Atom) extends Sentence
   override def toString() = atom.toString()
 }
 
-case class BinarySentence(val left: Sentence, val right: Sentence, val conn: BinaryConnective) extends Sentence
+final case class BinarySentence(val left: Sentence, val right: Sentence, val conn: BinaryConnective) extends Sentence
 {
   require(left != Absurdity && right != Absurdity)
   def matches(s: Sentence) = s match {
@@ -62,7 +62,7 @@ case class BinarySentence(val left: Sentence, val right: Sentence, val conn: Bin
   override def toString() = String.format("%s(%s,%s)", conn, left, right)
 }
 
-case class UnarySentence(val operand: Sentence, val conn: UnaryConnective) extends Sentence
+final case class UnarySentence(val operand: Sentence, val conn: UnaryConnective) extends Sentence
 {
   require(operand != Absurdity)
   def matches(s: Sentence) = s match {
@@ -79,7 +79,7 @@ case class UnarySentence(val operand: Sentence, val conn: UnaryConnective) exten
   override def toString() = String.format("%s(%s)", conn, operand)
 }
 
-case class QuantifiedSentence(val operand: Sentence, val quantifier: Quantifier) extends Sentence
+final case class QuantifiedSentence(val operand: Sentence, val quantifier: Quantifier) extends Sentence
 {
     require(operand != Absurdity)
     def matches(s: Sentence) = s match {
@@ -96,10 +96,10 @@ case class QuantifiedSentence(val operand: Sentence, val quantifier: Quantifier)
   override def toString() = String.format("%s(%s)", quantifier, operand)
 }
 
-case class NullSentence() extends Sentence
+final case object NullSentence extends Sentence
 {
   def matches(s: Sentence) = s match {
-    case NullSentence() => true
+    case NullSentence => true
     case _ => false
   }
   
