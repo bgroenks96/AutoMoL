@@ -13,7 +13,6 @@ object Latexifier {
     latexPrint(itr, "\\[") ++ "\\]"
   }
   
-  //all this stuff probably deserves its own object 
   private def latexPrint(itr: Iterator[Proof], proofString: String):String = {
     if (!itr.hasNext)
       proofString;
@@ -25,10 +24,20 @@ object Latexifier {
     if (conclusion.rule.isInstanceOf[NullRule]) 
       proofString;
     
-    var newString = proofString.concat(String.format("\\infer[%s]{%s}{%s} ", 
+    
+    
+    var newString = ""
+    if(conclusion.rule.isInstanceOf[ModelRule]){
+      newString = proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
+                                          ruleToString(conclusion.rule), 
+                                          sentenceToString(conclusion.sentence)))
+                                      
+    }else{
+    	newString = proofString.concat(String.format("\\infer[%s]{%s}{%s} ",     
                                           ruleToString(conclusion.rule), 
                                           sentenceToString(conclusion.sentence),
         		                              (conclusion.args.prems map {p => latexPrint(itr, "")}).fold("")((x, y) => x ++ y)))
+    }
     newString
   }
   

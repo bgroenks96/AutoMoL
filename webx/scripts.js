@@ -2,7 +2,7 @@
 		MathJax.Hub.Queue(["Typeset", MathJax.Hub, "top"]);
 }
 		
-// the following due to Farnando Carpani
+// the following adapted from to Farnando Carpani
 //https://codepen.io/pkra/pen/VpEqdd?editors=1010
 //https://groups.google.com/forum/#!msg/mathjax-users/Do5E5delM9w/wsnDFOvxCgAJ
 window.MathJax = {
@@ -18,7 +18,12 @@ window.MathJax = {
           "\\end{array}} &  \\hspace{-1em}\\raise{-0.25em}{#1} \\\\"+
           "#2"+
           "\\end{array}",3,""
-          ]
+          ],
+        inferbasic: [
+        	"\\begin{array}\[b\]{c c c c}"+
+        	"\\style{border-top:1px solid;}{#2} & \\hspace{-0.75em}\\raise{0.5em}{#1} \\\\"+
+        	"\\end{array}",2, ""
+        ]
         }
   },
   MathML: {
