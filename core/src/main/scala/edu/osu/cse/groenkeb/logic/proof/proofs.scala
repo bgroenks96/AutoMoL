@@ -6,7 +6,7 @@ import edu.osu.cse.groenkeb.logic.Sentence
 
 sealed abstract class Proof(val conclusion: Option[Conclusion], val premises: Set[Premise])
 case class CompleteProof(conc: Conclusion, prems: Set[Premise]) extends Proof(Option.apply(conc), prems)
-case class NullProof() extends Proof(Option.empty[Conclusion], Set())
+case object NullProof extends Proof(Option.empty[Conclusion], Set())
 
 object CompleteProof {
   /**

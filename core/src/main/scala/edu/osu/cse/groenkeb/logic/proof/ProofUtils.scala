@@ -11,7 +11,7 @@ object ProofUtils {
   private def prettyPrint(itr: Iterator[Proof], prefix: String) {
     if (!itr.hasNext) return
     var proof = itr.next()
-    if (proof.isInstanceOf[NullProof]) {
+    if (proof == NullProof) {
       println("No proof.")
       return;
     }

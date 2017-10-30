@@ -20,4 +20,6 @@ hs_err_pid*
 .gradle/
 .cache-main
 .cache-tests
+.classpath
+.project
 

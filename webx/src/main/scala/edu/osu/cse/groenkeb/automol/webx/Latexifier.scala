@@ -13,32 +13,23 @@ object Latexifier {
     latexPrint(itr, "\\[") ++ "\\]"
   }
   
-  private def latexPrint(itr: Iterator[Proof], proofString: String):String = {
-    if (!itr.hasNext)
-      proofString;
-    var proof = itr.next()
-    if(proof.isInstanceOf[NullProof]){
-      proofString
+  private def latexPrint(itr: Iterator[Proof], proofString: String): String = {
+    if (!itr.hasNext) proofString
+    itr.next() match {
+      case CompleteProof(conc, prems) => conc.rule match {
+        case ModelRule(_) => proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
+                                                ruleToString(conc.rule), 
+                                                sentenceToString(conc.sentence)))
+        case IdentityRule() => proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
+                                                  ruleToString(conc.rule), 
+                                                  sentenceToString(conc.sentence)))
+        case rule =>  proofString.concat(String.format("\\infer[%s]{%s}{%s} ",     
+                                         ruleToString(rule), 
+                                         sentenceToString(conc.sentence),
+        		                             (conc.args.prems map {p => latexPrint(itr, "")}).fold("")((x, y) => x ++ y)))
+      }
+      case NullProof => proofString
     }
-    var conclusion = proof.conclusion.get
-    if (conclusion.rule.isInstanceOf[NullRule]) 
-      proofString;
-    
-    
-    
-    var newString = ""
-    if(conclusion.rule.isInstanceOf[ModelRule]){
-      newString = proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
-                                          ruleToString(conclusion.rule), 
-                                          sentenceToString(conclusion.sentence)))
-                                      
-    }else{
-    	newString = proofString.concat(String.format("\\infer[%s]{%s}{%s} ",     
-                                          ruleToString(conclusion.rule), 
-                                          sentenceToString(conclusion.sentence),
-        		                              (conclusion.args.prems map {p => latexPrint(itr, "")}).fold("")((x, y) => x ++ y)))
-    }
-    newString
   }
   
   private def ruleToString(rule: Rule): String = {

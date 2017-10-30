@@ -7,38 +7,9 @@ import scala.collection.immutable.Seq
 import scala.collection.immutable.Set
 import scala.collection.immutable.Stream
 
-import edu.osu.cse.groenkeb.logic.Absurdity
-import edu.osu.cse.groenkeb.logic.Sentence
-import edu.osu.cse.groenkeb.logic.proof.rules.AnyProof
-import edu.osu.cse.groenkeb.logic.proof.rules.BinaryArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.BinaryParams
-import edu.osu.cse.groenkeb.logic.proof.rules.CompleteResult
-import edu.osu.cse.groenkeb.logic.proof.rules.EmptyArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.EmptyParams
-import edu.osu.cse.groenkeb.logic.proof.rules.EmptyProof
-import edu.osu.cse.groenkeb.logic.proof.rules.IncompleteResult
-import edu.osu.cse.groenkeb.logic.proof.rules.NullResult
-import edu.osu.cse.groenkeb.logic.proof.rules.NArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.OptionParams
-import edu.osu.cse.groenkeb.logic.proof.rules.RelevantProof
-import edu.osu.cse.groenkeb.logic.proof.rules.Rule
-import edu.osu.cse.groenkeb.logic.proof.rules.RuleArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.RuleParam
-import edu.osu.cse.groenkeb.logic.proof.rules.RuleParams
-import edu.osu.cse.groenkeb.logic.proof.rules.RuleSet
-import edu.osu.cse.groenkeb.logic.proof.rules.TernaryArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.TernaryParams
-import edu.osu.cse.groenkeb.logic.proof.rules.UnaryArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.UnaryParams
-import edu.osu.cse.groenkeb.logic.proof.Assumption
-import edu.osu.cse.groenkeb.logic.proof.CompleteProof
-import edu.osu.cse.groenkeb.logic.proof.Conclusion
-import edu.osu.cse.groenkeb.logic.proof.NullProof
-import edu.osu.cse.groenkeb.logic.proof.Premise
-import edu.osu.cse.groenkeb.logic.proof.Proof
-import edu.osu.cse.groenkeb.logic.proof.ProudPremise
-import edu.osu.cse.groenkeb.logic.proof.rules.NParams
-import edu.osu.cse.groenkeb.logic.proof.ProofContext
+import edu.osu.cse.groenkeb.logic._
+import edu.osu.cse.groenkeb.logic.proof.rules._
+import edu.osu.cse.groenkeb.logic.proof._
 
 class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
 
@@ -205,7 +176,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
     rules match {
       case RuleSet(Nil) => failure()
       case RuleSet(Seq(head, rem @ _*)) => infer(head, args) match {
-        case Left(proof:NullProof) => failure(inferFrom(RuleSet(rem), args))
+        case Left(proof) if proof == NullProof => failure(inferFrom(RuleSet(rem), args))
         case Left(proof:CompleteProof) => success(proof, inferFrom(RuleSet(rem), args))
         case Right(params) => pendingParams(params)(head)
       }
@@ -231,7 +202,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
       // case for decomposing rule requirements
       case IncompleteResult(params) => Right(params)
       // case for non-applicable rules
-      case NullResult() => Left(NullProof())
+      case NullResult() => Left(NullProof)
     }
   }
 

@@ -22,7 +22,7 @@ import edu.osu.cse.groenkeb.logic.utils.Empty
 case class ModelRule(val model: FirstOrderModel) extends Rule {
   def major(proof: Proof) = proof match {
     case CompleteProof(Conclusion(AtomicSentence(_), IdentityRule(), _), Empty()) => true
-    case NullProof() => true
+    case NullProof => true
     case _ => false
   }
   
