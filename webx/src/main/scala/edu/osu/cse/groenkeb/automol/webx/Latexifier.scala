@@ -64,7 +64,7 @@ object Latexifier {
       case UnarySentence(x, y)       => unaryConnectiveToString(y) ++ sentenceToString(x) 
       case BinarySentence(x, y, z)   => sentenceToString(x) ++ binaryConnectiveToString(z) ++ sentenceToString(y)
       case QuantifiedSentence(x, y)  => quantifiedSentenceToString(y) ++ sentenceToString(x) 
-      case NullSentence()            => ""
+      case NullSentence              => ""
     }
   }
   
