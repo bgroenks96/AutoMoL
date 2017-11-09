@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
 
 final class ModelVerificationService extends Http4sDsl[IO] {
   val solver = new ProofSolver(new NaiveProofStrategy())
-  
+
   val service = HttpService[IO] {
     case GET -> Root => Ok()
     case req@GET -> Root / "query" => req.decode[Json] {
@@ -36,14 +36,14 @@ final class ModelVerificationService extends Http4sDsl[IO] {
       case e => BadRequest(e.getMessage)
     }
   }
-  
+
   private def handleProofQuery(json: Json): Json = {
     json.as[VerificationProofRequest] match {
       case Right(VerificationProofRequest(query, model)) => firstResult(query)(model).asJson
       case Left(_) => Json.Null
     }
   }
-  
+
   private def firstResult(query: Sentence)(implicit model: FirstOrderModel): Proof = {
     val verifyContext = ProofContext(query)
     val falsifyContext = ProofContext(Absurdity, Seq(ProudPremise(query)))
@@ -53,9 +53,9 @@ final class ModelVerificationService extends Http4sDsl[IO] {
     val f2 = Future[Stream[ProofResult]] {
       solver.prove(falsifyContext)
     }
-    
+
     // Await async result and return first available proof
-    Await.result(Future.sequence(List(f1, f2)), Duration(10, TimeUnit.SECONDS)).flatMap { 
+    Await.result(Future.sequence(List(f1, f2)), Duration(10, TimeUnit.SECONDS)).flatMap {
       results => results.collect { case r:Success => r.proof }
     }.head
   }

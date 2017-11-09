@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
     )
 )
 
-val circeVersion = "0.8.0"
+val circeVersion = "0.9.0-M2"
 
 lazy val core = project.enablePlugins(ScalaJSPlugin)
   .settings(
@@ -30,7 +30,7 @@ lazy val modelvf = project.dependsOn(proofEngine)
       commonSettings,
       name := "automol-modelvf"
     )
-    
+
 lazy val webUtils = project.in(file("web-utils")).dependsOn(core).enablePlugins(ScalaJSPlugin)
     .settings(
       commonSettings,
@@ -41,15 +41,15 @@ lazy val webUtils = project.in(file("web-utils")).dependsOn(core).enablePlugins(
             "io.circe" %%% "circe-parser"
         ).map(_ % circeVersion)
     )
-    
+
 lazy val server = project.dependsOn(webUtils, modelvf)
     .settings(
         commonSettings,
         name := "automol-server",
         libraryDependencies ++= Seq(
-            "org.http4s" %% "http4s-blaze-server" % "0.18.0-M4",
-            "org.http4s" %% "http4s-circe" % "0.18.0-M4",
-            "org.http4s" %% "http4s-dsl" % "0.18.0-M4"
+            "org.http4s" %% "http4s-blaze-server" % "0.18.0-M5",
+            "org.http4s" %% "http4s-circe" % "0.18.0-M5",
+            "org.http4s" %% "http4s-dsl" % "0.18.0-M5"
         )
     )
 
