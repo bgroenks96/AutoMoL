@@ -43,7 +43,6 @@ class ModelVerificationTests {
   
   @Test
   def testFalsifyTrivial() {
-    val termA = Term("a")
     val domain = Domain()
     val diagram = AtomicDiagram(domain)
     val model = FirstOrderModel(diagram)
@@ -74,9 +73,6 @@ class ModelVerificationTests {
   
   @Test
   def testFalsifyAnd() {
-    val termA = Term("a")
-    val predR = NamedPredicate("R")
-    val predQ = NamedPredicate("Q")
     val domain = Domain()
     val diagram = AtomicDiagram(domain)
     val model = FirstOrderModel(diagram)
@@ -96,6 +92,20 @@ class ModelVerificationTests {
     val model = FirstOrderModel.from(parser.parse("R[a]"), parser.parse("R[b]"), parser.parse("R[c]"), parser.parse("R[d]"))
     val rules = RuleSet(Seq(ModelRule(model), AndVerification()))
     val context = ProofContext(parser.parse(sentence), rules, Nil)
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testFalsifyAndDeep() {
+    implicit val opMatcher = new DefaultPropOpMatcher()
+    val sentence = "(and (and R[a] R[b]) (and R[c] R[d]))"
+    val parser = SentenceParser(NodeRecursiveTokenizer())
+    val model = FirstOrderModel()
+    val rules = RuleSet(Seq(ModelRule(model), AndFalsification()))
+    val context = ProofContext(Absurdity, rules, Seq(ProudPremise(parser.parse(sentence))))
     val solver = new ProofSolver(new NaiveProofStrategy())
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
     Assert.assertFalse(results.isEmpty)

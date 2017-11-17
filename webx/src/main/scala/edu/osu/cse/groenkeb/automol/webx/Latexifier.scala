@@ -41,7 +41,7 @@ object Latexifier {
       case NegationVerification() => "\\not V"
       case NegationFalsification() => "\\not F"
       case ModelRule(_) => " M"
-      case IdentityRule()        => " id"
+      case IdentityRule()        => ""
       case NullRule()            => ""
       //others go here...      
     }

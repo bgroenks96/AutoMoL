@@ -59,6 +59,8 @@ package object json {
         case Right(model) => Right(ModelRule(model))
         case Left(failure) => Left(failure)
       }
+      case Right("id") => Right(IdentityRule())
+      case Right("nil") => Right(NullRule())
       case Right("not-V") => Right(NegationVerification())
       case Right("not-F") => Right(NegationFalsification())
       case Right("and-V") => Right(AndVerification())
@@ -90,6 +92,8 @@ package object json {
   
   implicit val ruleEncoder: Encoder[Rule] = Encoder.instance { (r: Rule) => r match {
     case ModelRule(model) => Json.obj(("type", Json.fromString("model")), ("desc", model.asJson))
+    case IdentityRule() => Json.obj(("type", Json.fromString("id")))
+    case NullRule() => Json.obj(("type", Json.fromString("nil")))
     case NegationVerification() => Json.obj(("type", Json.fromString("not-V")))
     case NegationFalsification() => Json.obj(("type", Json.fromString("not-F")))
     case AndVerification() => Json.obj(("type", Json.fromString("and-V")))
