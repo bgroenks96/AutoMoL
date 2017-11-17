@@ -41,8 +41,8 @@ case class ModelRule(val model: FirstOrderModel) extends Rule {
       case _ => NullResult()
     }
     case Absurdity => args match {
-      case UnaryArgs(CompleteProof(c, Empty())) if !model.verify(c.sentence) =>
-        CompleteResult(CompleteProof(Conclusion(Absurdity, this, args), Set(Assumption(c.sentence))))
+      case UnaryArgs(CompleteProof(Conclusion(s:AtomicSentence, _, _), Empty())) if !model.verify(s) =>
+        CompleteResult(CompleteProof(Conclusion(Absurdity, this, args), Set(Assumption(s))))
       case _ => NullResult()
     }
     case _ => NullResult()

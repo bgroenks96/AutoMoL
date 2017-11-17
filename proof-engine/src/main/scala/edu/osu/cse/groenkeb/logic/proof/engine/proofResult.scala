@@ -11,4 +11,9 @@ final case class Failure(context : ProofContext, hint: SearchHint = Cut()) exten
 final case class Success(proof: CompleteProof, context: ProofContext, hint: SearchHint = Cut()) extends ProofResult
 final case class Pending(context: ProofContext,
                          steps: Seq[ProofStep],
-                         aggregator: (ProofContext, Seq[Stream[ProofResult]]) => ProofResult) extends ProofResult
+                         aggregator: (ProofContext, Seq[Stream[ProofResult]]) => ProofResult) extends ProofResult {
+  def andThen(step: ProofStep) = 
+    Pending(context, steps, (context, results) => ProofStep({
+      aggregator(context, results)
+    })(context).then(step)())
+}

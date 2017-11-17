@@ -23,7 +23,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
       case Nil => failure()
       case Seq(head, rem @ _*) => head match {
         case s => {
-          var relevantRules = strategy.rules.acceptingMajor(ProudPremise(s.sentence).proof).yielding(Absurdity)
+          var relevantRules = strategy.rules.yielding(Absurdity)
           inferFrom(relevantRules, UnaryArgs(ProudPremise(s.sentence).proof)) match {
             case Success(cp, cntxt, prems) => success(cp, { proof(rem) })
             case Failure(cntxt, hint) => failure(hint -> Continue(step({ proof(rem) })))
@@ -83,9 +83,22 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
         case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + args)
       }
 
-    // filterSuccess filters the given proof results to include only those that are both successful and yield the given conclusion.
-    def filterSuccess(results: Stream[ProofResult], conc: Sentence): Stream[Success] = results collect {
-      case r:Success if r.proof.conc.matches(conc) || r.proof.conc.conclusion == Absurdity => r.asInstanceOf[Success]
+    // onlyValid filters the given proof results to include only those that are both successful and 'valid', i.e. satisfy
+    // the specified goal as well as the requirements for discharge.
+    def onlyValid(results: Stream[ProofResult], param: RuleParam): Stream[Success] = {
+      def isValid(proof: CompleteProof) = param match {
+        case EmptyProof(c) => true
+        case AnyProof(c) => c.matches(param.goal)
+        case RelevantProof(c, d, r@_*) => d match {
+          case Required(assumptions@_*) => proof.conc.matches(c) && 
+                                           d.assumptions.forall { a => proof.prems.exists { p => p.matches(a) } }
+          case Vacuous(assumptions@_*) => proof.conc.matches(c)
+          case Variate(assumptions@_*) => proof.conc.matches(c) &&
+                                          d.assumptions.exists { a => proof.prems.exists { p => p.matches(a) } }
+        }
+      }
+      
+      results.collect { case res:Success if isValid(res.proof) => res }
     }
 
     // advance discards the head of the first Stream in 'paramResults' that has more than a single result, leaving the remainder
@@ -100,7 +113,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
 
     def unaryResults(p0: RuleParam)(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])(implicit rule: Rule): ProofResult =
       paramResults match {
-        case Seq(results0) => filterSuccess(results0, p0.goal) match {
+        case Seq(results0) => onlyValid(results0, p0) match {
           case Stream() => failure()
           case Stream(head, rem@_*) => success(inferFromUnaryResult(head), { unaryResults(p0)(resultContext, Seq(rem.toStream)) })
         }
@@ -112,7 +125,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
     def binaryResults(p0: RuleParam, p1: RuleParam)(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])
                      (implicit rule: Rule): ProofResult = {
       paramResults match {
-        case Seq(results0, results1) => (filterSuccess(results0, p0.goal), filterSuccess(results1, p1.goal)) match {
+        case Seq(results0, results1) => (onlyValid(results0, p0), onlyValid(results1, p1)) match {
           case (filtered0, filtered1) if filtered0.isEmpty || filtered1.isEmpty => failure()
           case (filtered0, filtered1) =>
             success(inferFromBinaryResults(filtered0.head, filtered1.head), { binaryResults(p0, p1)(resultContext, advance(paramResults)) })
@@ -126,7 +139,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
                       (resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])
                       (implicit rule: Rule): ProofResult = {
       paramResults match {
-        case Seq(r0, r1, r2) => (filterSuccess(r0, p0.goal), filterSuccess(r1, p1.goal), filterSuccess(r2, p2.goal)) match {
+        case Seq(r0, r1, r2) => (onlyValid(r0, p0), onlyValid(r1, p1), onlyValid(r2, p2)) match {
           case (f0, f1, f2) if f0.isEmpty || f1.isEmpty || f2.isEmpty => failure()
           case (f0, f1, f2) =>
             success(inferFromTernaryResults(f0.head, f1.head, f2.head), { ternaryResults(p0, p1, p2)(resultContext, advance(paramResults)) })
@@ -138,7 +151,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
     
     def nResults(params: Seq[RuleParam])
                 (resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])(implicit rule: Rule): ProofResult = {
-      val filtered = for ((res, p) <- (paramResults zip params)) yield filterSuccess(res, p.goal)
+      val filtered = for ((res, p) <- (paramResults zip params)) yield onlyValid(res, p)
       filtered match {
         case anyMissing if anyMissing.length < params.length => failure()
         case all if all.forall { res => !res.isEmpty } =>
@@ -178,7 +191,9 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
       case RuleSet(Seq(head, rem @ _*)) => infer(head, args) match {
         case Left(proof) if proof == NullProof => failure(inferFrom(RuleSet(rem), args))
         case Left(proof:CompleteProof) => success(proof, inferFrom(RuleSet(rem), args))
-        case Right(params) => pendingParams(params)(head)
+        case Right(params) => pendingParams(params)(head).andThen(step({
+          inferFrom(RuleSet(rem), args)
+        }))
       }
     }
   }
