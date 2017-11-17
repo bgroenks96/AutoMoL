@@ -26,8 +26,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 
-import edu.osu.cse.groenkeb.logic.parse.SentenceParser
-
 final class ModelVerificationService(resPrefix: String) extends Http4sDsl[IO] {
   private val solver = new ProofSolver(new NaiveProofStrategy())
 
@@ -55,9 +53,16 @@ final class ModelVerificationService(resPrefix: String) extends Http4sDsl[IO] {
         val parser = SentenceParser(NodeRecursiveTokenizer())
         val query = parser.parse(queryStr)
         implicit val model = FirstOrderModel(modelDesc.map { s => parser.parse(s) }:_*)
-        val result = firstResult(query)
-        println(result)
-        result.asJson
+        try {
+          val result = firstResult(query)
+          println(result)
+          result.asJson
+        } catch {
+          case ex: Exception => {
+            ex.printStackTrace()
+            throw ex
+          }
+        }
       }
       case Left(_) => Json.Null
     }

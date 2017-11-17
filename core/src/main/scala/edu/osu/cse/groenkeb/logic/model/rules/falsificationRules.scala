@@ -177,6 +177,7 @@ case class UniversalFalsification(domain: Domain) extends FalsificationRule() {
                                           Required(Assumption(sentence.substitute(term, t))),
                                           Assumption(QuantifiedSentence(sentence, UniversalQuantifier(term)))))
         }:_*))
+      case _ => NullResult()
     }
     case _ => NullResult()
   }
