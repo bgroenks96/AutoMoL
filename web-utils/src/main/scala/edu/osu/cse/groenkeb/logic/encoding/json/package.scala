@@ -41,8 +41,8 @@ package object json {
   
   implicit val quantifierDecoder: Decoder[Quantifier] = Decoder.instance { c =>
     c.downField("type").as[String] match {
-      case Right("Universal") => c.field("term").as[String].map { term => UniversalQuantifier(Term(term)) }
-      case Right("Existential") => c.field("term").as[String].map { term => ExistentialQuantifier(Term(term)) }
+      case Right("Universal") => c.downField("term").as[String].map { term => UniversalQuantifier(Term(term)) }
+      case Right("Existential") => c.downField("term").as[String].map { term => ExistentialQuantifier(Term(term)) }
       case Right(s) => Left(DecodingFailure("Unrecognized quantifier type: " + s, List(CursorOp.MoveLast)))
       case Left(failure) => Left(failure)
     }

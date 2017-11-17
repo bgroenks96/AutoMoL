@@ -17,12 +17,10 @@ object Latexifier {
     if (!itr.hasNext) proofString
     itr.next() match {
       case CompleteProof(conc, prems) => conc.rule match {
-        case ModelRule(_) => proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
-                                                ruleToString(conc.rule), 
-                                                sentenceToString(conc.sentence)))
-        case IdentityRule() => proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
-                                                  ruleToString(conc.rule), 
-                                                  sentenceToString(conc.sentence)))
+        case r @ (ModelRule(_) | IdentityRule()) =>
+          proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
+                                           ruleToString(conc.rule), 
+                                           sentenceToString(conc.sentence)))
         case rule =>  proofString.concat(String.format("\\infer[%s]{%s}{%s} ",     
                                          ruleToString(rule), 
                                          sentenceToString(conc.sentence),
