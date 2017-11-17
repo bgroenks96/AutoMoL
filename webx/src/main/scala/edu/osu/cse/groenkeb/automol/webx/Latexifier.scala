@@ -7,7 +7,6 @@ import edu.osu.cse.groenkeb.logic._
 
 object Latexifier {
   
-  
   def latexPrint(proof: Proof): String = {
     var itr = ProofTraverser.preOrderTraversal(proof).iterator
     latexPrint(itr, "\\[") ++ "\\]"
@@ -15,12 +14,17 @@ object Latexifier {
   
   private def latexPrint(itr: Iterator[Proof], proofString: String): String = {
     if (!itr.hasNext) proofString
-    itr.next() match {
+    else itr.next() match {
       case CompleteProof(conc, prems) => conc.rule match {
-        case r @ (ModelRule(_) | IdentityRule()) =>
+        case NullRule() => ""
+        case IdentityRule() =>
           proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
                                            ruleToString(conc.rule), 
-                                           sentenceToString(conc.sentence)))
+                                           sentenceToString(conc.sentence))).concat(latexPrint(itr, ""))
+        case r@ModelRule(_) if conc.sentence != Absurdity =>
+          proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
+                                           ruleToString(conc.rule), 
+                                           sentenceToString(conc.sentence))).concat(latexPrint(itr, ""))
         case rule =>  proofString.concat(String.format("\\infer[%s]{%s}{%s} ",     
                                          ruleToString(rule), 
                                          sentenceToString(conc.sentence),
