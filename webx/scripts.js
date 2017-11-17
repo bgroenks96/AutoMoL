@@ -1,4 +1,4 @@
- function updateProof(){
+function updateProof(){
 		MathJax.Hub.Queue(["Typeset", MathJax.Hub, "top"]);
 }
 		

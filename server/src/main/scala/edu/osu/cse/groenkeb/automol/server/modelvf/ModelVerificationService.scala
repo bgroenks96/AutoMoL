@@ -12,34 +12,53 @@ import org.http4s.circe._
 import org.http4s.server._
 import org.http4s.dsl._
 import edu.osu.cse.groenkeb.logic.encoding.json._
+import edu.osu.cse.groenkeb.logic.parse._
 import edu.osu.cse.groenkeb.logic.model._
 import edu.osu.cse.groenkeb.logic.model.implicits._
 import edu.osu.cse.groenkeb.logic.proof.engine._
 import edu.osu.cse.groenkeb.logic.web.modelvf._
 import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.proof._
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 
-final class ModelVerificationService extends Http4sDsl[IO] {
-  val solver = new ProofSolver(new NaiveProofStrategy())
+import edu.osu.cse.groenkeb.logic.parse.SentenceParser
+
+final class ModelVerificationService(resPrefix: String) extends Http4sDsl[IO] {
+  private val solver = new ProofSolver(new NaiveProofStrategy())
+
+  private implicit val opMatcher = new DefaultFirstOrderOpMatcher()
 
   val service = HttpService[IO] {
-    case GET -> Root => Ok()
-    case req@GET -> Root / "query" => req.decode[Json] {
+    case req@GET -> Root => StaticFile.fromString(resPrefix + "/proofdisplay.html", Some(req)).getOrElseF(NotFound())
+    case req@POST -> Root / "prover" / "query" => req.decode[Json] {
       json => Ok(handleProofQuery(json))
     }
     .handleErrorWith {
-      case e => BadRequest(e.getMessage)
+      case e => {
+        println(String.format("error serving request %s: %s", req, e))
+        BadRequest(e.getMessage)
+      }
     }
+    case req@GET -> path => StaticFile.fromString(resPrefix + "/" + path, Some(req)).getOrElseF(NotFound())
+    case _ => MethodNotAllowed()
   }
 
   private def handleProofQuery(json: Json): Json = {
+    println("received proof query: " + json.noSpaces)
     json.as[VerificationProofRequest] match {
-      case Right(VerificationProofRequest(query, model)) => firstResult(query)(model).asJson
+      case Right(VerificationProofRequest(queryStr, modelDesc)) => {
+        val parser = SentenceParser(NodeRecursiveTokenizer())
+        val query = parser.parse(queryStr)
+        implicit val model = FirstOrderModel(modelDesc.map { s => parser.parse(s) }:_*)
+        val result = firstResult(query)
+        println(result)
+        result.asJson
+      }
       case Left(_) => Json.Null
     }
   }

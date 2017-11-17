@@ -15,7 +15,7 @@ import edu.osu.cse.groenkeb.logic.Sentence
 import edu.osu.cse.groenkeb.logic.UnaryConnective
 import edu.osu.cse.groenkeb.logic.UnarySentence
 
-class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) extends Parser[String, Sentence, SentenceParserOpts] {
+case class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatcher) extends Parser[String, Sentence, SentenceParserOpts] {
   def this()(implicit opMatcher: OperatorMatcher) = this(new NodeRecursiveTokenizer())
   
   def parse(src: String, opts: SentenceParserOpts = Notation("prefix")): Sentence = {

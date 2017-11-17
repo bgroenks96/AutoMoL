@@ -53,15 +53,15 @@ lazy val server = project.dependsOn(webUtils, modelvf)
         )
     )
 
-// In the future, to avoid forcing the proof engine to be ScalaJS compatible, we should make webx
-// only rely on 'core' and send messages to a server to do the proof work for us.
 lazy val webx = project.dependsOn(webUtils).enablePlugins(ScalaJSPlugin)
   .settings(
     commonSettings,
     name := "automol-webx",
     // This is an application with a main method
     scalaJSUseMainModuleInitializer := true,
+    jsDependencies += "org.webjars" % "jquery" % "2.1.3" / "2.1.3/jquery.js",
     libraryDependencies ++= Seq(
-        "org.scala-js" %%% "scalajs-dom" % "0.9.3"
+        "org.scala-js" %%% "scalajs-dom" % "0.9.3",
+        "be.doeraene" %%% "scalajs-jquery" % "0.9.2"
     )
   )
