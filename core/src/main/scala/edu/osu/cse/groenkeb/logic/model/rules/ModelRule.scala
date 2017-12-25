@@ -19,7 +19,7 @@ import edu.osu.cse.groenkeb.logic.utils.Empty
 
 case class ModelRule(val model: FirstOrderModel) extends Rule {
   def major(proof: Proof) = proof match {
-    case Proof(Conclusion(AtomicSentence(_), IdentityRule(), _), Empty()) => true
+    case Proof(Conclusion(AtomicSentence(_), IdentityRule, _), Empty()) => true
     case _ => false
   }
   
@@ -34,7 +34,6 @@ case class ModelRule(val model: FirstOrderModel) extends Rule {
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case AtomicSentence(atom) => args match {
       case EmptyArgs() if model.verify(conc) => CompleteResult(Proof(Conclusion(conc, this, args), Set()))
-      //case EmptyArgs() if !model.verify(conc) => CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), Nil))
       case _ => NullResult()
     }
     case Absurdity => args match {

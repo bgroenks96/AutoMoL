@@ -13,7 +13,7 @@ object ProofUtils {
     var proof = itr.next()
     
     var conclusion = proof.conclusion
-    if (conclusion.rule.isInstanceOf[NullRule]) return;
+    if (conclusion.rule == NullRule) return;
     println(String.format("%s %s %s {%s}\n", prefix, conclusion.sentence, conclusion.rule, proof.premises.mkString(", ")))
     conclusion.args.prems foreach { p => prettyPrint(itr, prefix + "   ") }
   }

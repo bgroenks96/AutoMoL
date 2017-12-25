@@ -15,9 +15,9 @@ object Latexifier {
   private def latexPrint(itr: Iterator[Proof], proofString: String): String = {
     if (!itr.hasNext) proofString
     else itr.next() match {
-      case CompleteProof(conc, prems) => conc.rule match {
-        case NullRule() => ""
-        case IdentityRule() =>
+      case Proof(conc, prems) => conc.rule match {
+        case NullRule => ""
+        case IdentityRule =>
           proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
                                            ruleToString(conc.rule), 
                                            sentenceToString(conc.sentence))).concat(latexPrint(itr, ""))
@@ -30,7 +30,6 @@ object Latexifier {
                                          sentenceToString(conc.sentence),
         		                             (conc.args.prems map {p => latexPrint(itr, "")}).fold("")((x, y) => x ++ y)))
       }
-      case NullProof => proofString
     }
   }
   
@@ -47,8 +46,8 @@ object Latexifier {
       case ExistentialVerification(_) => "\\exists V"
       case ExistentialFalsification(_) => "\\exists F"
       case ModelRule(_) => " M"
-      case IdentityRule()        => ""
-      case NullRule()            => ""
+      case IdentityRule        => ""
+      case NullRule            => ""
       //others go here...      
     }
   }

@@ -17,7 +17,7 @@ abstract class BaseRule extends Rule {
   def exists(sentences: Sentence*) = CaseAssumptions(sentences:_*)
 }
 
-final case class IdentityRule() extends BaseRule {
+final case object IdentityRule extends BaseRule {
   def yields(sentence: Sentence) = true
 
   def infer(conc: Sentence)(args: RuleArgs) = args match {
@@ -29,7 +29,7 @@ final case class IdentityRule() extends BaseRule {
   override def toString = "id"
 }
 
-final case class NullRule() extends BaseRule {
+final case object NullRule extends BaseRule {
   def major(proof: Proof) = false
 
   def yields(sentence: Sentence) = false
@@ -39,7 +39,7 @@ final case class NullRule() extends BaseRule {
   override def toString = "nil"
 }
 
-final case class NonContradictionRule() extends BaseRule {
+final case object NonContradictionRule extends BaseRule {
   def minor(proof: Proof) = proof match {
     case Proof(Conclusion(UnarySentence(_, Not()),_,_), _) => true
     case _ => false

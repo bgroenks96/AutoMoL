@@ -23,11 +23,11 @@ case class Conclusion(val conclusion: Sentence,
 }
 case class Assumption(s: Sentence) extends Premise(s) {
   // default proof from identity for assumption
-  def proof = Proof(s, IdentityRule(), Default.args(s, this), Set(this))
+  def proof = Proof(s, IdentityRule, Default.args(s, this), Set(this))
 }
 case class ProudPremise(s: Sentence) extends Premise(s) {
   // default proof from identity for "proud" premise
-  def proof = Proof(s, IdentityRule(), Default.args(s, this), Set())
+  def proof = Proof(s, IdentityRule, Default.args(s, this), Set())
 }
 
 object Premises {
@@ -36,5 +36,5 @@ object Premises {
 }
 
 private object Default {
-  def args(s: Sentence, p: Premise) = UnaryArgs(Proof(Conclusion(s, NullRule(), EmptyArgs()), Set()))
+  def args(s: Sentence, p: Premise) = UnaryArgs(Proof(Conclusion(s, NullRule, EmptyArgs()), Set()))
 }
