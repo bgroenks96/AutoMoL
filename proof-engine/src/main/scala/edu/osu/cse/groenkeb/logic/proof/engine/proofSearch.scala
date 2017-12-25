@@ -1,7 +1,6 @@
 package edu.osu.cse.groenkeb.logic.proof.engine
 
 import edu.osu.cse.groenkeb.logic.proof.Proof
-import edu.osu.cse.groenkeb.logic.proof.CompleteProof
 import scala.annotation.tailrec
 import scala.collection.immutable._
 

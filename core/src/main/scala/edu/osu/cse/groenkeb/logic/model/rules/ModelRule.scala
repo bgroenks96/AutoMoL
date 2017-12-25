@@ -9,9 +9,7 @@ import edu.osu.cse.groenkeb.logic.proof.rules.EmptyArgs
 import edu.osu.cse.groenkeb.logic.proof.rules.NullResult
 import edu.osu.cse.groenkeb.logic.proof.rules.Rule
 import edu.osu.cse.groenkeb.logic.proof.rules.RuleArgs
-import edu.osu.cse.groenkeb.logic.proof.CompleteProof
 import edu.osu.cse.groenkeb.logic.proof.Conclusion
-import edu.osu.cse.groenkeb.logic.proof.NullProof
 import edu.osu.cse.groenkeb.logic.proof.Proof
 import edu.osu.cse.groenkeb.logic.proof.ProudPremise
 import edu.osu.cse.groenkeb.logic.proof.rules.IdentityRule
@@ -21,8 +19,7 @@ import edu.osu.cse.groenkeb.logic.utils.Empty
 
 case class ModelRule(val model: FirstOrderModel) extends Rule {
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(AtomicSentence(_), IdentityRule(), _), Empty()) => true
-    case NullProof => true
+    case Proof(Conclusion(AtomicSentence(_), IdentityRule(), _), Empty()) => true
     case _ => false
   }
   
@@ -36,13 +33,13 @@ case class ModelRule(val model: FirstOrderModel) extends Rule {
   
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case AtomicSentence(atom) => args match {
-      case EmptyArgs() if model.verify(conc) => CompleteResult(CompleteProof(Conclusion(conc, this, args), Set()))
+      case EmptyArgs() if model.verify(conc) => CompleteResult(Proof(Conclusion(conc, this, args), Set()))
       //case EmptyArgs() if !model.verify(conc) => CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), Nil))
       case _ => NullResult()
     }
     case Absurdity => args match {
-      case UnaryArgs(CompleteProof(Conclusion(s:AtomicSentence, _, _), Empty())) if !model.verify(s) =>
-        CompleteResult(CompleteProof(Conclusion(Absurdity, this, args), Set(Assumption(s))))
+      case UnaryArgs(Proof(Conclusion(s:AtomicSentence, _, _), Empty())) if !model.verify(s) =>
+        CompleteResult(Proof(Conclusion(Absurdity, this, args), Set(Assumption(s))))
       case _ => NullResult()
     }
     case _ => NullResult()

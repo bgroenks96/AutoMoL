@@ -9,7 +9,7 @@ object ProofTraverser {
   }
   
   private def children(proof: Proof) = proof.conclusion match {
-    case Some(conc) if conc.premiseCount > 0 => Seq[Proof](conc.major) ++ conc.minors
+    case conc if conc.premiseCount > 0 => Seq[Proof](conc.major) ++ conc.minors
     case _ => Nil
   }
 }

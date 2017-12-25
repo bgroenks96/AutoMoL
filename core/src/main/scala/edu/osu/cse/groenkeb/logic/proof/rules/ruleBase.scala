@@ -2,7 +2,6 @@ package edu.osu.cse.groenkeb.logic.proof.rules
 
 import edu.osu.cse.groenkeb.logic.Sentence
 import edu.osu.cse.groenkeb.logic.Sentences
-import edu.osu.cse.groenkeb.logic.proof.CompleteProof
 import edu.osu.cse.groenkeb.logic.proof.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.Premise
 import edu.osu.cse.groenkeb.logic.proof.Proof
@@ -20,15 +19,15 @@ abstract class AbstractRule extends Rule {
 
 final case class IdentityRule() extends AbstractRule {
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(_, _, _), _) => true
+    case Proof(Conclusion(_, _, _), _) => true
     case _ => false
   }
 
   def yields(sentence: Sentence) = true
 
   def infer(conc: Sentence)(args: RuleArgs) = args match {
-    case UnaryArgs(CompleteProof(Conclusion(`conc`, _, _), prems)) =>
-      CompleteResult(CompleteProof(`conc`, this, args, prems + Assumption(conc)))
+    case UnaryArgs(Proof(Conclusion(`conc`, _, _), prems)) =>
+      CompleteResult(Proof(`conc`, this, args, prems + Assumption(conc)))
     case _ => IncompleteResult(UnaryParams(AnyProof(conc)))
   }
 
@@ -47,12 +46,12 @@ final case class NullRule() extends AbstractRule {
 
 final case class NonContradictionRule() extends AbstractRule {
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(s,_,_), _) if s != Absurdity => true
+    case Proof(Conclusion(s,_,_), _) if s != Absurdity => true
     case _ => false
   }
   
   def minor(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(UnarySentence(_, Not()),_,_), _) => true
+    case Proof(Conclusion(UnarySentence(_, Not()),_,_), _) => true
     case _ => false
   }
   
@@ -61,9 +60,9 @@ final case class NonContradictionRule() extends AbstractRule {
   def infer(conc: Sentence)(args: RuleArgs) = {
     val negation = Sentences.not(conc)
     args match {
-      case BinaryArgs(CompleteProof(Conclusion(`conc`, _, _), pa),
-                      CompleteProof(Conclusion(`negation`, _, _), pb)) =>
-                        CompleteResult(CompleteProof(Absurdity, this, args, pa ++ pb))
+      case BinaryArgs(Proof(Conclusion(`conc`, _, _), pa),
+                      Proof(Conclusion(`negation`, _, _), pb)) =>
+                        CompleteResult(Proof(Absurdity, this, args, pa ++ pb))
       case _ => IncompleteResult(BinaryParams(AnyProof(conc), AnyProof(negation)))
     }
   }

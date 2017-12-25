@@ -26,7 +26,6 @@ import edu.osu.cse.groenkeb.logic.proof.rules.TernaryParams
 import edu.osu.cse.groenkeb.logic.proof.rules.UnaryArgs
 import edu.osu.cse.groenkeb.logic.proof.rules.Variate
 import edu.osu.cse.groenkeb.logic.proof.Assumption
-import edu.osu.cse.groenkeb.logic.proof.CompleteProof
 import edu.osu.cse.groenkeb.logic.proof.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.Proof
 import edu.osu.cse.groenkeb.logic.utils.Empty
@@ -48,20 +47,20 @@ abstract class FalsificationRule extends AbstractRule() {
 
 case class NegationFalsification() extends FalsificationRule {
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(UnarySentence(_, Not()),_,_), _) => true
+    case Proof(Conclusion(UnarySentence(_, Not()),_,_), _) => true
     case _ => false
   }
 
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity => args match {
-      case BinaryArgs(CompleteProof(Conclusion(UnarySentence(operand, Not()), _, _), pa), minorProof) =>
+      case BinaryArgs(Proof(Conclusion(UnarySentence(operand, Not()), _, _), pa), minorProof) =>
         minorProof match {
-          case CompleteProof(Conclusion(`operand`, _, _), pb) => 
+          case Proof(Conclusion(`operand`, _, _), pb) => 
             val major = UnarySentence(operand, Not())
-            CompleteResult(CompleteProof(Absurdity, this, args, pa ++ pb + Assumption(major)))
+            CompleteResult(Proof(Absurdity, this, args, pa ++ pb + Assumption(major)))
           case _ => NullResult()
         }
-      case UnaryArgs(CompleteProof(Conclusion(UnarySentence(operand, Not()), _, _), pa)) =>
+      case UnaryArgs(Proof(Conclusion(UnarySentence(operand, Not()), _, _), pa)) =>
         val major = UnarySentence(operand, Not())
         IncompleteResult(BinaryParams(EmptyProof(major), RelevantProof(operand, Vacuous(), Assumption(major))))
       case _ => NullResult()
@@ -74,18 +73,18 @@ case class NegationFalsification() extends FalsificationRule {
 
 case class AndFalsification() extends FalsificationRule {
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(BinarySentence(_, _, And()), _, _), _) => true
+    case Proof(Conclusion(BinarySentence(_, _, And()), _, _), _) => true
     case _ => false
   }
 
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity => args match {
-      case BinaryArgs(CompleteProof(Conclusion(BinarySentence(left, right, And()), _, _), Empty()),
-                      CompleteProof(Conclusion(Absurdity, _, _), prems)) if prems exists { p => p.matches(left) || p.matches(right) } =>
+      case BinaryArgs(Proof(Conclusion(BinarySentence(left, right, And()), _, _), Empty()),
+                      Proof(Conclusion(Absurdity, _, _), prems)) if prems exists { p => p.matches(left) || p.matches(right) } =>
                         val major = Assumption(BinarySentence(left, right, And()))
                         val discharges = Set(Assumption(left), Assumption(right))
-                        CompleteResult(CompleteProof(Conclusion(Absurdity, this, args), prems -- discharges + major))
-      case UnaryArgs(CompleteProof(Conclusion(s@BinarySentence(left, right, And()), _, _), Empty())) =>
+                        CompleteResult(Proof(Conclusion(Absurdity, this, args), prems -- discharges + major))
+      case UnaryArgs(Proof(Conclusion(s@BinarySentence(left, right, And()), _, _), Empty())) =>
         IncompleteResult(BinaryParams(EmptyProof(BinarySentence(left, right, And())),
                                       RelevantProof(Absurdity, Variate(Assumption(left), Assumption(right)), Assumption(s))))
       case _ => NullResult()
@@ -98,21 +97,21 @@ case class AndFalsification() extends FalsificationRule {
 
 case class OrFalsification() extends FalsificationRule() {
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(BinarySentence(x, y, Or()), _, _), Empty()) => true
+    case Proof(Conclusion(BinarySentence(x, y, Or()), _, _), Empty()) => true
     case _ => false
   }
 
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity => args match {
-      case TernaryArgs(CompleteProof(Conclusion(BinarySentence(left, right, Or()), _, _), Empty()), arg1, arg2) => (arg1, arg2) match {
-        case (CompleteProof(Conclusion(Absurdity, _, _), pleft), CompleteProof(Conclusion(Absurdity, _, _), pright))
+      case TernaryArgs(Proof(Conclusion(BinarySentence(left, right, Or()), _, _), Empty()), arg1, arg2) => (arg1, arg2) match {
+        case (Proof(Conclusion(Absurdity, _, _), pleft), Proof(Conclusion(Absurdity, _, _), pright))
           if exists(left).in(pleft) && exists(right).in(pright) =>
             val major = Assumption(BinarySentence(left, right, Or()))
             val discharges = Set(Assumption(left), Assumption(right))
-            CompleteResult(CompleteProof(Conclusion(Absurdity, this, args), pleft ++ pright -- discharges + major))
+            CompleteResult(Proof(Conclusion(Absurdity, this, args), pleft ++ pright -- discharges + major))
         case _ => NullResult()
       }
-      case UnaryArgs(CompleteProof(Conclusion(BinarySentence(left, right, Or()), _, _), Empty())) =>
+      case UnaryArgs(Proof(Conclusion(BinarySentence(left, right, Or()), _, _), Empty())) =>
         IncompleteResult(TernaryParams(EmptyProof(BinarySentence(left, right, Or())),
                                        RelevantProof(Absurdity, Required(Assumption(left)), Assumption(BinarySentence(left, right, Or()))),
                                        RelevantProof(Absurdity, Required(Assumption(right)), Assumption(BinarySentence(left, right, Or())))))
@@ -126,21 +125,21 @@ case class OrFalsification() extends FalsificationRule() {
 
 case class ConditionalFalsification() extends FalsificationRule() {
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(BinarySentence(_,_, Implies()),_,_), _) => true
+    case Proof(Conclusion(BinarySentence(_,_, Implies()),_,_), _) => true
     case _ => false
   }
 
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity => args match {
-      case TernaryArgs(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), _, _), Empty()), arg1, arg2) => (arg1, arg2) match {
-        case (CompleteProof(Conclusion(`ante`, _, _), aprems), CompleteProof(Conclusion(Absurdity, _, _), cprems))
+      case TernaryArgs(Proof(Conclusion(BinarySentence(ante, conseq, Implies()), _, _), Empty()), arg1, arg2) => (arg1, arg2) match {
+        case (Proof(Conclusion(`ante`, _, _), aprems), Proof(Conclusion(Absurdity, _, _), cprems))
           if exists(conseq).in(cprems) =>
             val major = Assumption(BinarySentence(ante, conseq, Implies()))
             val discharges = Set(Assumption(conseq))
-            CompleteResult(CompleteProof(Conclusion(Absurdity, this, args), aprems ++ cprems -- discharges + major))
+            CompleteResult(Proof(Conclusion(Absurdity, this, args), aprems ++ cprems -- discharges + major))
         case _ => NullResult()
       }
-      case UnaryArgs(CompleteProof(Conclusion(BinarySentence(ante, conseq, Implies()), _, _), Empty())) =>
+      case UnaryArgs(Proof(Conclusion(BinarySentence(ante, conseq, Implies()), _, _), Empty())) =>
         IncompleteResult(TernaryParams(EmptyProof(BinarySentence(ante, conseq, Implies())),
                                        RelevantProof(ante, Vacuous(), Assumption(BinarySentence(ante, conseq, Implies()))),
                                        RelevantProof(Absurdity, Required(Assumption(conseq)), Assumption(BinarySentence(ante, conseq, Implies())))))
@@ -154,23 +153,23 @@ case class ConditionalFalsification() extends FalsificationRule() {
 
 case class UniversalFalsification(domain: Domain) extends FalsificationRule() {
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(QuantifiedSentence(_, UniversalQuantifier(_)), _, _), _) => true
+    case Proof(Conclusion(QuantifiedSentence(_, UniversalQuantifier(_)), _, _), _) => true
     case _ => false
   }
   
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity => args match {
-      case BinaryArgs(CompleteProof(Conclusion(QuantifiedSentence(sentence, UniversalQuantifier(term)), _, _), Empty()), arg1) =>
+      case BinaryArgs(Proof(Conclusion(QuantifiedSentence(sentence, UniversalQuantifier(term)), _, _), Empty()), arg1) =>
         // Validate proof and extract relevant assumption for this falsification from the set of premises, if available.
         // If no match is found, the proof is not valid.
         validate(arg1, sentence, term) match {
           case Some(falsified) =>
             val major = Assumption(QuantifiedSentence(sentence, UniversalQuantifier(term)))
             val discharge = Assumption(falsified)
-            CompleteResult(CompleteProof(Conclusion(Absurdity, this, args), arg1.premises - discharge + major))
+            CompleteResult(Proof(Conclusion(Absurdity, this, args), arg1.premises - discharge + major))
           case None => NullResult()
         }
-      case UnaryArgs(CompleteProof(Conclusion(QuantifiedSentence(sentence, UniversalQuantifier(term)), _, _), Empty())) =>
+      case UnaryArgs(Proof(Conclusion(QuantifiedSentence(sentence, UniversalQuantifier(term)), _, _), Empty())) =>
         IncompleteResult(OptionParams(this.domain.terms.toSeq.map {
           t => BinaryParams(EmptyProof(QuantifiedSentence(sentence, UniversalQuantifier(term))),
                             RelevantProof(Absurdity,
@@ -187,7 +186,7 @@ case class UniversalFalsification(domain: Domain) extends FalsificationRule() {
   private def validate(proof: Proof, sentence: Sentence, term: Term): Option[Sentence] = {
     def sub(t: Term) = sentence.substitute(term, t)
     proof.conclusion match {
-      case Some(conc) if conc.sentence == Absurdity => this.domain.terms.collectFirst {
+      case conc if conc.sentence == Absurdity => this.domain.terms.collectFirst {
         case t if exists(sub(t)).in(proof.premises) => sub(t)
       }
       case _ => None
@@ -199,23 +198,23 @@ case class UniversalFalsification(domain: Domain) extends FalsificationRule() {
 
 case class ExistentialFalsification(domain: Domain) extends FalsificationRule() {
   def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(QuantifiedSentence(_, ExistentialQuantifier(_)), _, _), _) => true
+    case Proof(Conclusion(QuantifiedSentence(_, ExistentialQuantifier(_)), _, _), _) => true
     case _ => false
   }
   
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity => args match {
-      case NArgs(Seq(CompleteProof(Conclusion(QuantifiedSentence(sentence, ExistentialQuantifier(term)),_,_), _),
+      case NArgs(Seq(Proof(Conclusion(QuantifiedSentence(sentence, ExistentialQuantifier(term)),_,_), _),
                      proofs@_*)) =>
         val discharges = validate(proofs, sentence, term).map { s => Assumption(s) }
         discharges match {
           // Make sure all proofs have a corresponding discharge; otherwise fail.
           case d if d.length == proofs.length =>
-            CompleteResult(CompleteProof(Conclusion(conc, this, args),
+            CompleteResult(Proof(Conclusion(conc, this, args),
                                          proofs.flatMap { p => p.premises }.toSet -- discharges))
           case _ => NullResult()
         }
-      case UnaryArgs(CompleteProof(Conclusion(QuantifiedSentence(sentence, ExistentialQuantifier(term)),_,_), _)) =>
+      case UnaryArgs(Proof(Conclusion(QuantifiedSentence(sentence, ExistentialQuantifier(term)),_,_), _)) =>
         val disproofs = this.domain.terms.toSeq.map { 
           t => RelevantProof(Absurdity,
                              Required(Assumption(sentence.substitute(term, t))),
@@ -235,7 +234,7 @@ case class ExistentialFalsification(domain: Domain) extends FalsificationRule() 
     this.domain.terms.toSeq.flatMap {
       t =>
         val sub = sentence.substitute(term, t)
-        proofs.collect { case CompleteProof(Conclusion(Absurdity,_,_), premises) =>
+        proofs.collect { case Proof(Conclusion(Absurdity,_,_), premises) =>
           premises.collect { case p if p.matches(sub) => sub }
         }.flatten
   }
