@@ -5,11 +5,6 @@ import edu.osu.cse.groenkeb.logic.proof.Proof
 
 trait Rule {
   /**
-   * True if this rule accepts the given proof as a MAJOR premise, false otherwise.
-   */
-  def major(proof: Proof): Boolean
-
-  /**
    * True if this rule yields the given sentence as a conclusion, false otherwise.
    */
   def yields(sentence: Sentence): Boolean

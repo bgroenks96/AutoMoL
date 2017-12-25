@@ -4,16 +4,10 @@ import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.Domain
-import edu.osu.cse.groenkeb.logic.proof.Proof
 
-abstract class VerificationRule extends AbstractRule
+abstract class VerificationRule extends BaseRule
 
-case class NegationVerification() extends VerificationRule() {  
-  def major(proof: Proof) = proof match {
-    case Proof(Conclusion(Absurdity, _, _), _) => true
-    case _ => false
-  }
-  
+case class NegationVerification() extends VerificationRule() {    
   def yields(conc: Sentence) = conc match {
     case UnarySentence(_, Not()) => true
     case _ => false
@@ -33,11 +27,6 @@ case class NegationVerification() extends VerificationRule() {
 }
 
 case class AndVerification() extends VerificationRule() {
-  def major(proof: Proof) = proof match {
-    case Proof(Conclusion(s,_,_), _) if s != Absurdity => true
-    case _ => false
-  }
-  
   def yields(conc: Sentence) = conc match {
     case BinarySentence(_, _, And()) => true
     case _ => false
@@ -56,11 +45,6 @@ case class AndVerification() extends VerificationRule() {
 }
 
 case class OrVerification() extends VerificationRule() {
-  def major(proof: Proof) = proof match {
-    case Proof(Conclusion(s,_,_), _) if s != Absurdity => true
-    case _ => false
-  }
-  
   def yields(conc: Sentence) = conc match {
     case BinarySentence(_, _, Or()) => true
     case _ => false
@@ -80,11 +64,6 @@ case class OrVerification() extends VerificationRule() {
 }
 
 case class ConditionalVerification() extends VerificationRule() {
-  def major(proof: Proof) = proof match {
-    case Proof(Conclusion(_,_,_), _) => true
-    case _ => false
-  }
-  
   def yields(conc: Sentence) = conc match {
     case BinarySentence(_, _, Implies()) => true
     case _ => false
@@ -107,8 +86,6 @@ case class ConditionalVerification() extends VerificationRule() {
 }
 
 case class UniversalVerification(domain: Domain) extends VerificationRule() {
-  def major(proof: Proof) = true
-  
   def yields(conc: Sentence) = conc match {
     case QuantifiedSentence(_, UniversalQuantifier(_)) => true
     case _ => false
@@ -134,8 +111,6 @@ case class UniversalVerification(domain: Domain) extends VerificationRule() {
 }
 
 case class ExistentialVerification(domain: Domain) extends VerificationRule() {
-  def major(proof: Proof) = true
-  
   def yields(conc: Sentence) = conc match {
     case QuantifiedSentence(_, ExistentialQuantifier(_)) => true
     case _ => false

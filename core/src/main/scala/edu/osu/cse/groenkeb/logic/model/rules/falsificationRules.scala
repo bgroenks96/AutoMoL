@@ -1,61 +1,20 @@
 package edu.osu.cse.groenkeb.logic.model.rules
 
-import edu.osu.cse.groenkeb.logic.Absurdity
-import edu.osu.cse.groenkeb.logic.And
-import edu.osu.cse.groenkeb.logic.BinarySentence
-import edu.osu.cse.groenkeb.logic.Implies
-import edu.osu.cse.groenkeb.logic.Not
-import edu.osu.cse.groenkeb.logic.Or
-import edu.osu.cse.groenkeb.logic.Sentence
-import edu.osu.cse.groenkeb.logic.Sentences
-import edu.osu.cse.groenkeb.logic.UnarySentence
-import edu.osu.cse.groenkeb.logic.proof.rules.AbstractRule
-import edu.osu.cse.groenkeb.logic.proof.rules.AnyProof
-import edu.osu.cse.groenkeb.logic.proof.rules.BinaryArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.BinaryParams
-import edu.osu.cse.groenkeb.logic.proof.rules.CompleteResult
-import edu.osu.cse.groenkeb.logic.proof.rules.EmptyProof
-import edu.osu.cse.groenkeb.logic.proof.rules.IncompleteResult
-import edu.osu.cse.groenkeb.logic.proof.rules.NullResult
-import edu.osu.cse.groenkeb.logic.proof.rules.RelevantProof
-import edu.osu.cse.groenkeb.logic.proof.rules.Required
-import edu.osu.cse.groenkeb.logic.proof.rules.Rule
-import edu.osu.cse.groenkeb.logic.proof.rules.RuleArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.TernaryArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.TernaryParams
-import edu.osu.cse.groenkeb.logic.proof.rules.UnaryArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.Variate
-import edu.osu.cse.groenkeb.logic.proof.Assumption
-import edu.osu.cse.groenkeb.logic.proof.Conclusion
-import edu.osu.cse.groenkeb.logic.proof.Proof
+import edu.osu.cse.groenkeb.logic._
+import edu.osu.cse.groenkeb.logic.proof._
+import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.utils.Empty
-import edu.osu.cse.groenkeb.logic.Term
-import edu.osu.cse.groenkeb.logic.QuantifiedSentence
-import edu.osu.cse.groenkeb.logic.ExistentialQuantifier
-import edu.osu.cse.groenkeb.logic.proof.rules.NParams
-import edu.osu.cse.groenkeb.logic.proof.rules.OptionParams
-import edu.osu.cse.groenkeb.logic.UniversalQuantifier
-import edu.osu.cse.groenkeb.logic.Domain
-import edu.osu.cse.groenkeb.logic.proof.rules.NArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.RuleParam
-import edu.osu.cse.groenkeb.logic.proof.rules.UnaryParams
-import edu.osu.cse.groenkeb.logic.proof.rules.Vacuous
 
-abstract class FalsificationRule extends AbstractRule() {
+abstract class FalsificationRule extends BaseRule() {
   def yields(sentence: Sentence) = sentence match { case Absurdity => true; case _ => false }
 }
 
 case class NegationFalsification() extends FalsificationRule {
-  def major(proof: Proof) = proof match {
-    case Proof(Conclusion(UnarySentence(_, Not()),_,_), _) => true
-    case _ => false
-  }
-
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity => args match {
       case BinaryArgs(Proof(Conclusion(UnarySentence(operand, Not()), _, _), pa), minorProof) =>
         minorProof match {
-          case Proof(Conclusion(`operand`, _, _), pb) => 
+          case Proof(Conclusion(`operand`, _, _), pb) =>
             val major = UnarySentence(operand, Not())
             CompleteResult(Proof(Absurdity, this, args, pa ++ pb + Assumption(major)))
           case _ => NullResult()
@@ -72,11 +31,6 @@ case class NegationFalsification() extends FalsificationRule {
 }
 
 case class AndFalsification() extends FalsificationRule {
-  def major(proof: Proof) = proof match {
-    case Proof(Conclusion(BinarySentence(_, _, And()), _, _), _) => true
-    case _ => false
-  }
-
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity => args match {
       case BinaryArgs(Proof(Conclusion(BinarySentence(left, right, And()), _, _), Empty()),
@@ -124,11 +78,6 @@ case class OrFalsification() extends FalsificationRule() {
 }
 
 case class ConditionalFalsification() extends FalsificationRule() {
-  def major(proof: Proof) = proof match {
-    case Proof(Conclusion(BinarySentence(_,_, Implies()),_,_), _) => true
-    case _ => false
-  }
-
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity => args match {
       case TernaryArgs(Proof(Conclusion(BinarySentence(ante, conseq, Implies()), _, _), Empty()), arg1, arg2) => (arg1, arg2) match {
@@ -152,11 +101,6 @@ case class ConditionalFalsification() extends FalsificationRule() {
 }
 
 case class UniversalFalsification(domain: Domain) extends FalsificationRule() {
-  def major(proof: Proof) = proof match {
-    case Proof(Conclusion(QuantifiedSentence(_, UniversalQuantifier(_)), _, _), _) => true
-    case _ => false
-  }
-  
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity => args match {
       case BinaryArgs(Proof(Conclusion(QuantifiedSentence(sentence, UniversalQuantifier(term)), _, _), Empty()), arg1) =>
@@ -197,11 +141,6 @@ case class UniversalFalsification(domain: Domain) extends FalsificationRule() {
 }
 
 case class ExistentialFalsification(domain: Domain) extends FalsificationRule() {
-  def major(proof: Proof) = proof match {
-    case Proof(Conclusion(QuantifiedSentence(_, ExistentialQuantifier(_)), _, _), _) => true
-    case _ => false
-  }
-  
   def infer(conc: Sentence)(args: RuleArgs) = conc match {
     case Absurdity => args match {
       case NArgs(Seq(Proof(Conclusion(QuantifiedSentence(sentence, ExistentialQuantifier(term)),_,_), _),

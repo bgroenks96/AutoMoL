@@ -13,16 +13,11 @@ import edu.osu.cse.groenkeb.logic.Not
 import edu.osu.cse.groenkeb.logic.UnarySentence
 import edu.osu.cse.groenkeb.logic.Absurdity
 
-abstract class AbstractRule extends Rule {
+abstract class BaseRule extends Rule {
   def exists(sentences: Sentence*) = CaseAssumptions(sentences:_*)
 }
 
-final case class IdentityRule() extends AbstractRule {
-  def major(proof: Proof) = proof match {
-    case Proof(Conclusion(_, _, _), _) => true
-    case _ => false
-  }
-
+final case class IdentityRule() extends BaseRule {
   def yields(sentence: Sentence) = true
 
   def infer(conc: Sentence)(args: RuleArgs) = args match {
@@ -34,7 +29,7 @@ final case class IdentityRule() extends AbstractRule {
   override def toString = "id"
 }
 
-final case class NullRule() extends AbstractRule {
+final case class NullRule() extends BaseRule {
   def major(proof: Proof) = false
 
   def yields(sentence: Sentence) = false
@@ -44,12 +39,7 @@ final case class NullRule() extends AbstractRule {
   override def toString = "nil"
 }
 
-final case class NonContradictionRule() extends AbstractRule {
-  def major(proof: Proof) = proof match {
-    case Proof(Conclusion(s,_,_), _) if s != Absurdity => true
-    case _ => false
-  }
-  
+final case class NonContradictionRule() extends BaseRule {
   def minor(proof: Proof) = proof match {
     case Proof(Conclusion(UnarySentence(_, Not()),_,_), _) => true
     case _ => false
