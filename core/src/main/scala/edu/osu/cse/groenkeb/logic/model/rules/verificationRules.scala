@@ -5,130 +5,168 @@ import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.Domain
 
-abstract class VerificationRule extends BaseRule
+abstract class VerificationRule extends BaseRule {
+  def major(sentence: Sentence) = false
+}
 
-case class NegationVerification() extends VerificationRule() {    
-  def yields(conc: Sentence) = conc match {
-    case UnarySentence(_, Not()) => true
+case object NegationVerification extends VerificationRule {  
+  def yields(conclusion: Sentence) = conclusion match {
+    case Not(_) => true
     case _ => false
   }
   
-  def infer(conc: Sentence)(args: RuleArgs) = conc match {
-    case UnarySentence(sentence, Not()) => args match {
-      case UnaryArgs(Proof(Conclusion(Absurdity, _, _), prems)) if  exists(sentence).in(prems) =>
+  def params(major: Option[Sentence] = None)(implicit context: ProofContext) = goal match {
+    case Not(sentence) if major == None => Some(UnaryParams(RelevantProof(Absurdity, Required(Assumption(sentence)))))
+    case _ => None
+  }
+
+  def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
+    case Not(sentence) => args match {
+      case UnaryArgs(Proof(Conclusion(Absurdity,_,_), prems)) if exists(sentence).in(prems) =>
         val discharge = Assumption(sentence)
-        CompleteResult(Proof(Conclusion(conc, this, args), prems - discharge))
-      case _ => IncompleteResult(UnaryParams(RelevantProof(Absurdity, Required(Assumption(sentence)))))
+        Some(Proof(Conclusion(goal, this, args), prems - discharge))
+      case _ => None
     }
-    case _ => NullResult()
+    case _ => None
   }
   
   override def toString = "~V"
 }
 
-case class AndVerification() extends VerificationRule() {
-  def yields(conc: Sentence) = conc match {
-    case BinarySentence(_, _, And()) => true
+case object AndVerification extends VerificationRule {
+  def yields(conclusion: Sentence) = conclusion match {
+    case And(_,_) => true
     case _ => false
   }
   
-  def infer(conc: Sentence)(args: RuleArgs) = conc match {
-    case BinarySentence(left, right, And()) => args match {
-      case BinaryArgs(Proof(Conclusion(`left`, _, _), pleft), Proof(Conclusion(`right`, _, _), pright)) =>
-        CompleteResult(Proof(Conclusion(conc, this, args), pleft ++ pright))
-      case _ => IncompleteResult(BinaryParams(AnyProof(left), AnyProof(right)))
-    }
-    case _ => NullResult()
+  def params(major: Option[Sentence] = None)(implicit context: ProofContext) = goal match {
+    case And(left, right) if major == None => Some(BinaryParams(AnyProof(left), AnyProof(right)))
+    case _ => None
+  }
+  
+  def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
+    case BinaryArgs(Proof(Conclusion(left, _, _), pleft), Proof(Conclusion(right, _, _), pright)) => Some(Proof(Conclusion(goal, this, args), pleft ++ pright))
+    case _ => None
   }
   
   override def toString = "&V"
 }
 
-case class OrVerification() extends VerificationRule() {
+case object OrVerification extends VerificationRule {
   def yields(conc: Sentence) = conc match {
-    case BinarySentence(_, _, Or()) => true
+    case Or(_,_) => true
     case _ => false
   }
-  
-  def infer(conc: Sentence)(args: RuleArgs) = conc match {
-    case BinarySentence(left, right, Or()) => args match {
+
+  def params(major: Option[Sentence] = None)(implicit context: ProofContext) = goal match {
+    case Or(left, right) if major == None =>
+      Some(OptionParams(
+        UnaryParams(AnyProof(left)),
+        UnaryParams(AnyProof(right))))
+    case _ => None
+  }
+
+  def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
+    case Or(left, right) => args match {
       case UnaryArgs(Proof(Conclusion(c, _, _), prems)) if c.matches(left) || c.matches(right) =>
-        CompleteResult(Proof(Conclusion(conc, this, args), prems))
-      case _ => IncompleteResult(OptionParams(UnaryParams(AnyProof(left)),
-                                              UnaryParams(AnyProof(right))))
+        Some(Proof(Conclusion(goal, this, args), prems))
+      case _ => None
     }
-    case _ => NullResult()
+    case _ => None
   }
   
   override def toString = "+V"
 }
 
-case class ConditionalVerification() extends VerificationRule() {
+case object ConditionalVerification extends VerificationRule {
   def yields(conc: Sentence) = conc match {
-    case BinarySentence(_, _, Implies()) => true
+    case Implies(_,_) => true
     case _ => false
   }
+
+  def params(major: Option[Sentence] = None)(implicit context: ProofContext) = goal match {
+    case Implies(ante, conseq) if major == None =>
+      Some(OptionParams(
+        UnaryParams(AnyProof(conseq)),
+        UnaryParams(RelevantProof(Absurdity, Required(Assumption(ante)), Assumption(Implies(ante, conseq))))))
+    case _ => None
+  }
   
-  def infer(conc: Sentence)(args: RuleArgs) = conc match {
-    case BinarySentence(ante, conseq, Implies()) => args match {
+  def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
+    case Implies(ante, conseq) => args match {
       case UnaryArgs(Proof(Conclusion(`conseq`, _, _), prems)) =>
-        CompleteResult(Proof(Conclusion(BinarySentence(ante, conseq, Implies()), this, args), prems))
+        Some(Proof(Conclusion(Implies(ante, conseq), this, args), prems))
       case UnaryArgs(Proof(Conclusion(Absurdity, _, _), prems)) if exists(ante).in(prems) =>
         val discharge = Assumption(ante)
-        CompleteResult(Proof(Conclusion(BinarySentence(ante, conseq, Implies()), this, args), prems - discharge))
-      case _ => IncompleteResult(OptionParams(UnaryParams(AnyProof(conseq)),
-                                              UnaryParams(RelevantProof(Absurdity, Required(Assumption(ante)), Assumption(BinarySentence(ante, conseq, Implies()))))))
+        Some(Proof(Conclusion(Implies(ante, conseq), this, args), prems - discharge))
+      case _ => None
     }
-    case _ => NullResult()
+    case _ => None
   }
   
   override def toString = ">V"
 }
 
-case class UniversalVerification(domain: Domain) extends VerificationRule() {
+case class UniversalVerification(domain: Domain) extends VerificationRule {
   def yields(conc: Sentence) = conc match {
-    case QuantifiedSentence(_, UniversalQuantifier(_)) => true
+    case ForAll(_, _) => true
     case _ => false
   }
-  
-  def infer(conc: Sentence)(args: RuleArgs) = conc match {
-    case QuantifiedSentence(sentence, UniversalQuantifier(term)) => args match {
-      case NArgs(proofs) if validate(proofs, sentence, term) =>
-        CompleteResult(Proof(Conclusion(conc, this, args), proofs.flatMap { p => p.premises }.toSet))
-      case _ => IncompleteResult(NParams(this.domain.terms.toSeq.map { 
-          t => AnyProof(sentence.substitute(term, t))
-        }))
+
+  def params(major: Option[Sentence] = None)(implicit context: ProofContext) = goal match {
+    case ForAll(term, sentence) if major == None =>
+      Some(NParams(domain.terms.toSeq.map {
+        t => AnyProof(sentence.substitute(term, t))
+      }))
+    case _ => None
+  }
+
+  def infer(args: RuleArgs)(implicit context: ProofContext) = {
+    def validate(proofs: Seq[Proof], sentence: Sentence, term: Term): Boolean =
+      proofs.length == domain.size && domain.terms.forall {
+        t => proofs.exists { p => p.conclusion.sentence.matches(sentence.substitute(term, t)) }
+      }
+
+    goal match {
+      case ForAll(term, sentence) => args match {
+        case NArgs(proofs) if validate(proofs, sentence, term) =>
+          Some(Proof(Conclusion(goal, UniversalVerification.this, args), proofs.flatMap { p => p.premises }.toSet))
+        case _ => None
+      }
+      case _ => None
     }
-    case _ => NullResult()
   }
-  
-  private def validate(proofs: Seq[Proof], sentence: Sentence, term: Term): Boolean = 
-    proofs.length == this.domain.size && this.domain.terms.forall {
-      t => proofs.exists { p => p.conclusion.sentence.matches(sentence.substitute(term, t)) }
-  }
-  
+
   override def toString = "UV"
 }
 
 case class ExistentialVerification(domain: Domain) extends VerificationRule() {
   def yields(conc: Sentence) = conc match {
-    case QuantifiedSentence(_, ExistentialQuantifier(_)) => true
+    case Exists(_,_) => true
     case _ => false
   }
-  
-  def infer(conc: Sentence)(args: RuleArgs) = conc match {
-    case QuantifiedSentence(sentence, ExistentialQuantifier(term)) => args match {
-      case UnaryArgs(proof) if validate(proof, sentence, term) =>
-        CompleteResult(Proof(Conclusion(conc, this, args), proof.premises))
-      case _ => IncompleteResult(OptionParams(this.domain.terms.toSeq.map {
+
+  def params(major: Option[Sentence] = None)(implicit context: ProofContext) = goal match {
+    case Exists(term, sentence) if major == None =>
+      Some(OptionParams(domain.terms.toSeq.map {
         t => UnaryParams(AnyProof(sentence.substitute(term, t)))
-      }:_*))
-    }
-    case _ => NullResult()
+      }: _*))
+    case _ => None
   }
   
-  private def validate(proof: Proof, sentence: Sentence, term: Term): Boolean = 
-    this.domain.terms.exists { t => sentence.substitute(term, t).matches(proof.conclusion.sentence) }
+  def infer(args: RuleArgs)(implicit context: ProofContext) = {
+    def validate(proof: Proof, sentence: Sentence, term: Term): Boolean =
+      domain.terms.exists { t => proof.conclusion.matches(sentence.substitute(term, t)) }
+    
+    goal match {
+      case Exists(term, sentence) => args match {
+        case UnaryArgs(proof) if validate(proof, sentence, term) =>
+          Some(Proof(Conclusion(goal, ExistentialVerification.this, args), proof.premises))
+        case _ => None
+      }
+      case _ => None
+    }
+  }
   
   override def toString = "EV"
 }

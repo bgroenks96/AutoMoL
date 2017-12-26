@@ -28,18 +28,11 @@ case class FirstOrderModel(val diagram: AtomicDiagram) extends Model {
     case Absurdity => false
     case NullSentence => false
   }
-  def rules: RuleSet = RuleSet(Seq(ModelRule(this),
-                          NegationVerification(), NegationFalsification(),
-                          AndVerification(), AndFalsification(),
-                          OrVerification(), OrFalsification(),
-                          ConditionalVerification(), ConditionalFalsification(),
-                          UniversalVerification(domain), UniversalFalsification(domain),
-                          ExistentialVerification(domain), ExistentialFalsification(domain)))
 }
 
 object FirstOrderModel {
-  def apply(sentences: Sentence*) = from(sentences:_*)
-  def from(sentences: Sentence*): FirstOrderModel = new FirstOrderModel(diagram(sentences:_*))
+  def apply(sentences: Sentence*) = from(sentences: _*)
+  def from(sentences: Sentence*): FirstOrderModel = new FirstOrderModel(diagram(sentences: _*))
   def empty = from()
   
 //  private def extract(sentences: Sentence*): Domain = sentences.toList match {

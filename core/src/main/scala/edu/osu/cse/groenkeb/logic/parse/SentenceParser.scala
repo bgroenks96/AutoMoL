@@ -51,7 +51,7 @@ case class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatc
     val op = opMatcher.opFor(str)
     op match {
       case x if x.isInstanceOf[BinaryConnective] => op.asInstanceOf[BinaryConnective]
-      case NullOp() => throw ParserException("undefined or malformed operator: " + str);
+      case NullOp => throw ParserException("undefined or malformed operator: " + str);
       case _ => throw ParserException("illegal use of non-binary operator: " + str);
     }
   }
@@ -61,7 +61,7 @@ case class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatc
     op match {
       case x if x.isInstanceOf[UnaryConnective] => Left(op.asInstanceOf[UnaryConnective])
       case x if x.isInstanceOf[Quantifier] => Right(op.asInstanceOf[Quantifier])
-      case NullOp() => throw ParserException("undefined or malformed operator: " + str);
+      case NullOp => throw ParserException("undefined or malformed operator: " + str);
       case _ => throw ParserException("illegal use of non-unary operator: " + str);
     }
   }
@@ -69,7 +69,7 @@ case class SentenceParser(tokenizer: Tokenizer)(implicit opMatcher: OperatorMatc
   private def matchAtom(str: String): Atom = {
     val op = opMatcher.opFor(str)
     op match {
-      case NullOp() => Atom.parse(str)
+      case NullOp => Atom.parse(str)
       case _ => throw ParserException("Found unexpected operator token: " + str)
     }
   }

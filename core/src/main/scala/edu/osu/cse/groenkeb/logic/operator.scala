@@ -6,15 +6,22 @@ trait Operator {
 }
 
 trait Quantifier extends Operator {
-  def evaluate(domain: Domain, functor: Sentence => Boolean, arg: Sentence): Boolean
+  def evaluate(domain: Domain, func: Sentence => Boolean, arg: Sentence): Boolean
 }
 
 trait Connective extends Operator {
-  def evaluate(functor: Sentence => Boolean, args: Sentence*): Boolean
+  def evaluate(func: Sentence => Boolean, args: Sentence*): Boolean
 }
 
-abstract class UnaryConnective extends Connective
-abstract class BinaryConnective extends Connective
+abstract class UnaryConnective extends Connective {
+  def apply(operand: Sentence): UnarySentence
+  def unapply(sentence: Sentence): Option[Sentence]
+}
+
+abstract class BinaryConnective extends Connective {
+  def apply(left: Sentence, right: Sentence): BinarySentence
+  def unapply(sentence: Sentence): Option[(Sentence, Sentence)]
+}
 
 sealed abstract class Predicate extends Operator
 case class NamedPredicate(val name: String) extends Predicate {
@@ -39,9 +46,9 @@ object IdentityPredicate {
   def name = "I"
 }
 
-case class NullOp() extends Operator {
+case object NullOp extends Operator {
   def matches(op: Operator) = op match {
-    case NullOp() => true
+    case NullOp => true
     case _ => false
   }
   

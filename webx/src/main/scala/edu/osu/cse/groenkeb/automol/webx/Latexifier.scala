@@ -35,12 +35,12 @@ object Latexifier {
   
   private def ruleToString(rule: Rule): String = {
     rule match {
-      case AndVerification() => "\\wedge V"
-      case AndFalsification()  => "\\wedge F"
-      case OrVerification() => "\\vee V"
-      case OrFalsification() => "\\vee F"
-      case NegationVerification() => "\\not V"
-      case NegationFalsification() => "\\not F"
+      case AndVerification => "\\wedge V"
+      case AndFalsification  => "\\wedge F"
+      case OrVerification => "\\vee V"
+      case OrFalsification => "\\vee F"
+      case NegationVerification => "\\not V"
+      case NegationFalsification => "\\not F"
       case UniversalVerification(_) => "\\forall V"
       case UniversalFalsification(_) => "\\forall F"
       case ExistentialVerification(_) => "\\exists V"
@@ -66,16 +66,16 @@ object Latexifier {
   
   private def unaryConnectiveToString(conn: UnaryConnective): String = {
     conn match{
-      case Not() => "\\neg "
+      case Not => "\\neg "
       case _     => "un:Error"
     }
   }
   
   private def binaryConnectiveToString(conn: BinaryConnective): String = {
     conn match{
-      case And()     => "\\wedge "
-      case Or()      => "\\vee "
-      case Implies() => "\\rightarrow "
+      case And     => "\\wedge "
+      case Or      => "\\vee "
+      case Implies => "\\rightarrow "
       case _         => "bin:Error"
     }
   }

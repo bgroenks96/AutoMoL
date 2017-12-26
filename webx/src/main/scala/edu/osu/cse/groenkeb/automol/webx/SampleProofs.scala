@@ -10,6 +10,7 @@ import edu.osu.cse.groenkeb.logic.proof.Proof
 import edu.osu.cse.groenkeb.logic.proof.ProudPremise
 import edu.osu.cse.groenkeb.logic.proof.rules.BinaryArgs
 import edu.osu.cse.groenkeb.logic.proof.rules.EmptyArgs
+import edu.osu.cse.groenkeb.logic.And
 
 object SampleProofs {
 
@@ -24,24 +25,24 @@ object SampleProofs {
 
   def VerifyAnd_1 = {
     val model = FirstOrderModel.from(atom("P"), atom("Q"))
-    val andv = AndVerification()
+    val andv = AndVerification
     val mrule = ModelRule(model)
     val p = atom("P")
     val q = atom("Q")
-    val pq = and(p, q)
+    val pq = And(p, q)
     Proof(Conclusion(pq, andv, BinaryArgs(Proof(Conclusion(p, mrule, EmptyArgs()), Set()),
                                           Proof(Conclusion(q, mrule, EmptyArgs()), Set()))), Set())
   }
 
   def VerifyAnd_2 = {
     val model = FirstOrderModel.from(atom("P"), atom("Q"), atom("R"))
-    val andv = AndVerification()
+    val andv = AndVerification
     val mrule = ModelRule(model)
     val p = atom("P")
     val q = atom("Q")
     val r = atom("R")
-    val pq = and(p, q)
-    val pqr = and(r, pq)
+    val pq = And(p, q)
+    val pqr = And(r, pq)
     //    Proof(Conclusion(pq, andv, BinaryArgs(Proof(Conclusion(p, mrule, EmptyArgs()), Set()),
     //                                          Proof(Conclusion(q, mrule, EmptyArgs()), Set()))), Set())
 
@@ -50,6 +51,4 @@ object SampleProofs {
   }
 
   private def atom(str: String) = Sentences.atom(str)
-
-  private def and(left: Sentence, right: Sentence) = Sentences.and(left, right)
 }

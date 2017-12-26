@@ -13,6 +13,15 @@ case class ExistentialQuantifier(term: Term) extends Quantifier {
   override def toString = "E:" + term.name
 }
 
+case object Exists {
+  def apply(term: Term, sentence: Sentence) = QuantifiedSentence(sentence, ExistentialQuantifier(term))
+  
+  def unapply(sentence: Sentence) = sentence match {
+    case QuantifiedSentence(sentence, ExistentialQuantifier(term)) => Some((term, sentence))
+    case _ => None
+  }
+}
+
 case class UniversalQuantifier(term: Term) extends Quantifier {
     def matches(op: Operator) = op match {
     case UniversalQuantifier(term) => true
@@ -25,4 +34,13 @@ case class UniversalQuantifier(term: Term) extends Quantifier {
   }
   
   override def toString = "U:" + term.name
+}
+
+case object ForAll {
+  def apply(term: Term, sentence: Sentence) = QuantifiedSentence(sentence, UniversalQuantifier(term))
+  
+  def unapply(sentence: Sentence) = sentence match {
+    case QuantifiedSentence(sentence, UniversalQuantifier(term)) => Some((term, sentence))
+    case _ => None
+  }
 }

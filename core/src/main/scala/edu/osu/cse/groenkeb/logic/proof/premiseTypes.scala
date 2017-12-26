@@ -36,5 +36,5 @@ object Premises {
 }
 
 private object Default {
-  def args(s: Sentence, p: Premise) = UnaryArgs(Proof(Conclusion(s, NullRule, EmptyArgs()), Set()))
+  def args(s: Sentence, p: Premise) = UnaryArgs(Proof(Conclusion(s, NullRule, EmptyArgs), Set()))
 }

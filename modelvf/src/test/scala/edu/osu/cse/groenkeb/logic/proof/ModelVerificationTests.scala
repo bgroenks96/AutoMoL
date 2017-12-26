@@ -62,7 +62,7 @@ class ModelVerificationTests {
     val domain = Domain(termA)
     val diagram = AtomicDiagram(domain, ObjectRelation(predR, termA), ObjectRelation(predQ, termA))
     val model = FirstOrderModel(diagram)
-    val rules = RuleSet(Seq(ModelRule(model), AndVerification()))
+    val rules = RuleSet(Seq(ModelRule(model), AndVerification))
     val context = ProofContext(Sentences.and(Sentences.atom("R[a]"), Sentences.atom("Q[a]")), rules, Nil)
     val solver = new ProofSolver(new NaiveProofStrategy())
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -76,7 +76,7 @@ class ModelVerificationTests {
     val domain = Domain()
     val diagram = AtomicDiagram(domain)
     val model = FirstOrderModel(diagram)
-    val rules = RuleSet(Seq(ModelRule(model), AndFalsification()))
+    val rules = RuleSet(Seq(ModelRule(model), AndFalsification))
     val context = ProofContext(Absurdity, rules, Seq(ProudPremise(Sentences.and(Sentences.atom("R[a]"), Sentences.atom("Q[a]")))))
     val solver = new ProofSolver(new NaiveProofStrategy())
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -90,7 +90,7 @@ class ModelVerificationTests {
     val sentence = "(and R[a] (and R[b] (and R[c] R[d])))"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
     val model = FirstOrderModel.from(parser.parse("R[a]"), parser.parse("R[b]"), parser.parse("R[c]"), parser.parse("R[d]"))
-    val rules = RuleSet(Seq(ModelRule(model), AndVerification()))
+    val rules = RuleSet(Seq(ModelRule(model), AndVerification))
     val context = ProofContext(parser.parse(sentence), rules, Nil)
     val solver = new ProofSolver(new NaiveProofStrategy())
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -104,7 +104,7 @@ class ModelVerificationTests {
     val sentence = "(and (and R[a] R[b]) (and R[c] R[d]))"
     val parser = SentenceParser(NodeRecursiveTokenizer())
     val model = FirstOrderModel()
-    val rules = RuleSet(Seq(ModelRule(model), AndFalsification()))
+    val rules = RuleSet(Seq(ModelRule(model), AndFalsification))
     val context = ProofContext(Absurdity, rules, Seq(ProudPremise(parser.parse(sentence))))
     val solver = new ProofSolver(new NaiveProofStrategy())
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -118,7 +118,7 @@ class ModelVerificationTests {
     val sentence = "(or R[a] R[b])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
     val model = FirstOrderModel.from(parser.parse("R[a]"))
-    val rules = RuleSet(Seq(ModelRule(model), OrVerification()))
+    val rules = RuleSet(Seq(ModelRule(model), OrVerification))
     val context = ProofContext(parser.parse(sentence), rules, Nil)
     val solver = new ProofSolver(new NaiveProofStrategy())
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -132,7 +132,7 @@ class ModelVerificationTests {
     val sentence = "(or R[a] R[b])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
     val model = FirstOrderModel()
-    val rules = RuleSet(Seq(ModelRule(model), OrFalsification()))
+    val rules = RuleSet(Seq(ModelRule(model), OrFalsification))
     val context = ProofContext(Absurdity, rules, Seq(ProudPremise(parser.parse(sentence))))
     val solver = new ProofSolver(new NaiveProofStrategy())
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -146,7 +146,7 @@ class ModelVerificationTests {
     val sentence = "(not R[a])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
     val model = FirstOrderModel()
-    val rules = RuleSet(Seq(ModelRule(model), NegationVerification()))
+    val rules = RuleSet(Seq(ModelRule(model), NegationVerification))
     val context = ProofContext(parser.parse(sentence), rules, Nil)
     val solver = new ProofSolver(new NaiveProofStrategy())
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -160,7 +160,7 @@ class ModelVerificationTests {
     val sentence = "(not R[a])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
     val model = FirstOrderModel.from(parser.parse("R[a]"))
-    val rules = RuleSet(Seq(ModelRule(model), NegationFalsification()))
+    val rules = RuleSet(Seq(ModelRule(model), NegationFalsification))
     val context = ProofContext(Absurdity, rules, Seq(ProudPremise(parser.parse(sentence))))
     val solver = new ProofSolver(new NaiveProofStrategy())
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -174,7 +174,7 @@ class ModelVerificationTests {
     val sentence = "(if R[a] R[b])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
     val model = FirstOrderModel.from(parser.parse("R[a]"), parser.parse("R[b]"))
-    val rules = RuleSet(Seq(ModelRule(model), ConditionalVerification()))
+    val rules = RuleSet(Seq(ModelRule(model), ConditionalVerification))
     val context = ProofContext(parser.parse(sentence), rules, Nil)
     val solver = new ProofSolver(new NaiveProofStrategy())
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -188,7 +188,7 @@ class ModelVerificationTests {
     val sentence = "(if R[a] R[b])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
     val model = FirstOrderModel();
-    val rules = RuleSet(Seq(ModelRule(model), ConditionalVerification()))
+    val rules = RuleSet(Seq(ModelRule(model), ConditionalVerification))
     val context = ProofContext(parser.parse(sentence), rules, Nil)
     val solver = new ProofSolver(new NaiveProofStrategy())
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -202,7 +202,7 @@ class ModelVerificationTests {
     val sentence = "(if R[a] R[b])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
     val model = FirstOrderModel(parser.parse("R[a]"));
-    val rules = RuleSet(Seq(ModelRule(model), ConditionalFalsification()))
+    val rules = RuleSet(Seq(ModelRule(model), ConditionalFalsification))
     val context = ProofContext(Absurdity, rules, Seq(ProudPremise(parser.parse(sentence))))
     val solver = new ProofSolver(new NaiveProofStrategy())
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -380,10 +380,10 @@ class ModelVerificationTests {
   
   private def standardRules(model: FirstOrderModel) =
     RuleSet(Seq(ModelRule(model),
-    NegationVerification(), NegationFalsification(),
-    AndVerification(), AndFalsification(),
-    OrVerification(), OrFalsification(),
-    ConditionalVerification(), ConditionalFalsification(),
+    NegationVerification, NegationFalsification,
+    AndVerification, AndFalsification,
+    OrVerification, OrFalsification,
+    ConditionalVerification, ConditionalFalsification,
     UniversalVerification(model.domain), UniversalFalsification(model.domain),
     ExistentialVerification(model.domain), ExistentialFalsification(model.domain)))
 }
