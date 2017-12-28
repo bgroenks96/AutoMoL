@@ -22,10 +22,11 @@ case object NegationFalsification extends FalsificationRule {
   }
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
-    case BinaryArgs(Proof(Conclusion(Not(operand), _, _), pmajor), minorProof) if (goal is Absurdity) => minorProof match {
-      case Proof(Conclusion(`operand`,_,_), pminor) =>
+    case BinaryArgs(Proof(Not(operand), _, _, pmajor), minorProof) if (goal is Absurdity) => minorProof match {
+      case Proof(`operand`,_,_, pminor) =>
         val major = Not(operand)
         Some(Proof(Absurdity, this, args, pmajor ++ pminor + Assumption(major)))
+      case _ => None
     }
     case _ => None
   }
@@ -50,11 +51,11 @@ case object AndFalsification extends FalsificationRule {
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
     case BinaryArgs(
-      Proof(Conclusion(And(left, right), _, _), Empty()),
-      Proof(Conclusion(Absurdity, _, _), prems)) if (goal is Absurdity) and (exists(left).in(prems) or exists(right).in(prems)) =>
+      Proof(And(left, right), IdentityRule, _, _),
+      Proof(Absurdity, _, _, prems)) if (goal is Absurdity) and (exists(left).in(prems) or exists(right).in(prems)) =>
       val major = Assumption(And(left, right))
       val discharges = Set(Assumption(left), Assumption(right))
-      Some(Proof(Conclusion(Absurdity, this, args), prems -- discharges + major))
+      Some(Proof(Absurdity, this, args, prems -- discharges + major))
     case _ => None
   }
 
@@ -78,12 +79,12 @@ case object OrFalsification extends FalsificationRule {
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
     case TernaryArgs(
-      Proof(Conclusion(Or(left, right), _, _), Empty()),
-      Proof(Conclusion(Absurdity, _, _), pleft),
-      Proof(Conclusion(Absurdity, _, _), pright)) if (goal is Absurdity) and exists(left).in(pleft) and exists(right).in(pright) =>
+      Proof(Or(left, right), IdentityRule, _, _),
+      Proof(Absurdity, _, _, pleft),
+      Proof(Absurdity, _, _, pright)) if (goal is Absurdity) and exists(left).in(pleft) and exists(right).in(pright) =>
       val major = Assumption(Or(left, right))
       val discharges = Set(Assumption(left), Assumption(right))
-      Some(Proof(Conclusion(Absurdity, this, args), pleft ++ pright -- discharges + major))
+      Some(Proof(Absurdity, this, args, pleft ++ pright -- discharges + major))
     case _ => None
   }
 
@@ -106,14 +107,14 @@ case object ConditionalFalsification extends FalsificationRule {
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
     case TernaryArgs(
-      Proof(Conclusion(Implies(ante, conseq),_,_), Empty()),
+      Proof(Implies(ante, conseq), IdentityRule,_,_),
       antecedentProof,
-      Proof(Conclusion(Absurdity, _, _), cprems)) if (goal is Absurdity) and exists(conseq).in(cprems) =>
+      Proof(Absurdity, _, _, cprems)) if (goal is Absurdity) and exists(conseq).in(cprems) =>
         antecedentProof match {
-          case Proof(Conclusion(`ante`,_,_), aprems) =>
+          case Proof(`ante`,_,_, aprems) =>
             val major = Assumption(Implies(ante, conseq))
             val discharges = Set(Assumption(conseq))
-            Some(Proof(Conclusion(Absurdity, this, args), aprems ++ cprems -- discharges + major))
+            Some(Proof(Absurdity, this, args, aprems ++ cprems -- discharges + major))
           case _ => None
         }
     case _ => None
@@ -149,22 +150,22 @@ case class UniversalFalsification(domain: Domain) extends FalsificationRule {
     def validate(proof: Proof, sentence: Sentence, term: Term): Option[Sentence] = {
       def sub(t: Term) = sentence.substitute(term, t)
       proof.conclusion match {
-        case conc if conc.sentence == Absurdity => domain.terms.collectFirst {
-          case t if exists(sub(t)).in(proof.premises) => sub(t)
+        case Absurdity => domain.terms.collectFirst {
+          case t if exists(sub(t)).in(proof.undischarged) => sub(t)
         }
         case _ => None
       }
     }
     
     args match {
-      case BinaryArgs(Proof(Conclusion(ForAll(term, sentence),_,_), Empty()), arg1) if goal is Absurdity =>
+      case BinaryArgs(Proof(ForAll(term, sentence), IdentityRule,_,_), arg1) if goal is Absurdity =>
         // Validate proof and extract relevant assumption for this falsification from the set of premises, if available.
         // If no match is found, the proof is not valid.
         validate(arg1, sentence, term) match {
           case Some(falsified) =>
-            val major = Assumption(QuantifiedSentence(sentence, UniversalQuantifier(term)))
+            val major = Assumption(ForAll(term ,sentence))
             val discharge = Assumption(falsified)
-            Some(Proof(Conclusion(Absurdity, UniversalFalsification.this, args), arg1.premises - discharge + major))
+            Some(Proof(Absurdity, this, args, arg1.undischarged - discharge + major))
           case None => None
         }
       case _ => None
@@ -202,18 +203,18 @@ case class ExistentialFalsification(domain: Domain) extends FalsificationRule {
         t =>
           val sub = sentence.substitute(term, t)
           proofs.collect {
-            case Proof(Conclusion(Absurdity,_,_), premises) =>
+            case Proof(Absurdity,_,_, premises) =>
               premises.collect { case p if p.matches(sub) => sub }
           }.flatten
       }
     
     args match {
-      case NArgs(Seq(Proof(Conclusion(Exists(term, sentence),_,_),_), proofs @ _*)) if goal is Absurdity =>
+      case NArgs(Seq(Proof(Exists(term, sentence), IdentityRule,_,_), proofs @ _*)) if goal is Absurdity =>
         val discharges = validate(proofs, sentence, term).map { s => Assumption(s) }
         discharges match {
           // Make sure all proofs have a corresponding discharge; otherwise fail.
           case d if d.length == proofs.length =>
-            Some(Proof(Conclusion(Absurdity, ExistentialFalsification.this, args), proofs.flatMap { p => p.premises }.toSet -- discharges))
+            Some(Proof(Absurdity, this, args, proofs.flatMap { p => p.undischarged }.toSet -- discharges))
           case _ => None
         }
       case _ => None

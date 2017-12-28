@@ -22,9 +22,9 @@ case object NegationVerification extends VerificationRule {
 
   def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
     case Not(sentence) => args match {
-      case UnaryArgs(Proof(Conclusion(Absurdity,_,_), prems)) if exists(sentence).in(prems) =>
+      case UnaryArgs(Proof(Absurdity,_,_, prems)) if exists(sentence).in(prems) =>
         val discharge = Assumption(sentence)
-        Some(Proof(Conclusion(goal, this, args), prems - discharge))
+        Some(Proof(goal, this, args, prems - discharge))
       case _ => None
     }
     case _ => None
@@ -45,7 +45,7 @@ case object AndVerification extends VerificationRule {
   }
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
-    case BinaryArgs(Proof(Conclusion(left, _, _), pleft), Proof(Conclusion(right, _, _), pright)) => Some(Proof(Conclusion(goal, this, args), pleft ++ pright))
+    case BinaryArgs(Proof(left, _, _, pleft), Proof(right, _, _, pright)) => Some(Proof(goal, this, args, pleft ++ pright))
     case _ => None
   }
   
@@ -68,8 +68,8 @@ case object OrVerification extends VerificationRule {
 
   def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
     case Or(left, right) => args match {
-      case UnaryArgs(Proof(Conclusion(c, _, _), prems)) if c.matches(left) || c.matches(right) =>
-        Some(Proof(Conclusion(goal, this, args), prems))
+      case UnaryArgs(Proof(c, _, _, prems)) if c.matches(left) || c.matches(right) =>
+        Some(Proof(goal, this, args, prems))
       case _ => None
     }
     case _ => None
@@ -94,11 +94,11 @@ case object ConditionalVerification extends VerificationRule {
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
     case Implies(ante, conseq) => args match {
-      case UnaryArgs(Proof(Conclusion(`conseq`, _, _), prems)) =>
-        Some(Proof(Conclusion(Implies(ante, conseq), this, args), prems))
-      case UnaryArgs(Proof(Conclusion(Absurdity, _, _), prems)) if exists(ante).in(prems) =>
+      case UnaryArgs(Proof(`conseq`, _, _, prems)) =>
+        Some(Proof(Implies(ante, conseq), this, args, prems))
+      case UnaryArgs(Proof(Absurdity, _, _, prems)) if exists(ante).in(prems) =>
         val discharge = Assumption(ante)
-        Some(Proof(Conclusion(Implies(ante, conseq), this, args), prems - discharge))
+        Some(Proof(Implies(ante, conseq), this, args, prems - discharge))
       case _ => None
     }
     case _ => None
@@ -124,13 +124,13 @@ case class UniversalVerification(domain: Domain) extends VerificationRule {
   def infer(args: RuleArgs)(implicit context: ProofContext) = {
     def validate(proofs: Seq[Proof], sentence: Sentence, term: Term): Boolean =
       proofs.length == domain.size && domain.terms.forall {
-        t => proofs.exists { p => p.conclusion.sentence.matches(sentence.substitute(term, t)) }
+        t => proofs.exists { p => p.sentence.matches(sentence.substitute(term, t)) }
       }
 
     goal match {
       case ForAll(term, sentence) => args match {
         case NArgs(proofs) if validate(proofs, sentence, term) =>
-          Some(Proof(Conclusion(goal, UniversalVerification.this, args), proofs.flatMap { p => p.premises }.toSet))
+          Some(Proof(goal, this, args, proofs.flatMap { p => p.undischarged }.toSet))
         case _ => None
       }
       case _ => None
@@ -161,7 +161,7 @@ case class ExistentialVerification(domain: Domain) extends VerificationRule() {
     goal match {
       case Exists(term, sentence) => args match {
         case UnaryArgs(proof) if validate(proof, sentence, term) =>
-          Some(Proof(Conclusion(goal, ExistentialVerification.this, args), proof.premises))
+          Some(Proof(goal, this, args, proof.undischarged))
         case _ => None
       }
       case _ => None

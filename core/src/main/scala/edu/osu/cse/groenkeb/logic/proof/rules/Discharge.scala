@@ -15,19 +15,19 @@ sealed abstract class Discharge(val assumptions: Assumption*) {
  * A collection of assumptions that ALL must be used and discharged by a proof.
  */
 case class Required(assmp: Assumption*) extends Discharge(assmp:_*) {
-  def discharge(proof: Proof) = if (assmp forall { a => proof.premises exists { p => p.matches(a) }}) Some(assmp) else None
+  def discharge(proof: Proof) = if (assmp forall { a => proof.undischarged exists { p => p.matches(a) }}) Some(assmp) else None
 }
 /**
  * A collection of assumptions that may optionally be used and discharged by a proof.
  */
 case class Vacuous(assmp: Assumption*) extends Discharge(assmp:_*) {
-  def discharge(proof: Proof) = Some(assmp filter { a => proof.premises exists { p => p.matches(a) }})
+  def discharge(proof: Proof) = Some(assmp filter { a => proof.undischarged exists { p => p.matches(a) }})
 }
 /**
  * A collection of assumptions where at least one must be used and discharged by a proof.
  */
 case class Variate(assmp: Assumption*) extends Discharge(assmp:_*) {
-  def discharge(proof: Proof) = assmp.filter { a => proof.premises exists { p => p.matches(a) }} match {
+  def discharge(proof: Proof) = assmp.filter { a => proof.undischarged exists { p => p.matches(a) }} match {
     case Nil => None
     case any => Some(any)
   }

@@ -21,18 +21,8 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
   private def proof(premises: scala.Seq[Premise])(implicit context: ProofContext): ProofResult = premises match {
     case Nil => inferFrom(RuleSet(strategy.rules))
     case Seq(head, rem @ _*) => head match {
-      case p: ProudPremise if context.hasGoal(p.sentence) => success(p.proof, proof(rem))
       case a: Assumption if context.hasGoal(a.sentence) => success(a.proof, proof(rem))
-      case Conclusion(s, rule, args) if context.hasGoal(s) => args match {
-        case EmptyArgs => success(Proof(s, rule, args, Set()), proof(rem))
-        case UnaryArgs(proof0) => success(Proof(s, rule, args, proof0.premises), proof(rem))
-        case BinaryArgs(proof0, proof1) =>
-          success(Proof(s, rule, args, proof0.premises ++ proof1.premises), proof(rem))
-        case TernaryArgs(proof0, proof1, proof2) =>
-          success(Proof(s, rule, args, proof0.premises ++ proof1.premises ++ proof2.premises), proof(rem))
-        case NArgs(proofs) =>
-          success(Proof(s, rule, args, proofs flatMap { p => p.premises } toSet), proof(rem))
-      }
+      case p @ Proof(s, rule, args, undischarged) if context.hasGoal(s) => success(p, { proof(rem) })
       case _ => proof(rem)
     }
   }
@@ -71,14 +61,14 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
     // the specified goal as well as the requirements for discharge.
     def onlyValid(results: Stream[ProofResult], param: RuleParam): Stream[Success] = {
       def isValid(proof: Proof) = param match {
-        case EmptyProof(c) => true
+        case EmptyProof(c) => c.matches(param.goal)
         case AnyProof(c) => c.matches(param.goal)
         case RelevantProof(c, d, r@_*) => d match {
           case Required(assumptions@_*) => proof.conclusion.matches(c) && 
-                                           d.assumptions.forall { a => proof.premises.exists { p => p.matches(a) } }
+                                           d.assumptions.forall { a => proof.undischarged.exists { p => p.matches(a) } }
           case Vacuous(assumptions@_*) => proof.conclusion.matches(c)
           case Variate(assumptions@_*) => proof.conclusion.matches(c) &&
-                                          d.assumptions.exists { a => proof.premises.exists { p => p.matches(a) } }
+                                          d.assumptions.exists { a => proof.undischarged.exists { p => p.matches(a) } }
         }
       }
       
@@ -195,7 +185,10 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
   }
 
   private def tryParam(param: RuleParam)(implicit context: ProofContext): ProofResult = param match {
-    case EmptyProof(conc) => success(ProudPremise(conc).proof)
+    case EmptyProof(conc) => context.premises.collect({ case a:Assumption => a }).find { a => a.matches(conc) } match {
+      case Some(assumption) => success(assumption.proof)
+      case None => failure()
+    }
     case AnyProof(conc) => {
       val newContext = context.withGoal(conc)
       proof(strategy.premises(newContext))(newContext)

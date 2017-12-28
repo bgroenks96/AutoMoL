@@ -2,6 +2,7 @@ package edu.osu.cse.groenkeb.logic.proof.rules
 
 import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.proof._
+import edu.osu.cse.groenkeb.logic.utils.Empty
 
 abstract class BaseRule extends Rule {
   def exists(sentences: Sentence*) = CaseAssumptions(sentences:_*)
@@ -27,8 +28,8 @@ final case object IdentityRule extends BaseRule {
   def params(major: Option[Sentence])(implicit context: ProofContext) = Some(UnaryParams(AnyProof(goal)))
 
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
-    case UnaryArgs(Proof(Conclusion(context.goal, _, _), prems)) =>
-      Some(Proof(context.goal, this, args, prems + Assumption(context.goal)))
+    case UnaryArgs(Proof(context.goal, _, _, Empty())) =>
+      Some(Proof(context.goal, this, args, Set(Assumption(context.goal))))
     case _ => None
   }
 
@@ -43,8 +44,8 @@ final case object NonContradictionRule extends BaseRule {
   def params(major: Option[Sentence])(implicit context: ProofContext) = Some(BinaryParams(AnyProof(goal), AnyProof(Not(goal))))
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
-    case BinaryArgs(Proof(Conclusion(context.goal, _, _), pa),
-                    Proof(Conclusion(Not(context.goal), _, _), pb)) =>
+    case BinaryArgs(Proof(context.goal,_,_, pa),
+                    Proof(Not(context.goal),_,_, pb)) =>
                       Some(Proof(Absurdity, this, args, pa ++ pb))
     case _ => None
   }

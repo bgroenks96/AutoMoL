@@ -1,5 +1,7 @@
 package edu.osu.cse.groenkeb.logic.model.cli;
 
+import static edu.osu.cse.groenkeb.logic.model.implicits.standardRules;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -14,10 +16,10 @@ import edu.osu.cse.groenkeb.logic.Term;
 import edu.osu.cse.groenkeb.logic.model.FirstOrderModel;
 import edu.osu.cse.groenkeb.logic.parse.SentenceParser;
 import edu.osu.cse.groenkeb.logic.parse.SentenceParserOpts;
+import edu.osu.cse.groenkeb.logic.proof.Assumption;
 import edu.osu.cse.groenkeb.logic.proof.Premise;
 import edu.osu.cse.groenkeb.logic.proof.ProofContext;
 import edu.osu.cse.groenkeb.logic.proof.ProofUtils;
-import edu.osu.cse.groenkeb.logic.proof.ProudPremise;
 import edu.osu.cse.groenkeb.logic.proof.engine.NaiveProofStrategy;
 import edu.osu.cse.groenkeb.logic.proof.engine.ProofResult;
 import edu.osu.cse.groenkeb.logic.proof.engine.ProofSolver;
@@ -25,8 +27,6 @@ import edu.osu.cse.groenkeb.logic.proof.engine.Success;
 import edu.osu.cse.groenkeb.logic.proof.rules.RuleSet;
 import edu.osu.cse.groenkeb.utils.Convert;
 import scala.collection.JavaConversions;
-
-import static edu.osu.cse.groenkeb.logic.model.implicits.standardRules;
 
 public class ModelVerificationCommandProcessor implements CommandProcessor<ModelVerificationContext>
 {
@@ -116,7 +116,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
       final RuleSet rules = standardRules (current.getModel ());
       final ProofContext verifyProofContext = new ProofContext(this.sentence, rules, Convert.<Premise>emptyScalaSet());
       final HashSet<Premise> falsifyPremiseSet = new HashSet<Premise> ();
-      falsifyPremiseSet.add (new ProudPremise(this.sentence));
+      falsifyPremiseSet.add (new Assumption(this.sentence));
       final ProofContext falsifyProofContext = new ProofContext(Sentences.absurdity (), rules, Convert.toScalaSet (falsifyPremiseSet));
       java.util.Iterator<ProofResult> results;
       final scala.collection.immutable.Stream <ProofResult> verifyResults = solver.prove(verifyProofContext);

@@ -15,20 +15,20 @@ object Latexifier {
   private def latexPrint(itr: Iterator[Proof], proofString: String): String = {
     if (!itr.hasNext) proofString
     else itr.next() match {
-      case Proof(conc, prems) => conc.rule match {
+      case Proof(s, rule, args, prems) => rule match {
         case NullRule => ""
         case IdentityRule =>
           proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
-                                           ruleToString(conc.rule), 
-                                           sentenceToString(conc.sentence))).concat(latexPrint(itr, ""))
-        case r@ModelRule(_) if conc.sentence != Absurdity =>
+                                           ruleToString(rule), 
+                                           sentenceToString(s))).concat(latexPrint(itr, ""))
+        case r@ModelRule(_) if s != Absurdity =>
           proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
-                                           ruleToString(conc.rule), 
-                                           sentenceToString(conc.sentence))).concat(latexPrint(itr, ""))
+                                           ruleToString(rule), 
+                                           sentenceToString(s))).concat(latexPrint(itr, ""))
         case rule =>  proofString.concat(String.format("\\infer[%s]{%s}{%s} ",     
                                          ruleToString(rule), 
-                                         sentenceToString(conc.sentence),
-        		                             (conc.args.prems map {p => latexPrint(itr, "")}).fold("")((x, y) => x ++ y)))
+                                         sentenceToString(s),
+        		                             (args.prems map {p => latexPrint(itr, "")}).fold("")((x, y) => x ++ y)))
       }
     }
   }

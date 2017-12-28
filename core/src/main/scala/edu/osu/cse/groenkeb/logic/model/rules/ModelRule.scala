@@ -4,7 +4,6 @@ import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.model._
 import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.proof.rules._
-import edu.osu.cse.groenkeb.logic.utils.Empty
 
 case class ModelRule(val model: FirstOrderModel) extends BaseRule {
   def major(sentence: Sentence) = sentence.isInstanceOf[AtomicSentence]
@@ -26,12 +25,12 @@ case class ModelRule(val model: FirstOrderModel) extends BaseRule {
 
   def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
     case AtomicSentence(atom) => args match {
-      case EmptyArgs if model.verify(goal) => Some(Proof(Conclusion(goal, ModelRule.this, args), Set()))
+      case EmptyArgs if model.verify(goal) => Some(Proof(goal, ModelRule.this, args, Set()))
       case _ => None
     }
     case Absurdity => args match {
-      case UnaryArgs(Proof(Conclusion(s: AtomicSentence, _, _), Empty())) if !model.verify(s) =>
-        Some(Proof(Conclusion(Absurdity, ModelRule.this, args), Set(Assumption(s))))
+      case UnaryArgs(Proof(s: AtomicSentence, IdentityRule, _, _)) if !model.verify(s) =>
+        Some(Proof(Absurdity, ModelRule.this, args, Set(Assumption(s))))
       case _ => None
     }
     case _ => None

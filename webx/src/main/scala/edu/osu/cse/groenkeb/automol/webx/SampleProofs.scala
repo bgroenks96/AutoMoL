@@ -5,22 +5,21 @@ import edu.osu.cse.groenkeb.logic.Sentences
 import edu.osu.cse.groenkeb.logic.model.FirstOrderModel
 import edu.osu.cse.groenkeb.logic.model.rules.AndVerification
 import edu.osu.cse.groenkeb.logic.model.rules.ModelRule
-import edu.osu.cse.groenkeb.logic.proof.Conclusion
 import edu.osu.cse.groenkeb.logic.proof.Proof
-import edu.osu.cse.groenkeb.logic.proof.ProudPremise
 import edu.osu.cse.groenkeb.logic.proof.rules.BinaryArgs
 import edu.osu.cse.groenkeb.logic.proof.rules.EmptyArgs
 import edu.osu.cse.groenkeb.logic.And
+import edu.osu.cse.groenkeb.logic.proof.Assumption
 
 object SampleProofs {
 
-  def Id = ProudPremise(atom("P")).proof
+  def Id = Assumption(atom("P")).proof
 
   def VerifyAtom_1 = {
     val model = FirstOrderModel.from(atom("P"))
     val mrule = ModelRule(model)
     val p = atom("P")
-    Proof(Conclusion(p, mrule, EmptyArgs()), Set())
+    Proof(p, mrule, EmptyArgs, Set())
   }
 
   def VerifyAnd_1 = {
@@ -30,8 +29,8 @@ object SampleProofs {
     val p = atom("P")
     val q = atom("Q")
     val pq = And(p, q)
-    Proof(Conclusion(pq, andv, BinaryArgs(Proof(Conclusion(p, mrule, EmptyArgs()), Set()),
-                                          Proof(Conclusion(q, mrule, EmptyArgs()), Set()))), Set())
+    Proof(pq, andv, BinaryArgs(Proof(p, mrule, EmptyArgs, Set()),
+                               Proof(q, mrule, EmptyArgs, Set())), Set())
   }
 
   def VerifyAnd_2 = {
@@ -46,8 +45,9 @@ object SampleProofs {
     //    Proof(Conclusion(pq, andv, BinaryArgs(Proof(Conclusion(p, mrule, EmptyArgs()), Set()),
     //                                          Proof(Conclusion(q, mrule, EmptyArgs()), Set()))), Set())
 
-    Proof(Conclusion(pqr, andv, BinaryArgs(Proof(Conclusion(r, mrule, EmptyArgs()), Set()), Proof(Conclusion(pq, andv, BinaryArgs(Proof(Conclusion(p, mrule, EmptyArgs()), Set()),
-                                           Proof(Conclusion(q, mrule, EmptyArgs()), Set()))), Set()))), Set())
+    Proof(pqr, andv, BinaryArgs(Proof(r, mrule, EmptyArgs, Set()),
+                                Proof(pq, andv, BinaryArgs(Proof(p, mrule, EmptyArgs, Set()),
+                                                           Proof(q, mrule, EmptyArgs, Set())), Set())), Set())
   }
 
   private def atom(str: String) = Sentences.atom(str)
