@@ -13,7 +13,7 @@ object ProofUtils {
     var proof = itr.next()
     
     if (proof.rule == NullRule) return;
-    println(String.format("%s %s %s {%s}\n", prefix, proof.sentence, proof.rule, proof.undischarged.mkString(", ")))
+    println(String.format("%s %s %s [%s] { %s }\n", prefix, proof.sentence, proof.rule, proof.binding, proof.undischarged.mkString(", ")))
     proof.args.prems foreach { p => prettyPrint(itr, prefix + "   ") }
   }
 }

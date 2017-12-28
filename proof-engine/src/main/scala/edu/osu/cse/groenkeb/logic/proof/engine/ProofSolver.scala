@@ -22,7 +22,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
     case Nil => inferFrom(RuleSet(strategy.rules))
     case Seq(head, rem @ _*) => head match {
       case a: Assumption if context.hasGoal(a.sentence) => success(a.proof, proof(rem))
-      case p @ Proof(s, rule, args, undischarged) if context.hasGoal(s) => success(p, { proof(rem) })
+      case p @ Proof(s, rule, args, undischarged, _) if context.hasGoal(s) => success(p, { proof(rem) })
       case _ => proof(rem)
     }
   }

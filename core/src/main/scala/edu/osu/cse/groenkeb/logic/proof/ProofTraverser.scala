@@ -9,7 +9,7 @@ object ProofTraverser {
   }
   
   private def children(proof: Proof) = proof match {
-    case Proof(s, rule, args, prems) if args.prems.length > 0 => args.prems
+    case Proof(s, rule, args, prems, _) if args.prems.length > 0 => args.prems
     case _ => Nil
   }
 }

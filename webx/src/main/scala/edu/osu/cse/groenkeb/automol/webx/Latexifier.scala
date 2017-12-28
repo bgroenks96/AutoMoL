@@ -15,7 +15,7 @@ object Latexifier {
   private def latexPrint(itr: Iterator[Proof], proofString: String): String = {
     if (!itr.hasNext) proofString
     else itr.next() match {
-      case Proof(s, rule, args, prems) => rule match {
+      case Proof(s, rule, args, prems, _) => rule match {
         case NullRule => ""
         case IdentityRule =>
           proofString.concat(String.format("\\inferbasic[%s]{%s} ", 

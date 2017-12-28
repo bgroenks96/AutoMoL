@@ -16,14 +16,14 @@ case object NegationVerification extends VerificationRule {
   }
   
   def params(major: Option[Sentence] = None)(implicit context: ProofContext) = goal match {
-    case Not(sentence) if major == None => Some(UnaryParams(RelevantProof(Absurdity, Required(Assumption(sentence)))))
+    case Not(sentence) if major == None => Some(UnaryParams(RelevantProof(Absurdity, Required(Assumption(sentence, bind)))))
     case _ => None
   }
 
   def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
     case Not(sentence) => args match {
-      case UnaryArgs(disproof@Proof(Absurdity,_,_, assumptions)) if disproof uses sentence =>
-        Some(Proof(goal, this, args, assumptions.discharge(sentence)))
+      case UnaryArgs(disproof@Proof(Absurdity,_,_, assumptions,_)) if disproof uses sentence =>
+        Some(Proof(goal, this, args, assumptions.discharge(sentence), bind))
       case _ => None
     }
     case _ => None
@@ -44,7 +44,7 @@ case object AndVerification extends VerificationRule {
   }
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
-    case BinaryArgs(Proof(left, _, _, pleft), Proof(right, _, _, pright)) => Some(Proof(goal, this, args, pleft ++ pright))
+    case BinaryArgs(Proof(left, _, _, pleft, _), Proof(right, _, _, pright, _)) => Some(Proof(goal, this, args, pleft ++ pright))
     case _ => None
   }
   
@@ -67,7 +67,7 @@ case object OrVerification extends VerificationRule {
 
   def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
     case Or(left, right) => args match {
-      case UnaryArgs(Proof(c, _, _, prems)) if c.matches(left) || c.matches(right) =>
+      case UnaryArgs(Proof(c, _, _, prems, _)) if c.matches(left) || c.matches(right) =>
         Some(Proof(goal, this, args, prems))
       case _ => None
     }
@@ -87,16 +87,16 @@ case object ConditionalVerification extends VerificationRule {
     case Implies(ante, conseq) if major == None =>
       Some(OptionParams(
         UnaryParams(AnyProof(conseq)),
-        UnaryParams(RelevantProof(Absurdity, Required(Assumption(ante)), Assumption(Implies(ante, conseq))))))
+        UnaryParams(RelevantProof(Absurdity, Required(Assumption(ante, bind)), Assumption(Implies(ante, conseq))))))
     case _ => None
   }
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
     case Implies(ante, conseq) => args match {
-      case UnaryArgs(Proof(`conseq`, _, _, assumptions)) =>
+      case UnaryArgs(Proof(`conseq`, _, _, assumptions, _)) =>
         Some(Proof(Implies(ante, conseq), this, args, assumptions))
-      case UnaryArgs(anteDisproof@Proof(Absurdity, _, _, assumptions)) if anteDisproof uses ante =>
-        Some(Proof(Implies(ante, conseq), this, args, assumptions.discharge(ante)))
+      case UnaryArgs(anteDisproof@Proof(Absurdity, _, _, assumptions, _)) if anteDisproof uses ante =>
+        Some(Proof(Implies(ante, conseq), this, args, assumptions.discharge(ante), bind))
       case _ => None
     }
     case _ => None

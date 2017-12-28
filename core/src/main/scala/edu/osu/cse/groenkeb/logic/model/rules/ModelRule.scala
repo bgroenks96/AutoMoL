@@ -29,8 +29,8 @@ case class ModelRule(val model: FirstOrderModel) extends BaseRule {
       case _ => None
     }
     case Absurdity => args match {
-      case UnaryArgs(Proof(s: AtomicSentence, IdentityRule, _, _)) if !model.verify(s) =>
-        Some(Proof(Absurdity, ModelRule.this, args, Set(Assumption(s))))
+      case UnaryArgs(Proof(s: AtomicSentence, IdentityRule, _, assumptions, _)) if !model.verify(s) =>
+        Some(Proof(Absurdity, ModelRule.this, args, assumptions))
       case _ => None
     }
     case _ => None
