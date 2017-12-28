@@ -177,15 +177,10 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
         
         tryNext(head, None +: (strategy.premises map { p => Some(p.sentence) }))
     }
-    
-//        case None => failure({ inferFrom(RuleSet(rem), args) })
-//        case Some(params) => pendingParams(params)(head).andThen(step({
-//          inferFrom(RuleSet(rem), args)
-//        }))
   }
 
   private def tryParam(param: RuleParam)(implicit context: ProofContext): ProofResult = param match {
-    case EmptyProof(conc) => context.premises.collect({ case a:Assumption => a }).find { a => a.matches(conc) } match {
+    case EmptyProof(conc) => context.available.collect({ case a:Assumption => a }).find { a => a.matches(conc) } match {
       case Some(assumption) => success(assumption.proof)
       case None => failure()
     }
@@ -194,7 +189,7 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
       proof(strategy.premises(newContext))(newContext)
     }
     case RelevantProof(conc, discharges, restrict@_*) => {
-      val newContext = context.withGoal(conc).withAssumptions(discharges.assumptions:_*).lessPremises(restrict:_*)
+      val newContext = context.withGoal(conc).withAssumptions(discharges.assumptions:_*).restrict(restrict:_*)
       proof(strategy.premises(newContext))(newContext)
     }
   }

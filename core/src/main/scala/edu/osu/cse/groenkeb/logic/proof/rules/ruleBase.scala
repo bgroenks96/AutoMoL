@@ -5,12 +5,14 @@ import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.utils.Empty
 
 abstract class BaseRule extends Rule {
-  def exists(sentences: Sentence*) = CaseAssumptions(sentences:_*)
-  
   def goal(implicit context: ProofContext) = context.goal
   
   implicit def sentenceExtensions(s: Sentence) = new {
     def is(arg: Sentence) = s == arg
+  }
+  
+  implicit def assumptionSetExtensions(assumptions: Set[Assumption]) = new {
+    def discharge(sentences: Sentence*) = assumptions filterNot { a => sentences.exists { s => a.matches(s) }}
   }
   
   implicit def booleanExtensions(b: Boolean) = new {
@@ -65,6 +67,3 @@ final case object NullRule extends BaseRule {
   override def toString = "nil"
 }
 
-protected case class CaseAssumptions(sentences: Sentence*) {
-  def in(prems: Traversable[Premise]) = sentences forall { s => prems exists { p => p.matches(s) }}
-}

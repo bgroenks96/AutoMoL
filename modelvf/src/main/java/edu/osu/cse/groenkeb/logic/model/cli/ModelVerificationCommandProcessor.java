@@ -114,7 +114,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
     public ModelVerificationContext execute(ModelVerificationContext current)
     {
       final RuleSet rules = standardRules (current.getModel ());
-      final ProofContext verifyProofContext = new ProofContext(this.sentence, rules, Convert.<Premise>emptyScalaSet());
+      final ProofContext verifyProofContext = new ProofContext(this.sentence, rules, Convert.<Premise>emptyScalaSeq());
       final HashSet<Premise> falsifyPremiseSet = new HashSet<Premise> ();
       falsifyPremiseSet.add (new Assumption(this.sentence));
       final ProofContext falsifyProofContext = new ProofContext(Sentences.absurdity (), rules, Convert.toScalaSet (falsifyPremiseSet));

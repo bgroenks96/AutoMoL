@@ -22,9 +22,8 @@ case object NegationVerification extends VerificationRule {
 
   def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
     case Not(sentence) => args match {
-      case UnaryArgs(Proof(Absurdity,_,_, prems)) if exists(sentence).in(prems) =>
-        val discharge = Assumption(sentence)
-        Some(Proof(goal, this, args, prems - discharge))
+      case UnaryArgs(disproof@Proof(Absurdity,_,_, assumptions)) if disproof uses sentence =>
+        Some(Proof(goal, this, args, assumptions.discharge(sentence)))
       case _ => None
     }
     case _ => None
@@ -94,11 +93,10 @@ case object ConditionalVerification extends VerificationRule {
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
     case Implies(ante, conseq) => args match {
-      case UnaryArgs(Proof(`conseq`, _, _, prems)) =>
-        Some(Proof(Implies(ante, conseq), this, args, prems))
-      case UnaryArgs(Proof(Absurdity, _, _, prems)) if exists(ante).in(prems) =>
-        val discharge = Assumption(ante)
-        Some(Proof(Implies(ante, conseq), this, args, prems - discharge))
+      case UnaryArgs(Proof(`conseq`, _, _, assumptions)) =>
+        Some(Proof(Implies(ante, conseq), this, args, assumptions))
+      case UnaryArgs(anteDisproof@Proof(Absurdity, _, _, assumptions)) if anteDisproof uses ante =>
+        Some(Proof(Implies(ante, conseq), this, args, assumptions.discharge(ante)))
       case _ => None
     }
     case _ => None

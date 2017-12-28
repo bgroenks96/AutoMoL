@@ -13,7 +13,9 @@ sealed abstract class Premise(val sentence: Sentence) {
   def matches(p: Premise) = this.sentence.matches(p.sentence)
   def matches(s: Sentence) = s.matches(sentence)
 }
-sealed case class Proof(conclusion: Sentence, rule: Rule, args: RuleArgs, undischarged: Set[Assumption]) extends Premise(conclusion)
+sealed case class Proof(conclusion: Sentence, rule: Rule, args: RuleArgs, undischarged: Set[Assumption]) extends Premise(conclusion) {
+  def uses(s: Sentence) = undischarged exists { a => a.matches(s) }
+}
 sealed case class Assumption(s: Sentence) extends Premise(s) {
   // default proof from identity for assumption
   def proof = Proof(s, IdentityRule, Default.args(s), Set(this))

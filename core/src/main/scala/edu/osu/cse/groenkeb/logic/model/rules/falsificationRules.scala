@@ -3,7 +3,7 @@ package edu.osu.cse.groenkeb.logic.model.rules
 import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.proof.rules._
-import edu.osu.cse.groenkeb.logic.utils.Empty
+import edu.osu.cse.groenkeb.logic.utils._
 
 abstract class FalsificationRule extends BaseRule {
   def yields(conclusion: Sentence) = conclusion is Absurdity
@@ -16,16 +16,15 @@ case object NegationFalsification extends FalsificationRule {
   }
   
   def params(major: Option[Sentence])(implicit context: ProofContext) = major match {
-    case Some(Not(operand)) if (goal is Absurdity) =>
-      Some(BinaryParams(EmptyProof(Not(operand)), RelevantProof(operand, Vacuous(), Assumption(Not(operand)))))
+    case Some(Not(sentence)) if (goal is Absurdity) =>
+      Some(BinaryParams(EmptyProof(Not(sentence)), RelevantProof(sentence, Vacuous(), Assumption(Not(sentence)))))
     case _ => None
   }
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
-    case BinaryArgs(Proof(Not(operand), _, _, pmajor), minorProof) if (goal is Absurdity) => minorProof match {
-      case Proof(`operand`,_,_, pminor) =>
-        val major = Not(operand)
-        Some(Proof(Absurdity, this, args, pmajor ++ pminor + Assumption(major)))
+    case BinaryArgs(Proof(Not(sentence), IdentityRule, _, Only(majorAssumption)), minorProof) if (goal is Absurdity) => minorProof match {
+      case Proof(`sentence`,_,_, pminor) =>
+        Some(Proof(Absurdity, this, args, pminor + majorAssumption))
       case _ => None
     }
     case _ => None
@@ -51,11 +50,9 @@ case object AndFalsification extends FalsificationRule {
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
     case BinaryArgs(
-      Proof(And(left, right), IdentityRule, _, _),
-      Proof(Absurdity, _, _, prems)) if (goal is Absurdity) and (exists(left).in(prems) or exists(right).in(prems)) =>
-      val major = Assumption(And(left, right))
-      val discharges = Set(Assumption(left), Assumption(right))
-      Some(Proof(Absurdity, this, args, prems -- discharges + major))
+      major@Proof(And(left, right), IdentityRule, _, Only(majorAssumption)),
+      minor@Proof(Absurdity, _, _, assumptions)) if goal is Absurdity and ((minor uses left) or (minor uses right)) =>
+      Some(Proof(Absurdity, this, args, assumptions.discharge(left, right) + majorAssumption))
     case _ => None
   }
 
@@ -79,12 +76,10 @@ case object OrFalsification extends FalsificationRule {
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
     case TernaryArgs(
-      Proof(Or(left, right), IdentityRule, _, _),
-      Proof(Absurdity, _, _, pleft),
-      Proof(Absurdity, _, _, pright)) if (goal is Absurdity) and exists(left).in(pleft) and exists(right).in(pright) =>
-      val major = Assumption(Or(left, right))
-      val discharges = Set(Assumption(left), Assumption(right))
-      Some(Proof(Absurdity, this, args, pleft ++ pright -- discharges + major))
+      major@Proof(Or(left, right), IdentityRule, _, Only(majorAssumption)),
+      minorLeft@Proof(Absurdity, _, _, assumptionsLeft),
+      minorRight@Proof(Absurdity, _, _, assumptionsRight)) if goal is Absurdity and ((minorLeft uses left) and (minorRight uses right)) =>
+      Some(Proof(Absurdity, this, args, (assumptionsLeft ++ assumptionsRight).discharge(left, right) + majorAssumption))
     case _ => None
   }
 
@@ -99,7 +94,8 @@ case object ConditionalFalsification extends FalsificationRule {
   
   def params(major: Option[Sentence])(implicit context: ProofContext) = major match {
     case Some(sentence @ Implies(ante, conseq)) =>
-      Some(TernaryParams(EmptyProof(Implies(ante, conseq)),
+      Some(TernaryParams(
+        EmptyProof(Implies(ante, conseq)),
         RelevantProof(ante, Vacuous(), Assumption(Implies(ante, conseq))),
         RelevantProof(Absurdity, Required(Assumption(conseq)), Assumption(Implies(ante, conseq)))))
     case _ => None
@@ -107,14 +103,12 @@ case object ConditionalFalsification extends FalsificationRule {
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
     case TernaryArgs(
-      Proof(Implies(ante, conseq), IdentityRule,_,_),
-      antecedentProof,
-      Proof(Absurdity, _, _, cprems)) if (goal is Absurdity) and exists(conseq).in(cprems) =>
-        antecedentProof match {
-          case Proof(`ante`,_,_, aprems) =>
-            val major = Assumption(Implies(ante, conseq))
-            val discharges = Set(Assumption(conseq))
-            Some(Proof(Absurdity, this, args, aprems ++ cprems -- discharges + major))
+      major@Proof(Implies(ante, cons), IdentityRule,_, Only(majorAssumption)),
+      minorAnte,
+      minorCons@Proof(Absurdity, _, _, assumptionsCons)) if (goal is Absurdity) and (minorCons uses cons) =>
+        minorAnte match {
+          case Proof(`ante`,_,_, assumptionsAnte) =>
+            Some(Proof(Absurdity, this, args, (assumptionsAnte ++ assumptionsCons).discharge(cons) + majorAssumption))
           case _ => None
         }
     case _ => None
@@ -151,7 +145,7 @@ case class UniversalFalsification(domain: Domain) extends FalsificationRule {
       def sub(t: Term) = sentence.substitute(term, t)
       proof.conclusion match {
         case Absurdity => domain.terms.collectFirst {
-          case t if exists(sub(t)).in(proof.undischarged) => sub(t)
+          case t if proof uses sub(t) => sub(t)
         }
         case _ => None
       }

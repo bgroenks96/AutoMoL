@@ -10,7 +10,7 @@ import edu.osu.cse.groenkeb.logic.proof.ProofContext
 case class NaiveProofStrategy() extends ProofStrategy {
   def rules(implicit context: ProofContext): RuleSet = context.rules
   
-  def premises(implicit context: ProofContext): Seq[Premise] = Seq(context.premises.toSeq:_*)
+  def premises(implicit context: ProofContext): Seq[Premise] = Seq(context.available.toSeq:_*)
   
   def decide(result: ProofResult)(implicit context: ProofContext): ProofResult = result
 }
