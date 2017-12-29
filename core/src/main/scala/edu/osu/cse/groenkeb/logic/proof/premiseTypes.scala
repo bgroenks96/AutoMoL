@@ -25,7 +25,7 @@ sealed case class Assumption(s: Sentence, b: Option[Binding] = None) extends Pre
   def this(s: Sentence) = this(s, None)
   
   // default proof from identity for assumption
-  def proof = Proof(s, IdentityRule, EmptyArgs, Set(this))
+  def proof = Proof(s, IdentityRule, EmptyArgs, Set(this), b)
   
   override def toString = "%s(%s)".format(b match { case Some(binding) => "[%s]".format(binding); case None => "" }, s)
 }
