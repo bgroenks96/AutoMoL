@@ -9,7 +9,7 @@ object Latexifier {
   
   def latexPrint(proof: Proof): String = {
     var itr = ProofTraverser.preOrderTraversal(proof).iterator
-    latexPrint(itr, "\\[") ++ "\\]"
+    latexPrint(itr, "\\[") + "\\]"
   }
   
   private def latexPrint(itr: Iterator[Proof], proofString: String): String = {
@@ -20,15 +20,15 @@ object Latexifier {
         case IdentityRule =>
           proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
                                            ruleToString(rule), 
-                                           sentenceToString(s))).concat(latexPrint(itr, ""))
+                                           sentenceToString(s)))
         case r@ModelRule(_) if s != Absurdity =>
           proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
                                            ruleToString(rule), 
-                                           sentenceToString(s))).concat(latexPrint(itr, ""))
+                                           sentenceToString(s)))
         case rule =>  proofString.concat(String.format("\\infer[%s]{%s}{%s} ",     
                                          ruleToString(rule), 
                                          sentenceToString(s),
-        		                             (args.prems map {p => latexPrint(itr, "")}).fold("")((x, y) => x ++ y)))
+        		                             (args.prems map {p => latexPrint(itr, "")}).fold("")((x, y) => x + y)))
       }
     }
   }
@@ -39,8 +39,8 @@ object Latexifier {
       case AndFalsification  => "\\wedge F"
       case OrVerification => "\\vee V"
       case OrFalsification => "\\vee F"
-      case NegationVerification => "\\not V"
-      case NegationFalsification => "\\not F"
+      case NegationVerification => "\\neg V"
+      case NegationFalsification => "\\neg F"
       case UniversalVerification(_) => "\\forall V"
       case UniversalFalsification(_) => "\\forall F"
       case ExistentialVerification(_) => "\\exists V"
@@ -52,14 +52,14 @@ object Latexifier {
     }
   }
   
-  private def sentenceToString(sentence: Sentence): String = {
-    
+  private def sentenceToString(sentence: Sentence, parenthize: Boolean = false): String = {
     sentence match {
       case Absurdity                 => "\\bot"
       case AtomicSentence(x)         => x.toString()
-      case UnarySentence(x, y)       => unaryConnectiveToString(y) ++ sentenceToString(x) 
-      case BinarySentence(x, y, z)   => sentenceToString(x) ++ binaryConnectiveToString(z) ++ sentenceToString(y)
-      case QuantifiedSentence(x, y)  => quantifiedSentenceToString(y) ++ sentenceToString(x) 
+      case UnarySentence(x, y)       => unaryConnectiveToString(y) + sentenceToString(x, true)
+      case BinarySentence(x, y, z) if parenthize => "(%s%s%s)".format(sentenceToString(x, true), binaryConnectiveToString(z), sentenceToString(y, true))
+      case BinarySentence(x, y, z) => "%s%s%s".format(sentenceToString(x, true), binaryConnectiveToString(z), sentenceToString(y, true))
+      case QuantifiedSentence(x, y)  => quantifiedSentenceToString(y) + "[%s]".format(sentenceToString(x))
       case NullSentence              => ""
     }
   }

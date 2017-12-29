@@ -25,15 +25,11 @@ sealed case class Assumption(s: Sentence, b: Option[Binding] = None) extends Pre
   def this(s: Sentence) = this(s, None)
   
   // default proof from identity for assumption
-  def proof = Proof(s, IdentityRule, Default.args(s), Set(this))
+  def proof = Proof(s, IdentityRule, EmptyArgs, Set(this))
   
   override def toString = "%s(%s)".format(b match { case Some(binding) => "[%s]".format(binding); case None => "" }, s)
 }
 
 object Premises {
   def assume(sentences: Sentence*) = sentences map { s => Assumption(s) }
-}
-
-private object Default {
-  def args(s: Sentence) = UnaryArgs(Proof(s, NullRule, EmptyArgs, Set()))
 }

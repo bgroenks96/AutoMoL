@@ -45,9 +45,9 @@ object SampleProofs {
     //    Proof(Conclusion(pq, andv, BinaryArgs(Proof(Conclusion(p, mrule, EmptyArgs()), Set()),
     //                                          Proof(Conclusion(q, mrule, EmptyArgs()), Set()))), Set())
 
-    Proof(pqr, andv, BinaryArgs(Proof(r, mrule, EmptyArgs, Set()),
-                                Proof(pq, andv, BinaryArgs(Proof(p, mrule, EmptyArgs, Set()),
-                                                           Proof(q, mrule, EmptyArgs, Set())), Set())), Set())
+    Proof(pqr, andv, BinaryArgs(Proof(pq, andv, BinaryArgs(Proof(p, mrule, EmptyArgs, Set()),
+                                                           Proof(q, mrule, EmptyArgs, Set())), Set()),
+                                Proof(r, mrule, EmptyArgs, Set())), Set())
   }
 
   private def atom(str: String) = Sentences.atom(str)
