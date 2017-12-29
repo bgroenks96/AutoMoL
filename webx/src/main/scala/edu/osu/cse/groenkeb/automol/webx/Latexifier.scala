@@ -92,6 +92,14 @@ object Latexifier {
  
   type IdMap = scala.collection.mutable.Map[Int, Int]
   
+  /**
+   * Provides mutable context for transforming locally unique inference identifiers to globally unique values.
+   * Inference bindings are assigned by the depth in the proof tree where the assumptions were introduced. This means
+   * that some values may be duplicated across sub-trees. This class uses a StatefulGenerator to generate globally unique
+   * values for each new inference binding. While traversing the proof, this context should be copied at each recursive step
+   * to retain all context downward in the proof tree. The generator will be shared between all copy instances to
+   * ensure that newly generated identifiers in each sub-tree are unique.
+   */
   private class DischargeContext(private val generator: StatefulGenerator[Int],
                                  private val index: IdMap) {  
     def this() = this(new StatefulGenerator(1, i => i + 1), scala.collection.mutable.Map[Int, Int]())
@@ -104,6 +112,9 @@ object Latexifier {
       next
     })
     
+    /**
+     * Creates a copy of this DischargeContext that has the same generator and existing indices.
+     */
     def copy = new DischargeContext(this)
   }
 }
