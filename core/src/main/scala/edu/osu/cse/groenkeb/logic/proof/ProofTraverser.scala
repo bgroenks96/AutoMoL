@@ -8,8 +8,8 @@ object ProofTraverser {
     case childNodes => proof +: childNodes.flatMap(preOrderTraversal)
   }
   
-  private def children(proof: Proof) = proof.conclusion match {
-    case Some(conc) if conc.premiseCount > 0 => Seq[Proof](conc.major) ++ conc.minors
+  private def children(proof: Proof) = proof match {
+    case Proof(s, rule, args, prems, _) if args.prems.length > 0 => args.prems
     case _ => Nil
   }
 }

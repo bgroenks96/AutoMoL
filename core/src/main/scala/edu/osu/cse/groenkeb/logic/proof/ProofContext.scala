@@ -1,29 +1,31 @@
 package edu.osu.cse.groenkeb.logic.proof
 
-import edu.osu.cse.groenkeb.logic.Sentence
-import edu.osu.cse.groenkeb.logic.proof.rules.RuleSet
+import edu.osu.cse.groenkeb.logic._
+import edu.osu.cse.groenkeb.logic.proof.rules._
 
 object ProofContext {
   def apply(goal: Sentence,
             rules: RuleSet,
-            premises: Seq[Premise]) = new ProofContext(goal, rules, premises.toSet)
+            available: Traversable[Premise]) = new ProofContext(goal, rules, available)
   
-  def apply(goal: Sentence, premises: Seq[Premise] = Nil)(implicit rules: RuleSet) = new ProofContext(goal, rules, premises.toSet)
+  def apply(goal: Sentence, available: Traversable[Premise] = Nil)(implicit rules: RuleSet) = new ProofContext(goal, available)
 }
 
-case class ProofContext (val goal: Sentence,
-                                 val rules: RuleSet,
-                                 val premises: Set[Premise]) {
+case class ProofContext (goal: Sentence,
+                         rules: RuleSet,
+                         available: Set[Premise],
+                         depth: Int) {
+  def this(goal: Sentence, rules: RuleSet, available: Traversable[Premise]) = this(goal, rules, available.toSet, 1)
   
-  def withAssumptions(newAssumptions: Assumption*) = ProofContext(goal, rules, premises ++ newAssumptions)
+  def this(goal: Sentence, available: Traversable[Premise] = Nil)(implicit rules: RuleSet) = this(goal, rules, available)
   
-  def withRuleSet(newRules: RuleSet) = ProofContext(goal, newRules, premises)
+  def withAssumptions(newAssumptions: Assumption*) = ProofContext(goal, rules, available ++ newAssumptions, depth)
   
-  def withGoal(newGoal: Sentence) = ProofContext(newGoal, rules, premises)
+  def withGoal(newGoal: Sentence) = ProofContext(newGoal, rules, available, depth + 1)
   
-  def lessPremises(restrict: Premise*) = ProofContext(goal, rules, premises.filterNot { p => restrict.exists { r => r.matches(p) } })
+  def restrict(premises: Premise*) = ProofContext(goal, rules, available.filterNot { p => premises.exists { r => r.matches(p) } }, depth)
   
-  def has(premise: Premise) = premises.exists { p => p.matches(premise) }
+  def fromAvailable(sentence: Sentence) = available.find { p => p.matches(sentence) }
   
   def hasGoal(sentence: Sentence) = goal.matches(sentence)
 }

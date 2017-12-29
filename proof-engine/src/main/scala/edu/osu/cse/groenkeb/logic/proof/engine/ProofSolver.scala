@@ -18,83 +18,57 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
     ProofSearch(step { proof(strategy.premises) } )()
   }
 
-  private def proof(premises: scala.Seq[Premise])(implicit context: ProofContext): ProofResult = context.goal match {
-    case Absurdity => premises match {
-      case Nil => failure()
-      case Seq(head, rem @ _*) => head match {
-        case s => {
-          var relevantRules = strategy.rules.yielding(Absurdity)
-          inferFrom(relevantRules, UnaryArgs(ProudPremise(s.sentence).proof)) match {
-            case Success(cp, cntxt, prems) => success(cp, { proof(rem) })
-            case Failure(cntxt, hint) => failure(hint -> Continue(step({ proof(rem) })))
-            case pending: Pending => pending
-          }
-        }
-      }
-    }
-    case goal => premises match {
-      case Nil => inferFrom(RuleSet(strategy.rules))
-      case Seq(head, rem@_*) => head match {
-        case p:ProudPremise if context.hasGoal(p.sentence) => success(p.proof, proof(rem))
-        case a:Assumption if context.hasGoal(a.sentence) => success(a.proof, proof(rem))
-        case Conclusion(s, rule, args) if context.hasGoal(s) => args match {
-          case EmptyArgs() => success(CompleteProof(s, rule, args, Set()), proof(rem))
-          case UnaryArgs(proof0) => success(CompleteProof(s, rule, args, proof0.premises), proof(rem))
-          case BinaryArgs(proof0, proof1) =>
-            success(CompleteProof(s, rule, args, proof0.premises ++ proof1.premises), proof(rem))
-          case TernaryArgs(proof0, proof1, proof2) =>
-            success(CompleteProof(s, rule, args, proof0.premises ++ proof1.premises ++ proof2.premises), proof(rem))
-          case NArgs(proofs) =>
-            success(CompleteProof(s, rule, args, proofs flatMap { p => p.premises } toSet), proof(rem))
-        }
-        case _ => proof(rem)
-      }
+  private def proof(premises: scala.Seq[Premise])(implicit context: ProofContext): ProofResult = premises match {
+    case Nil => inferFrom(RuleSet(strategy.rules))
+    case Seq(head, rem @ _*) => head match {
+      case a: Assumption if context.hasGoal(a.sentence) => success(a.proof, proof(rem))
+      case p @ Proof(s, rule, args, undischarged, _) if context.hasGoal(s) => success(p, { proof(rem) })
+      case _ => proof(rem)
     }
   }
 
-  // NOT DONE YET!
-  private def inferFrom(rules: RuleSet, args: RuleArgs = EmptyArgs())(implicit context: ProofContext): ProofResult = {
+  private def inferFrom(rules: RuleSet)(implicit context: ProofContext): ProofResult = {
     // inferFromResults matches the given sequence of Success results to a RuleArgs type and performs the final inference
     // step. It is assumed that the given result has already been validated to fulfill the necessary inference requirements.
     // Failure to meet this precondition is an error on the part of the caller.
-    def inferFromUnaryResult(res0: Success)(implicit rule: Rule): CompleteProof =
-      infer(rule, UnaryArgs(res0.proof)) match {
-        case Left(proof: CompleteProof) => proof
+    def inferFromUnaryResult(res0: Success)(implicit rule: Rule): Proof =
+      rule.infer(UnaryArgs(res0.proof)) match {
+        case Some(proof) => proof
         // Exceptional case: one or more of the supplied Success results failed to satisfy the precondition.
-        // This would indicate a bug in the calling code.
-        case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + args)
+        // This would indicate a bug in either the calling code or in the rule.
+        case None => throw new IllegalArgumentException("one or more arguments failed to satisfy the rule [%s]: %s".format(rule, res0))
       }
 
-    def inferFromBinaryResults(res0: Success, res1: Success)(implicit rule: Rule): CompleteProof =
-      infer(rule, BinaryArgs(res0.proof, res1.proof)) match {
-        case Left(proof: CompleteProof) => proof
-        case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + args)
+    def inferFromBinaryResults(res0: Success, res1: Success)(implicit rule: Rule): Proof =
+      rule.infer(BinaryArgs(res0.proof, res1.proof)) match {
+        case Some(proof) => proof
+        case None => throw new IllegalArgumentException("one or more arguments failed to satisfy the rule [%s]: %s %s".format(rule, res0, res1))
       }
 
-    def inferFromTernaryResults(res0: Success, res1: Success, res2: Success)(implicit rule: Rule): CompleteProof =
-      infer(rule, TernaryArgs(res0.proof, res1.proof, res2.proof)) match {
-        case Left(proof: CompleteProof) => proof
-        case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + args)
+    def inferFromTernaryResults(res0: Success, res1: Success, res2: Success)(implicit rule: Rule): Proof =
+      rule.infer(TernaryArgs(res0.proof, res1.proof, res2.proof)) match {
+        case Some(proof) => proof
+        case None => throw new IllegalArgumentException("one or more arguments failed to satisfy the rule [%s]: %s %s %s".format(rule, res0, res1, res2))
       }
     
-    def inferFromNResults(resN: Seq[Success])(implicit rule: Rule): CompleteProof =
-      infer(rule, NArgs(resN.map { s => s.proof })) match {
-        case Left(proof: CompleteProof) => proof
-        case r => throw new IllegalArgumentException("one or more arguments failed to satisfy the proof: " + args)
+    def inferFromNResults(resN: Seq[Success])(implicit rule: Rule): Proof =
+      rule.infer(NArgs(resN.map { s => s.proof })) match {
+        case Some(proof) => proof
+        case None => throw new IllegalArgumentException("one or more arguments failed to satisfy the rule [%s]: %s".format(rule, resN))
       }
 
     // onlyValid filters the given proof results to include only those that are both successful and 'valid', i.e. satisfy
     // the specified goal as well as the requirements for discharge.
     def onlyValid(results: Stream[ProofResult], param: RuleParam): Stream[Success] = {
-      def isValid(proof: CompleteProof) = param match {
-        case EmptyProof(c) => true
+      def isValid(proof: Proof) = param match {
+        case EmptyProof(c) => c.matches(param.goal)
         case AnyProof(c) => c.matches(param.goal)
         case RelevantProof(c, d, r@_*) => d match {
-          case Required(assumptions@_*) => proof.conc.matches(c) && 
-                                           d.assumptions.forall { a => proof.prems.exists { p => p.matches(a) } }
-          case Vacuous(assumptions@_*) => proof.conc.matches(c)
-          case Variate(assumptions@_*) => proof.conc.matches(c) &&
-                                          d.assumptions.exists { a => proof.prems.exists { p => p.matches(a) } }
+          case Required(assumptions@_*) => proof.conclusion.matches(c) && 
+                                           d.assumptions.forall { a => proof.undischarged.exists { p => p.matches(a) } }
+          case Vacuous(assumptions@_*) => proof.conclusion.matches(c)
+          case Variate(assumptions@_*) => proof.conclusion.matches(c) &&
+                                          d.assumptions.exists { a => proof.undischarged.exists { p => p.matches(a) } }
         }
       }
       
@@ -182,42 +156,41 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
         pending(optionResults, opts.map {
           params => step({ pendingParams(params) })
         }.reduce((acc, step) => acc.then(step)))
-      // TODO Make sure EmptyParams/EmptyArgs is actually necessary; I can't remember why they were added. ¯\(°_o)/¯
-      case EmptyParams() => throw new RuntimeException("infer returned invalid parameters")
+      case EmptyParams => rule.infer(EmptyArgs) match {
+        case None => pending((c, r) => r.head.head, step { failure() } )
+        case Some(proof) => pending((c, r) => r.head.head, step { success(proof) })
+      }
     }
 
     rules match {
       case RuleSet(Nil) => failure()
-      case RuleSet(Seq(head, rem @ _*)) => infer(head, args) match {
-        case Left(proof) if proof == NullProof => failure(inferFrom(RuleSet(rem), args))
-        case Left(proof:CompleteProof) => success(proof, inferFrom(RuleSet(rem), args))
-        case Right(params) => pendingParams(params)(head).andThen(step({
-          inferFrom(RuleSet(rem), args)
-        }))
-      }
+      case RuleSet(Seq(head, rem @ _*)) => 
+        def tryNext(rule: Rule, majors: Seq[Option[Sentence]]): ProofResult = majors match {
+          case Nil => failure({ inferFrom(RuleSet(rem)) })
+          case Seq(head, rem @ _*) => rule.params(head) match {
+            case None => failure({ tryNext(rule, immutable(rem)) })
+            case Some(params) => pendingParams(params)(rule).andThen(step({
+              tryNext(rule, immutable(rem))
+            }))
+          }
+        }
+        
+        tryNext(head, None +: (strategy.premises map { p => Some(p.sentence) }))
     }
   }
 
   private def tryParam(param: RuleParam)(implicit context: ProofContext): ProofResult = param match {
-    case EmptyProof(conc) => success(ProudPremise(conc).proof)
+    case EmptyProof(conc) => context.available.collect({ case a:Assumption => a }).find { a => a.matches(conc) } match {
+      case Some(assumption) => success(assumption.proof)
+      case None => failure()
+    }
     case AnyProof(conc) => {
       val newContext = context.withGoal(conc)
       proof(strategy.premises(newContext))(newContext)
     }
     case RelevantProof(conc, discharges, restrict@_*) => {
-      val newContext = context.withGoal(conc).withAssumptions(discharges.assumptions:_*).lessPremises(restrict:_*)
+      val newContext = context.withGoal(conc).withAssumptions(discharges.assumptions:_*).restrict(restrict:_*)
       proof(strategy.premises(newContext))(newContext)
-    }
-  }
-
-  private def infer(rule: Rule, args: RuleArgs = EmptyArgs())(implicit context: ProofContext): Either[Proof, RuleParams] = {
-    rule.infer(context.goal)(args) match {
-      // case for trivial (tautological) proof
-      case CompleteResult(proof) => Left(proof)
-      // case for decomposing rule requirements
-      case IncompleteResult(params) => Right(params)
-      // case for non-applicable rules
-      case NullResult() => Left(NullProof)
     }
   }
 
@@ -226,15 +199,15 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
   // convenience method that creates a new ProofStep instance from a call-by-name parameter
   private def step(stepFunc: => ProofResult)(implicit context: ProofContext) = ProofStep { stepFunc }
 
-  private def success(proof: CompleteProof, hint: SearchHint)(implicit context: ProofContext) = {
+  private def success(proof: Proof, hint: SearchHint)(implicit context: ProofContext) = {
     strategy.decide(Success(proof, context, hint))
   }
 
-  private def success(proof: CompleteProof, continuation: => ProofResult)(implicit context: ProofContext) = {
+  private def success(proof: Proof, continuation: => ProofResult)(implicit context: ProofContext) = {
     strategy.decide(Success(proof, context, Continue(step(continuation))))
   }
 
-  private def success(proof: CompleteProof)(implicit context: ProofContext) = strategy.decide(Success(proof, context, Cut()))
+  private def success(proof: Proof)(implicit context: ProofContext) = strategy.decide(Success(proof, context, Cut()))
 
   private def failure(hint: SearchHint)(implicit context: ProofContext) = strategy.decide(Failure(context, hint))
 
@@ -250,85 +223,4 @@ class ProofSolver(strategy: ProofStrategy = new NaiveProofStrategy()) {
   }
 
   private def immutable[T](seq: scala.Seq[T]) = scala.collection.immutable.Seq(seq:_*)
-
-//  private def then(result: ProofResult, continue: () => Proof = null): Proof = result match {
-//    case Failure(proof, Continue()) if continue != null => continue()
-//    case finish => finish.proof
-//  }
-//
-//  private def proofFromPremises(premises: Seq[Premise])(implicit context: ProofContext): Proof = premises match {
-//    case Nil => proofFromInference(RuleSet(strategy.rules))
-//    case Seq(head, rem@_*) => head match {
-//      case ProudPremise(s) if s.matches(context.goal) => ProudPremise(s).proof
-//      case Assumption(s) if s.matches(context.goal) => Assumption(s).proof
-//      case Conclusion(s, rule, args) if s.matches(context.goal) => args match {
-//        case EmptyArgs() => CompleteProof(s, rule, args, Nil)
-//        case UnaryArgs(proof0) => CompleteProof(s, rule, args, proof0.premises)
-//        case BinaryArgs(proof0, proof1) => CompleteProof(s, rule, args, proof0.premises ++ proof1.premises)
-//        case TernaryArgs(proof0, proof1, proof2) => CompleteProof(s, rule, args, proof0.premises ++ proof1.premises ++ proof2.premises)
-//      }
-//      case premise if premise.sentence.contains(context.goal) =>
-//        // if the premise contains our goal, attempt to infer conclusion from a rule that accepts the sentence as a major premise
-//        val proudProof = ProudPremise(premise.sentence).proof
-//        val relevantRules = strategy.rules(context.withRuleSet(context.rules.acceptingMajor(proudProof)))
-//        proofFromInference(relevantRules, UnaryArgs(proudProof)) match {
-//          case NullProof(_) => proofFromPremises(rem)
-//          case proof => proof
-//        }
-//      case premise if context.goal.equals(Absurdity()) =>
-//        val relevantRules = strategy.rules(context.withRuleSet(context.rules.yielding(context.goal)))
-//        println(premise)
-//        println(relevantRules)
-//        proofFromInference(relevantRules) match {
-//          case NullProof(_) => proofFromPremises(rem)
-//          case proof => proof
-//        }
-//      case _ => proofFromPremises(rem)
-//    }
-//  }
-//
-//  private def proofFromInference(rules: RuleSet, args: RuleArgs = EmptyArgs())(implicit context: ProofContext): Proof = rules match {
-//    case RuleSet(Nil) => NullProof(context.premises)
-//    case RuleSet(Seq(head, rem@_*)) => infer(head, args) match {
-//      case Left(NullProof(prems)) => proofFromInference(RuleSet(rem), args)
-//      case Left(proof) => proof
-//      case Right(params) => infer(head, proof(params)) match {
-//        case Left(CompleteProof(c, p)) => CompleteProof(c, p)
-//        case Left(NullProof(_)) | Right(_) => proofFromInference(RuleSet(rem), args)
-//      }
-//    }
-//  }
-//
-//  private def relevantProof(discharge: Discharge, restrict: Seq[Assumption])(implicit context: ProofContext): Proof = {
-//      val newContext = context.lessAssumptions(restrict:_*)
-//      discharge match {
-//        case Vacuous(assumptions@_*) => then(proof(newContext.withAssumptions(assumptions:_*)))
-//        case Required(assumptions@_*) => then(proof(newContext.withAssumptions(assumptions:_*))) match {
-//          case CompleteProof(c, prems) if assumptions.par forall { a => prems exists ( p => p.matches(a.sentence)) } => CompleteProof(c, (prems ++ context.premises).distinct)
-//          case _ => NullProof(newContext.premises)
-//        }
-//        case Variate(assumptions@_*) => then(proof(newContext.withAssumptions(assumptions:_*))) match {
-//          case CompleteProof(c, prems) if prems.par exists { p => assumptions exists { a => a.sentence.matches(p.sentence) } } =>
-//            CompleteProof(c, (prems ++ context.premises).distinct)
-//          case _ => NullProof(newContext.premises)
-//        }
-//      }
-//  }
-//
-//  private def proof(param: RuleParam)(implicit context: ProofContext): Proof = param match {
-//    case EmptyProof(conc) => ProudPremise(conc).proof
-//    case AnyProof(conc) => then(proof(context.withGoal(conc)))
-//    case RelevantProof(conc, discharge, restrict@_*) => relevantProof(discharge, restrict)(context.withGoal(conc))
-//    case _ => NullProof(context.premises)
-//  }
-//
-//  private def proof(params: RuleParams)(implicit context: ProofContext): RuleArgs = params match {
-//    case EmptyParams() => EmptyArgs()
-//    case UnaryParams(p0) => UnaryArgs(proof(p0))
-//    case BinaryParams(p0, p1) => BinaryArgs(proof(p0), proof(p1))
-//    case TernaryParams(p0, p1, p2) => TernaryArgs(proof(p0), proof(p1), proof(p2))
-//    // TODO fixme: good example of a need for better IoC
-//    case OptionParams(all@_*) => all.map(p => proof(p)).find { arg => arg.prems forall { case CompleteProof(_,_) => true; case _ => false; }}.getOrElse(EmptyArgs())
-//  }
-//
 }

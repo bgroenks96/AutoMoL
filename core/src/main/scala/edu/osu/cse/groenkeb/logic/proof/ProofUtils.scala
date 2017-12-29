@@ -11,14 +11,9 @@ object ProofUtils {
   private def prettyPrint(itr: Iterator[Proof], prefix: String) {
     if (!itr.hasNext) return
     var proof = itr.next()
-    if (proof == NullProof) {
-      println("No proof.")
-      return;
-    }
     
-    var conclusion = proof.conclusion.get
-    if (conclusion.rule.isInstanceOf[NullRule]) return;
-    println(String.format("%s %s %s {%s}\n", prefix, conclusion.sentence, conclusion.rule, proof.premises.mkString(", ")))
-    conclusion.args.prems foreach { p => prettyPrint(itr, prefix + "   ") }
+    if (proof.rule == NullRule) return;
+    println(String.format("%s %s %s [%s] { %s }\n", prefix, proof.sentence, proof.rule, proof.binding, proof.undischarged.mkString(", ")))
+    proof.args.prems foreach { p => prettyPrint(itr, prefix + "   ") }
   }
 }

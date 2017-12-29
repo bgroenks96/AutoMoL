@@ -9,74 +9,75 @@ object Latexifier {
   
   def latexPrint(proof: Proof): String = {
     var itr = ProofTraverser.preOrderTraversal(proof).iterator
-    latexPrint(itr, "\\[") ++ "\\]"
+    latexPrint(itr, "\\[")(new DischargeContext()) + "\\]"
   }
   
-  private def latexPrint(itr: Iterator[Proof], proofString: String): String = {
+  private def latexPrint(itr: Iterator[Proof], proofString: String)(implicit context: DischargeContext): String = {
     if (!itr.hasNext) proofString
     else itr.next() match {
-      case CompleteProof(conc, prems) => conc.rule match {
-        case NullRule() => ""
-        case IdentityRule() =>
+      case Proof(s, rule, args, prems, binding) => rule match {
+        case NullRule => ""
+        case IdentityRule =>
           proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
-                                           ruleToString(conc.rule), 
-                                           sentenceToString(conc.sentence))).concat(latexPrint(itr, ""))
-        case r@ModelRule(_) if conc.sentence != Absurdity =>
+                                           ruleToString(rule, binding), 
+                                           sentenceToString(s)))
+        case r@ModelRule(_) if s != Absurdity =>
           proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
-                                           ruleToString(conc.rule), 
-                                           sentenceToString(conc.sentence))).concat(latexPrint(itr, ""))
+                                           ruleToString(rule, binding), 
+                                           sentenceToString(s)))
         case rule =>  proofString.concat(String.format("\\infer[%s]{%s}{%s} ",     
-                                         ruleToString(rule), 
-                                         sentenceToString(conc.sentence),
-        		                             (conc.args.prems map {p => latexPrint(itr, "")}).fold("")((x, y) => x ++ y)))
+                                         ruleToString(rule, binding), 
+                                         sentenceToString(s),
+        		                             (args.prems map {p => latexPrint(itr, "")(context.copy)}).fold("")((x, y) => x + y)))
       }
-      case NullProof => proofString
     }
   }
   
-  private def ruleToString(rule: Rule): String = {
-    rule match {
-      case AndVerification() => "\\wedge V"
-      case AndFalsification()  => "\\wedge F"
-      case OrVerification() => "\\vee V"
-      case OrFalsification() => "\\vee F"
-      case NegationVerification() => "\\not V"
-      case NegationFalsification() => "\\not F"
+  private def ruleToString(rule: Rule, binding: Option[Binding])(implicit context: DischargeContext): String =
+    (binding match {
+      case Some(IntBinding(id)) => "\\scriptsize{(%d)}  ".format(context.lookup(id))
+      case _ => ""
+    }) + "  \\small{%s}".format((rule match {
+      case AndVerification => "\\wedge V"
+      case AndFalsification  => "\\wedge F"
+      case OrVerification => "\\vee V"
+      case OrFalsification => "\\vee F"
+      case NegationVerification => "\\neg V"
+      case NegationFalsification => "\\neg F"
       case UniversalVerification(_) => "\\forall V"
       case UniversalFalsification(_) => "\\forall F"
       case ExistentialVerification(_) => "\\exists V"
       case ExistentialFalsification(_) => "\\exists F"
-      case ModelRule(_) => " M"
-      case IdentityRule()        => ""
-      case NullRule()            => ""
-      //others go here...      
-    }
-  }
+      case ModelRule(_) => "M"
+      case IdentityRule        => ""
+      case NullRule            => ""
+      case _ => "undef"
+    }))
   
-  private def sentenceToString(sentence: Sentence): String = {
-    
+  private def sentenceToString(sentence: Sentence, parenthize: Boolean = false): String = {
     sentence match {
       case Absurdity                 => "\\bot"
       case AtomicSentence(x)         => x.toString()
-      case UnarySentence(x, y)       => unaryConnectiveToString(y) ++ sentenceToString(x) 
-      case BinarySentence(x, y, z)   => sentenceToString(x) ++ binaryConnectiveToString(z) ++ sentenceToString(y)
-      case QuantifiedSentence(x, y)  => quantifiedSentenceToString(y) ++ sentenceToString(x) 
+      case UnarySentence(x, y)       => unaryConnectiveToString(y) + sentenceToString(x, true)
+      case BinarySentence(x, y, z) if parenthize => "(%s%s%s)".format(sentenceToString(x, true), binaryConnectiveToString(z), sentenceToString(y, true))
+      case BinarySentence(x, y, z) => "%s%s%s".format(sentenceToString(x, true), binaryConnectiveToString(z), sentenceToString(y, true))
+      case QuantifiedSentence(x, y)  => quantifiedSentenceToString(y) + "[%s]".format(sentenceToString(x))
       case NullSentence              => ""
     }
   }
   
   private def unaryConnectiveToString(conn: UnaryConnective): String = {
     conn match{
-      case Not() => "\\neg "
+      case Not => "\\neg "
       case _     => "un:Error"
     }
   }
   
   private def binaryConnectiveToString(conn: BinaryConnective): String = {
     conn match{
-      case And()     => "\\wedge "
-      case Or()      => "\\vee "
-      case Implies() => "\\rightarrow "
+      case And     => "\\wedge "
+      case Or      => "\\vee "
+      case Implies => "\\rightarrow "
       case _         => "bin:Error"
     }
   }
@@ -88,5 +89,21 @@ object Latexifier {
       case _                        => "quant:error"
     }
   }
+ 
+  type IdMap = scala.collection.mutable.Map[Int, Int]
   
+  private class DischargeContext(private val generator: StatefulGenerator[Int],
+                                 private val index: IdMap) {  
+    def this() = this(new StatefulGenerator(1, i => i + 1), scala.collection.mutable.Map[Int, Int]())
+    
+    def this(parent: DischargeContext) = this(parent.generator, parent.index.clone())
+    
+    def lookup(id: Int) = index.getOrElse(id, {
+      val next = generator.next
+      index(id) = next
+      next
+    })
+    
+    def copy = new DischargeContext(this)
+  }
 }

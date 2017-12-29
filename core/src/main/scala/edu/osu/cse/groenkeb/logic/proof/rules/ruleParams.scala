@@ -19,7 +19,7 @@ case class RelevantProof(c: Sentence, val from: Discharge, val restrict: Assumpt
 case class EmptyProof(c: Sentence) extends RuleParam(c)
 
 sealed abstract class RuleParams
-case class EmptyParams() extends RuleParams
+case object EmptyParams extends RuleParams
 case class UnaryParams(param0: RuleParam) extends RuleParams
 case class BinaryParams(param0: RuleParam, param1: RuleParam) extends RuleParams
 case class TernaryParams(param0: RuleParam, param1: RuleParam, param2: RuleParam) extends RuleParams

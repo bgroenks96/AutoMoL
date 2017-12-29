@@ -6,18 +6,18 @@ import edu.osu.cse.groenkeb.logic.UniversalQuantifier
 
 class DefaultPropOpMatcher() extends OperatorMatcher {
   def opFor(str: String): Operator = str match {
-    case "and" => And()
-    case "or" => Or()
-    case "not" => Not()
-    case "if" => Implies()
-    case _ => NullOp()
+    case "and" => And
+    case "or" => Or
+    case "not" => Not
+    case "if" => Implies
+    case _ => NullOp
   }
   
   def nameFor(op: Operator): String = op match {
-    case And() => "and"
-    case Or() => "or"
-    case Not() => "not"
-    case Implies() => "if"
+    case And => "and"
+    case Or => "or"
+    case Not => "not"
+    case Implies => "if"
     case _ => ""
   }
 }

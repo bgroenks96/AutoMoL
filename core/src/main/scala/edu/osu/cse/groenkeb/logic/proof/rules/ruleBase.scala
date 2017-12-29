@@ -1,76 +1,76 @@
 package edu.osu.cse.groenkeb.logic.proof.rules
 
-import edu.osu.cse.groenkeb.logic.Sentence
-import edu.osu.cse.groenkeb.logic.Sentences
-import edu.osu.cse.groenkeb.logic.proof.CompleteProof
-import edu.osu.cse.groenkeb.logic.proof.Conclusion
-import edu.osu.cse.groenkeb.logic.proof.Premise
-import edu.osu.cse.groenkeb.logic.proof.Proof
-import edu.osu.cse.groenkeb.logic.proof.Assumption
-import edu.osu.cse.groenkeb.logic.proof.Conclusion
-import edu.osu.cse.groenkeb.logic.proof.Premise
-import edu.osu.cse.groenkeb.logic.proof.Assumption
-import edu.osu.cse.groenkeb.logic.Not
-import edu.osu.cse.groenkeb.logic.UnarySentence
-import edu.osu.cse.groenkeb.logic.Absurdity
+import edu.osu.cse.groenkeb.logic._
+import edu.osu.cse.groenkeb.logic.proof._
+import edu.osu.cse.groenkeb.logic.utils.Empty
 
-abstract class AbstractRule extends Rule {
-  def exists(sentences: Sentence*) = CaseAssumptions(sentences:_*)
+abstract class BaseRule extends Rule {
+  def goal(implicit context: ProofContext) = context.goal
+  
+  def bind(implicit context: ProofContext) = Some(IntBinding(context.depth))
+  
+  implicit def sentenceExtensions(s: Sentence) = new {
+    def is(arg: Sentence) = s == arg
+  }
+  
+  implicit def booleanExtensions(b: Boolean) = new {
+    def and(arg: Boolean) = b && arg
+    def or(arg: Boolean) = b || arg
+    def not = !b
+  }
+  
+  implicit def assumptionSetExtensions(assumptions: Set[Assumption]) = new {
+    def discharge(sentences: Sentence*)(implicit context: ProofContext) =
+      assumptions filter { a => a match {
+        case Assumption(s, Some(IntBinding(b))) if (sentences.contains(s)) and (b == context.depth) => false
+        case _ => true
+      }}
+  }
 }
 
-final case class IdentityRule() extends AbstractRule {
-  def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(_, _, _), _) => true
-    case _ => false
-  }
+final case object IdentityRule extends BaseRule {
+  def major(sentence: Sentence) = false
 
   def yields(sentence: Sentence) = true
 
-  def infer(conc: Sentence)(args: RuleArgs) = args match {
-    case UnaryArgs(CompleteProof(Conclusion(`conc`, _, _), prems)) =>
-      CompleteResult(CompleteProof(`conc`, this, args, prems + Assumption(conc)))
-    case _ => IncompleteResult(UnaryParams(AnyProof(conc)))
+  def params(major: Option[Sentence])(implicit context: ProofContext) = Some(UnaryParams(AnyProof(goal)))
+
+  def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
+    case UnaryArgs(Proof(context.goal, _, _, Empty(), _)) =>
+      Some(Proof(context.goal, this, args, Set(Assumption(context.goal))))
+    case _ => None
   }
 
   override def toString = "id"
 }
 
-final case class NullRule() extends AbstractRule {
-  def major(proof: Proof) = false
+final case object NonContradictionRule extends BaseRule {
+  def major(sentence: Sentence) = false
 
+  def yields(sentence: Sentence) = sentence is Absurdity
+
+  def params(major: Option[Sentence])(implicit context: ProofContext) = Some(BinaryParams(AnyProof(goal), AnyProof(Not(goal))))
+
+  def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
+    case BinaryArgs(
+      Proof(context.goal, _, _, pa, _),
+      Proof(Not(context.goal), _, _, pb, _)) =>
+      Some(Proof(Absurdity, this, args, pa ++ pb))
+    case _ => None
+  }
+
+  override def toString = "NC"
+}
+
+final case object NullRule extends BaseRule {
+  def major(sentence: Sentence) = false
+  
   def yields(sentence: Sentence) = false
 
-  def infer(conc: Sentence)(args: RuleArgs) = NullResult()
+  def params(major: Option[Sentence])(implicit context: ProofContext) = None
+  
+  def infer(args: RuleArgs)(implicit context: ProofContext) = None
 
   override def toString = "nil"
 }
 
-final case class NonContradictionRule() extends AbstractRule {
-  def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(s,_,_), _) if s != Absurdity => true
-    case _ => false
-  }
-  
-  def minor(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(UnarySentence(_, Not()),_,_), _) => true
-    case _ => false
-  }
-  
-  def yields(sentence: Sentence) = sentence match { case Absurdity => true; case _ => false }
-  
-  def infer(conc: Sentence)(args: RuleArgs) = {
-    val negation = Sentences.not(conc)
-    args match {
-      case BinaryArgs(CompleteProof(Conclusion(`conc`, _, _), pa),
-                      CompleteProof(Conclusion(`negation`, _, _), pb)) =>
-                        CompleteResult(CompleteProof(Absurdity, this, args, pa ++ pb))
-      case _ => IncompleteResult(BinaryParams(AnyProof(conc), AnyProof(negation)))
-    }
-  }
-  
-  override def toString = "<NonContradiction>"
-}
-
-protected case class CaseAssumptions(sentences: Sentence*) {
-  def in(prems: Traversable[Premise]) = sentences forall { s => prems exists { p => p.matches(s) }}
-}

@@ -1,32 +1,12 @@
 package edu.osu.cse.groenkeb.logic.model.rules
 
-import edu.osu.cse.groenkeb.logic.Absurdity
-import edu.osu.cse.groenkeb.logic.AtomicSentence
-import edu.osu.cse.groenkeb.logic.Sentence
-import edu.osu.cse.groenkeb.logic.model.FirstOrderModel
-import edu.osu.cse.groenkeb.logic.proof.rules.CompleteResult
-import edu.osu.cse.groenkeb.logic.proof.rules.EmptyArgs
-import edu.osu.cse.groenkeb.logic.proof.rules.NullResult
-import edu.osu.cse.groenkeb.logic.proof.rules.Rule
-import edu.osu.cse.groenkeb.logic.proof.rules.RuleArgs
-import edu.osu.cse.groenkeb.logic.proof.CompleteProof
-import edu.osu.cse.groenkeb.logic.proof.Conclusion
-import edu.osu.cse.groenkeb.logic.proof.NullProof
-import edu.osu.cse.groenkeb.logic.proof.Proof
-import edu.osu.cse.groenkeb.logic.proof.ProudPremise
-import edu.osu.cse.groenkeb.logic.proof.rules.IdentityRule
-import edu.osu.cse.groenkeb.logic.proof.rules.UnaryArgs
-import edu.osu.cse.groenkeb.logic.proof.Assumption
-import edu.osu.cse.groenkeb.logic.utils.Empty
+import edu.osu.cse.groenkeb.logic._
+import edu.osu.cse.groenkeb.logic.model._
+import edu.osu.cse.groenkeb.logic.proof._
+import edu.osu.cse.groenkeb.logic.proof.rules._
 
-case class ModelRule(val model: FirstOrderModel) extends Rule {
-  def major(proof: Proof) = proof match {
-    case CompleteProof(Conclusion(AtomicSentence(_), IdentityRule(), _), Empty()) => true
-    case NullProof => true
-    case _ => false
-  }
-  
-  def minor(proof: Proof) = false
+case class ModelRule(val model: FirstOrderModel) extends BaseRule {
+  def major(sentence: Sentence) = sentence.isInstanceOf[AtomicSentence]
   
   def yields(conc: Sentence) = conc match {
     case AtomicSentence(atom) => model.verify(conc)
@@ -34,19 +14,27 @@ case class ModelRule(val model: FirstOrderModel) extends Rule {
     case _ => false
   }
   
-  def infer(conc: Sentence)(args: RuleArgs) = conc match {
+  def params(major: Option[Sentence] = None)(implicit context: ProofContext) = goal match {
+    case s:AtomicSentence if major == None and model.verify(s) => Some(EmptyParams)
+    case Absurdity => major match {
+      case Some(s:AtomicSentence) if !model.verify(s) => Some(UnaryParams(EmptyProof(s)))
+      case _ => None
+    }
+    case _ => None
+  }
+
+  def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
     case AtomicSentence(atom) => args match {
-      case EmptyArgs() if model.verify(conc) => CompleteResult(CompleteProof(Conclusion(conc, this, args), Set()))
-      //case EmptyArgs() if !model.verify(conc) => CompleteResult(CompleteProof(Conclusion(Absurdity(), this, args), Nil))
-      case _ => NullResult()
+      case EmptyArgs if model.verify(goal) => Some(Proof(goal, ModelRule.this, args, Set()))
+      case _ => None
     }
     case Absurdity => args match {
-      case UnaryArgs(CompleteProof(Conclusion(s:AtomicSentence, _, _), Empty())) if !model.verify(s) =>
-        CompleteResult(CompleteProof(Conclusion(Absurdity, this, args), Set(Assumption(s))))
-      case _ => NullResult()
+      case UnaryArgs(Proof(s: AtomicSentence, IdentityRule, _, assumptions, _)) if !model.verify(s) =>
+        Some(Proof(Absurdity, ModelRule.this, args, assumptions))
+      case _ => None
     }
-    case _ => NullResult()
+    case _ => None
   }
-  
+
   override def toString = "M"
 }

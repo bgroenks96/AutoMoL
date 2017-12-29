@@ -70,7 +70,7 @@ final class ModelVerificationService(resPrefix: String) extends Http4sDsl[IO] {
 
   private def firstResult(query: Sentence)(implicit model: FirstOrderModel): Proof = {
     val verifyContext = ProofContext(query)
-    val falsifyContext = ProofContext(Absurdity, Seq(ProudPremise(query)))
+    val falsifyContext = ProofContext(Absurdity, Seq(Assumption(query)))
     val f1 = Future[Stream[ProofResult]] {
       solver.prove(verifyContext)
     }
