@@ -343,7 +343,7 @@ class ModelVerificationTests {
   }
   
   @Test
-  def testVerifyExistential2() {
+  def testVerifyExistentialWithFreeVariable() {
     implicit val opMatcher = new DefaultFirstOrderOpMatcher()
     val sentence = "Ex (or Q[d] R[x])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
@@ -360,6 +360,76 @@ class ModelVerificationTests {
   def testFalsifyExistential() {
     implicit val opMatcher = new DefaultFirstOrderOpMatcher()
     val sentence = "Ex R[x]"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("Q[a]"), parser.parse("Q[b]"));
+    val rules = standardRules(model)
+    val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testFalsifyExistentialBoundVariableNotUsed() {
+    implicit val opMatcher = new DefaultFirstOrderOpMatcher()
+    val sentence = "Ex R[a]"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("Q[a]"), parser.parse("Q[b]"));
+    val rules = standardRules(model)
+    val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testFalsifyExistentialWithNestedFalsification_1() {
+    implicit val opMatcher = new DefaultFirstOrderOpMatcher()
+    val sentence = "Ex (and Q[x] R[x])"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("Q[a]"), parser.parse("Q[b]"));
+    val rules = standardRules(model)
+    val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testFalsifyExistentialWithNestedFalsification_2() {
+    implicit val opMatcher = new DefaultFirstOrderOpMatcher()
+    val sentence = "Ex (and (not Q[x]) Q[x])"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("Q[a]"), parser.parse("Q[b]"));
+    val rules = standardRules(model)
+    val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testFalsifyNestedExistential() {
+    implicit val opMatcher = new DefaultFirstOrderOpMatcher()
+    val sentence = "not (Ex Q[x])"
+    val parser = new SentenceParser(new NodeRecursiveTokenizer())
+    val model = FirstOrderModel(parser.parse("Q[a]"), parser.parse("Q[b]"));
+    val rules = standardRules(model)
+    val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
+    val solver = new ProofSolver(new NaiveProofStrategy())
+    val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
+    Assert.assertFalse(results.isEmpty)
+    ProofUtils.prettyPrint(results.head.proof)
+  }
+  
+  @Test
+  def testFalsifyNestedExistentialWithNestedFalsification() {
+    implicit val opMatcher = new DefaultFirstOrderOpMatcher()
+    val sentence = "and (Ex (not Q[x])) (Ex Q[x])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
     val model = FirstOrderModel(parser.parse("Q[a]"), parser.parse("Q[b]"));
     val rules = standardRules(model)

@@ -191,13 +191,12 @@ case class ExistentialFalsification(domain: Domain) extends FalsificationRule {
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = {
     def validate(proofs: Seq[Proof], sentence: Sentence, term: Term): Seq[Sentence] =
-      domain.terms.toSeq.flatMap {
-        t =>
-          val sub = sentence.substitute(term, t)
-          proofs.collect {
-            case Proof(Absurdity,_,_, premises,_) =>
-              premises.collect { case p if p.matches(sub) => sub }
-          }.flatten
+      domain.terms.toSeq map { t => sentence.substitute(term, t) } match {
+        case instances if instances.corresponds(proofs)((s, p) => p match {
+          case proof@Proof(Absurdity, _, _, _, _) if proof uses s => true
+          case _ => false
+        }) => instances
+        case _ => Nil
       }
     
     args match {
