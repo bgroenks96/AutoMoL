@@ -17,6 +17,7 @@ object Latexifier {
     else itr.next() match {
       case Proof(s, rule, args, prems, binding) => rule match {
         case NullRule => ""
+        case IdentityRule if binding == None => proofString.concat(sentenceToString(s))
         case IdentityRule =>
           proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
                                            ruleToString(rule, binding), 

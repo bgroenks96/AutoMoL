@@ -24,7 +24,7 @@ case object NegationFalsification extends FalsificationRule {
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
     case BinaryArgs(Proof(Not(sentence), IdentityRule, _, Only(majorAssumption), _), minorProof) if (goal is Absurdity) => minorProof match {
       case Proof(`sentence`,_,_, pminor, _) =>
-        Some(Proof(Absurdity, this, args, pminor + majorAssumption, bind))
+        Some(Proof(Absurdity, this, args, pminor + majorAssumption))
       case _ => None
     }
     case _ => None
