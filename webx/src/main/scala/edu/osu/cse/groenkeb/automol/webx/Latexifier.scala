@@ -44,6 +44,8 @@ object Latexifier {
       case OrFalsification => "\\vee F"
       case NegationVerification => "\\neg V"
       case NegationFalsification => "\\neg F"
+      case ConditionalVerification => "\\rightarrow V"
+      case ConditionalFalsification => "\\rightarrow F"
       case UniversalVerification(_) => "\\forall V"
       case UniversalFalsification(_) => "\\forall F"
       case ExistentialVerification(_) => "\\exists V"
