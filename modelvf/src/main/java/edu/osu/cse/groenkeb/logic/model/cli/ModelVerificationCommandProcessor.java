@@ -117,7 +117,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
         if (result instanceof Success)
         {
           ProofUtils.prettyPrint (((Success) result).proof ());
-          return current;
+          System.out.println ("---------");
         }
       }
       
@@ -129,7 +129,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
         if (result instanceof Success)
         {
           ProofUtils.prettyPrint (((Success) result).proof ());
-          return current;
+          System.out.println ("---------");
         }
       }
       
