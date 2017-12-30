@@ -205,7 +205,7 @@ case class ExistentialFalsification(domain: Domain) extends FalsificationRule {
         discharges match {
           // Make sure all proofs have a corresponding discharge; otherwise fail.
           case d if d.length == proofs.length =>
-            Some(Proof(Absurdity, this, args, proofs.flatMap { p => p.undischarged }.toSet -- discharges, bind))
+            Some(Proof(Absurdity, this, args, proofs.flatMap { p => p.undischarged }.toSet -- discharges + majorAssumption, bind))
           case _ => None
         }
       case _ => None

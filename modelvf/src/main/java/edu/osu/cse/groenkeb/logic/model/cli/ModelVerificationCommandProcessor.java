@@ -9,22 +9,12 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
-import edu.osu.cse.groenkeb.logic.Domain;
-import edu.osu.cse.groenkeb.logic.Sentence;
-import edu.osu.cse.groenkeb.logic.Sentences;
-import edu.osu.cse.groenkeb.logic.Term;
-import edu.osu.cse.groenkeb.logic.model.FirstOrderModel;
-import edu.osu.cse.groenkeb.logic.parse.SentenceParser;
-import edu.osu.cse.groenkeb.logic.parse.SentenceParserOpts;
-import edu.osu.cse.groenkeb.logic.proof.Assumption;
-import edu.osu.cse.groenkeb.logic.proof.Premise;
-import edu.osu.cse.groenkeb.logic.proof.ProofContext;
-import edu.osu.cse.groenkeb.logic.proof.ProofUtils;
-import edu.osu.cse.groenkeb.logic.proof.engine.NaiveProofStrategy;
-import edu.osu.cse.groenkeb.logic.proof.engine.ProofResult;
-import edu.osu.cse.groenkeb.logic.proof.engine.ProofSolver;
-import edu.osu.cse.groenkeb.logic.proof.engine.Success;
-import edu.osu.cse.groenkeb.logic.proof.rules.RuleSet;
+import edu.osu.cse.groenkeb.logic.*;
+import edu.osu.cse.groenkeb.logic.parse.*;
+import edu.osu.cse.groenkeb.logic.model.*;
+import edu.osu.cse.groenkeb.logic.proof.*;
+import edu.osu.cse.groenkeb.logic.proof.engine.*;
+import edu.osu.cse.groenkeb.logic.proof.rules.*;
 import edu.osu.cse.groenkeb.utils.Convert;
 import scala.collection.JavaConversions;
 
@@ -103,7 +93,7 @@ public class ModelVerificationCommandProcessor implements CommandProcessor<Model
   private class QueryCommand implements Command<ModelVerificationContext>
   {
     private final Sentence sentence;
-    private final ProofSolver solver = new ProofSolver(new NaiveProofStrategy());
+    private final ProofSolver solver = new ProofSolver(new EvaluationProofStrategy(), Convert.<SolverOpts>emptyScalaSeq());
     
     QueryCommand(final Sentence sentence)
     {

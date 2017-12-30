@@ -3,8 +3,11 @@ package edu.osu.cse.groenkeb.logic.proof.rules
 import edu.osu.cse.groenkeb.logic.Sentence
 import edu.osu.cse.groenkeb.logic.proof.Proof
 
+import scala.collection.immutable.Set
+import scala.collection.immutable.Seq
+
 case class RuleSet(val rules: Seq[Rule]) extends Seq[Rule] {
-  def this(rules: Set[Rule]) = this(rules.toSeq)
+  def this(rules: Set[Rule]) = this(Seq(rules.toSeq:_*))
   def this(rules: RuleSet) = this(rules.rules)
   
   def iterator = rules.iterator
@@ -23,6 +26,6 @@ case class RuleSet(val rules: Seq[Rule]) extends Seq[Rule] {
 }
 
 object RuleSet {
-  def apply(rules: Set[Rule]) = new RuleSet(rules.toSeq)
+  def apply(rules: Set[Rule]) = new RuleSet(Seq(rules.toSeq:_*))
   def apply(rules: RuleSet) = new RuleSet(rules.rules)
 }

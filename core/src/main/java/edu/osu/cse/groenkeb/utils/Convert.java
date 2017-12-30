@@ -21,9 +21,9 @@ public class Convert
     return JavaConversions.asScalaSet (set).toSet ();
   }
   
-  public static <T> scala.collection.Seq<T> emptyScalaSeq()
+  public static <T> scala.collection.immutable.Seq<T> emptyScalaSeq()
   {
-    return JavaConversions.asScalaBuffer(Collections.<T>emptyList ());
+    return new scala.collection.immutable.VectorBuilder ().result();
   }
   
   public static <T> scala.collection.immutable.Set<T> emptyScalaSet()

@@ -10,6 +10,8 @@ sealed abstract class Discharge(val assumptions: Assumption*) {
    * the given proof fails to satisfy the requirements for discharge.
    */
   def discharge(proof: Proof): Option[Seq[Assumption]]
+  
+  override def toString = "{%s}".mkString(",")
 }
 /**
  * A collection of assumptions that ALL must be used and discharged by a proof.

@@ -13,7 +13,8 @@ final case class Pending(context: ProofContext,
                          steps: Seq[ProofStep],
                          aggregator: (ProofContext, Seq[Stream[ProofResult]]) => ProofResult) extends ProofResult {
   def andThen(step: ProofStep) = 
-    Pending(context, steps, (context, results) => ProofStep({
-      aggregator(context, results)
-    })(context).then(step)())
+    Pending(context, steps, (c, res) => ProofStep({
+      println("andThen: " + step.context)
+      aggregator(c, res)
+    })(c).then(step)())
 }

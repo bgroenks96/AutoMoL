@@ -15,6 +15,8 @@ import edu.osu.cse.groenkeb.logic.model.rules.AndVerification
 import edu.osu.cse.groenkeb.logic.model.rules.ConditionalFalsification
 import edu.osu.cse.groenkeb.logic.model.rules.UniversalVerification
 
+import scala.collection.immutable.Seq
+
 object implicits {
   implicit def standardRules(implicit model: FirstOrderModel = FirstOrderModel.empty): RuleSet =
     RuleSet(Seq(ModelRule(model),

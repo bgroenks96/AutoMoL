@@ -13,7 +13,7 @@ sealed abstract class Premise(val sentence: Sentence, val binding: Option[Bindin
   def matches(p: Premise) = this.sentence.matches(p.sentence)
   def matches(s: Sentence) = s.matches(sentence)
 }
-sealed case class Proof(conclusion: Sentence, rule: Rule, args: RuleArgs, undischarged: Set[Assumption], b: Option[Binding] = None)
+final case class Proof(conclusion: Sentence, rule: Rule, args: RuleArgs, undischarged: Set[Assumption], b: Option[Binding] = None)
   extends Premise(conclusion, b) {
   
   def uses(s: Sentence)(implicit context: ProofContext) = undischarged find { a => a.matches(s) } match {
@@ -21,7 +21,7 @@ sealed case class Proof(conclusion: Sentence, rule: Rule, args: RuleArgs, undisc
     case _ => false
   }
 }
-sealed case class Assumption(s: Sentence, b: Option[Binding] = None) extends Premise(s, b) {
+final case class Assumption(s: Sentence, b: Option[Binding] = None) extends Premise(s, b) {
   def this(s: Sentence) = this(s, None)
   
   // default proof from identity for assumption

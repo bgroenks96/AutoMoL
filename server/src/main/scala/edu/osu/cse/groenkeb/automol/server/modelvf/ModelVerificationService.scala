@@ -27,9 +27,11 @@ import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 
 final class ModelVerificationService(resPrefix: String) extends Http4sDsl[IO] {
-  private val solver = new ProofSolver(new NaiveProofStrategy())
-
   private implicit val opMatcher = new DefaultFirstOrderOpMatcher()
+  
+  private implicit val strategy = new EvaluationProofStrategy()
+  
+  private val solver = new ProofSolver
 
   val service = HttpService[IO] {
     case req@GET -> Root => StaticFile.fromString(resPrefix + "/proofdisplay.html", Some(req)).getOrElseF(NotFound())
