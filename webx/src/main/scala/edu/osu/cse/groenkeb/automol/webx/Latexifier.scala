@@ -2,6 +2,7 @@ package edu.osu.cse.groenkeb.automol.webx
 
 import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.proof.rules._
+import edu.osu.cse.groenkeb.logic.proof.rules.core._
 import edu.osu.cse.groenkeb.logic.model.rules._
 import edu.osu.cse.groenkeb.logic._
 
@@ -39,6 +40,7 @@ object Latexifier {
       case Some(IntBinding(id)) => "\\scriptsize{(%d)}  ".format(context.lookup(id))
       case _ => ""
     }) + "  \\small{%s}".format((rule match {
+      // Core VF rules
       case AndVerification => "\\wedge V"
       case AndFalsification  => "\\wedge F"
       case OrVerification => "\\vee V"
@@ -51,6 +53,16 @@ object Latexifier {
       case UniversalFalsification(_) => "\\forall F"
       case ExistentialVerification(_) => "\\exists V"
       case ExistentialFalsification(_) => "\\exists F"
+      // Core deduction rules
+      case AndIntroduction => "\\wedge I"
+      case AndElimination  => "\\wedge E"
+      case OrIntroduction => "\\vee I"
+      case OrElimination => "\\vee E"
+      case NegationIntroduction => "\\neg I"
+      case NegationElimination => "\\neg E"
+      case IfIntroduction => "\\rightarrow I"
+      case IfElimination => "\\rightarrow E"
+      // Other
       case ModelRule(_) => "M"
       case IdentityRule        => ""
       case NullRule            => ""

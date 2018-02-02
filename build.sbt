@@ -12,6 +12,7 @@ lazy val commonSettings = Seq(
 )
 
 val circeVersion = "0.9.0-M2"
+val parsebackVersion = "0.3"
 
 lazy val core = project.enablePlugins(ScalaJSPlugin)
   .settings(
@@ -31,6 +32,17 @@ lazy val modelvf = project.dependsOn(proofEngine)
       name := "automol-modelvf"
     )
 
+lazy val parseExt = project.in(file("parse-ext")).dependsOn(core)
+    .settings(
+      commonSettings,
+      name := "automol-parse-ext",
+      resolvers += "bintray-djspiewak-maven" at "https://dl.bintray.com/djspiewak/maven",
+      libraryDependencies ++= Seq(
+        "com.codecommit" %% "parseback-core" % parsebackVersion,
+        "com.codecommit" %% "parseback-cats" % parsebackVersion
+      )
+    )
+
 lazy val webUtils = project.in(file("web-utils")).dependsOn(core).enablePlugins(ScalaJSPlugin)
     .settings(
       commonSettings,
@@ -42,7 +54,7 @@ lazy val webUtils = project.in(file("web-utils")).dependsOn(core).enablePlugins(
         ).map(_ % circeVersion)
     )
 
-lazy val server = project.dependsOn(webUtils, modelvf)
+lazy val server = project.dependsOn(webUtils, modelvf, parseExt)
     .settings(
         commonSettings,
         name := "automol-server",

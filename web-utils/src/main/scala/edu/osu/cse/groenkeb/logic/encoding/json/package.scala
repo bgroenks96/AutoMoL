@@ -2,6 +2,7 @@ package edu.osu.cse.groenkeb.logic.encoding
 
 import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.proof.rules._
+import edu.osu.cse.groenkeb.logic.proof.rules.core._
 import edu.osu.cse.groenkeb.logic.model.rules._
 import edu.osu.cse.groenkeb.logic.model._
 import cats.syntax.either._
@@ -53,7 +54,7 @@ package object json {
     case ExistentialQuantifier(term) => Json.fromFields(Seq(("type", Json.fromString("Existential")), ("term", Json.fromString(term.name))))
   }}
   
-  implicit val ruleDecoder: Decoder[Rule] = Decoder.instance { c =>
+  implicit val vfRuleDecoder: Decoder[Rule] = Decoder.instance { c =>
     c.downField("type").as[String] match {
       case Right("model") => c.downField("desc").as[FirstOrderModel] match {
         case Right(model) => Right(ModelRule(model))
@@ -90,7 +91,7 @@ package object json {
     }
   }
   
-  implicit val ruleEncoder: Encoder[Rule] = Encoder.instance { (r: Rule) => r match {
+  implicit val vfRuleEncoder: Encoder[Rule] = Encoder.instance { (r: Rule) => r match {
     case ModelRule(model) => Json.obj(("type", Json.fromString("model")), ("desc", model.asJson))
     case IdentityRule => Json.obj(("type", Json.fromString("id")))
     case NullRule => Json.obj(("type", Json.fromString("nil")))
@@ -110,5 +111,35 @@ package object json {
                                                                 ("domain", domain.asJson)))
     case UniversalFalsification(domain) => Json.fromFields(Seq(("type", Json.fromString("uq-F")),
                                                                 ("domain", domain.asJson)))
+  }}
+  
+  implicit val coreRuleDecoder: Decoder[Rule] = Decoder.instance { c =>
+    c.downField("type").as[String] match {
+      case Right("id") => Right(IdentityRule)
+      case Right("nil") => Right(NullRule)
+      case Right("~I") => Right(NegationIntroduction)
+      case Right("~E") => Right(NegationElimination)
+      case Right("&I") => Right(AndIntroduction)
+      case Right("&E") => Right(AndElimination)
+      case Right("vI") => Right(OrIntroduction)
+      case Right("vE") => Right(OrElimination)
+      case Right(">I") => Right(IfIntroduction)
+      case Right(">E") => Right(IfElimination)
+      case Right(s) => Left(DecodingFailure("Unrecognized rule type: " + s, List(CursorOp.MoveLast)))
+      case Left(failure) => Left(failure)
+    }
+  }
+  
+  implicit val coreRuleEncoder: Encoder[Rule] = Encoder.instance { (r: Rule) => r match {
+    case IdentityRule => Json.obj(("type", Json.fromString("id")))
+    case NullRule => Json.obj(("type", Json.fromString("nil")))
+    case NegationIntroduction => Json.obj(("type", Json.fromString("~I")))
+    case NegationElimination => Json.obj(("type", Json.fromString("~E")))
+    case AndIntroduction => Json.obj(("type", Json.fromString("&I")))
+    case AndElimination => Json.obj(("type", Json.fromString("&E")))
+    case OrIntroduction => Json.obj(("type", Json.fromString("vI")))
+    case OrElimination => Json.obj(("type", Json.fromString("vE")))
+    case IfIntroduction => Json.obj(("type", Json.fromString(">I")))
+    case IfElimination => Json.obj(("type", Json.fromString(">E")))
   }}
 }
