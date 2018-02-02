@@ -10,11 +10,13 @@ import org.scalajs.dom.document
 import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.encoding.json._
 import edu.osu.cse.groenkeb.logic.web.modelvf.VerificationProofRequest
+import edu.osu.cse.groenkeb.logic.web.core.PrologParser
+import edu.osu.cse.groenkeb.logic.web.core.ParseProofRequest
+
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe.parser.decode
-
 object MainPage {
   
   def main(args: Array[String]): Unit = {
@@ -72,7 +74,31 @@ object MainPage {
     }
     
     jQuery.ajax(js.Dynamic.literal(`type` = "POST",
-                                   url = "prover/query",
+                                   url = "modelvf/query",
+                                   contentType = "application/json",
+                                   data = reqJson.noSpaces,
+                                   dataType = "json",
+                                   success = onSuccess _
+                                   ).asInstanceOf[JQueryAjaxSettings])
+  }
+  
+  @JSExportTopLevel("parseAndDisplay")
+  def parseAndDisplay(): Unit = {
+    val input = document.getElementById("prolog_id").asInstanceOf[html.Input]
+    val term = input.value
+    val reqJson = ParseProofRequest(PrologParser, term).asJson
+    def onSuccess(data: js.Dynamic, textStatus: String, jqXHR: JQueryXHR) {
+      // Stringify JSON string from AJAX response and decode it into Proof using Circe
+      val jsonStr = js.JSON.stringify(data, null)
+      println("received response JSON from server: " + jsonStr)
+      decode[Proof](jsonStr) match {
+        case Right(proof) => updateText(document.getElementById("top"), Latexifier.latexPrint(proof))
+        case Left(failure) => println("decoding error: " + failure)
+      }
+    }
+    
+    jQuery.ajax(js.Dynamic.literal(`type` = "POST",
+                                   url = "parse",
                                    contentType = "application/json",
                                    data = reqJson.noSpaces,
                                    dataType = "json",

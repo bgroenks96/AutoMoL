@@ -8,7 +8,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object ServerMain {
   def main(args: Array[String]): Unit = {
     BlazeBuilder[IO].bindHttp(8192, "0.0.0.0")
-      .mountService(new ModelVerificationService("webx").service, "/")
+      .mountService(new ProofQueryService("webx").service, "/")
       .serve
       .run
       .unsafeRunSync()

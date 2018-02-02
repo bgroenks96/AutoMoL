@@ -13,16 +13,14 @@
 		<div id="top">Proofs go here</div>
 		<div id="bottom">
 			
-
-			Goal: <input id="goal_id" type="text"><br>
-			Premises: <input id="prem_id" type="text"><br>
+			Proof Search (AutoMoL)<br/>
+			Goal: <input id="goal_id" type="text" size="100"><br>
+			Premises: <input id="prem_id" type="text" size="100"><br>
 			
 			<button id="button1" type="button" 
 					onclick="search()">
 				Search
 			</button>
-
-			
 			
 			<button id="button2" type="button" 
 					onclick="atomicButton_1()">
@@ -36,6 +34,14 @@
 			<button id="button4" type="button" 
 					onclick="andButton_2()">
 				Demo: And-V 2
+			</button>
+			<br/>
+			<br/>
+			From Prolog: <input id="prolog_id" type="text" size="50">
+			<br>
+			<button id="button5" type="button" 
+					onclick="parseAndDisplay()">
+				Display
 			</button>
 			
 			
