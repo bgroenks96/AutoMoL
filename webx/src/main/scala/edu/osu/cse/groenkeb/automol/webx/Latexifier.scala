@@ -30,7 +30,7 @@ object Latexifier {
         case rule =>  proofString.concat(String.format("\\infer[%s]{%s}{%s} ",     
                                          ruleToString(rule, binding), 
                                          sentenceToString(s),
-        		                             (args.prems map {p => latexPrint(itr, "")(context.copy)}).fold("")((x, y) => x + y)))
+        		                             (args.prems map {p => latexPrint(itr, "")(context.copy)}).reduce((x, y) => s"$x\\hspace{1.0em}$y")))
       }
     }
   }
