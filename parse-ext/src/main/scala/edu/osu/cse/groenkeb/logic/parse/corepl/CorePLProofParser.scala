@@ -1,4 +1,4 @@
-package edu.osu.cse.groenkeb.logic.parse.prolog
+package edu.osu.cse.groenkeb.logic.parse.corepl
 
 import cats.Eval
 import parseback._
@@ -15,18 +15,19 @@ final case object PrologProofParser extends edu.osu.cse.groenkeb.logic.parse.Par
   def parse(in: String, opts: Seq[PrologProofParserOpts]): Proof = {
     // implicit val W = Whitespace("""\s+"""r)
     
+    val builder = new CoreProofBuilder()
+    
     lazy val proof: Parser[Proof] = (
-      "d(" ~> list ~ "," ~ sentence ~ "," ~ derivation <~ ")" ^^ {
-        (_, prems, _, conc, _, deriv) => deriv match {
-          case Left((rule, args)) => Proof(conc, rule, args, prems.map { s => Assumption(s) }.toSet)
-          case Right(sentence) =>
-            val trivialProof = Assumption(sentence).proof
-            Proof(conc, trivialProof.rule, trivialProof.args, prems.map { s => Assumption(s) }.toSet)
+      "d(" ~> list ~ "," ~ sentence ~ "," ~ inference <~ ")" ^^ {
+        (_, prems, _, conc, _, inf) => inf match {
+          case Left((rule, args)) => builder.proof(conc, rule, args, prems)
+          case Right(`conc`) => builder.trivialProof(conc, prems)
+          case Right(s) => throw new ParserException(s"malformed proof term: trivial inference premise $s does not match conclusion $conc")
         }
       }
     )
     
-    lazy val derivation: Parser[Either[(Rule, RuleArgs), Sentence]] = (
+    lazy val inference: Parser[Either[(Rule, RuleArgs), Sentence]] = (
       rule ^^ { (_, rule, args) => Left((rule, args)) }
       | sentence ^^ { (_, s) => Right(s) }
     )

@@ -2,6 +2,8 @@ package edu.osu.cse.groenkeb.logic.parse.prolog
 
 import org.junit.Test
 
+import edu.osu.cse.groenkeb.logic.parse.corepl.PrologProofParser;
+
 @Test
 final class PrologProofParserTest {
   

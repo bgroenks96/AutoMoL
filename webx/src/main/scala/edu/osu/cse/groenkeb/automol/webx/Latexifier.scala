@@ -5,6 +5,7 @@ import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof.rules.core._
 import edu.osu.cse.groenkeb.logic.model.rules._
 import edu.osu.cse.groenkeb.logic._
+import edu.osu.cse.groenkeb.logic.utils.StatefulGenerator
 
 object Latexifier {
   

@@ -20,6 +20,14 @@ final case class Proof(conclusion: Sentence, rule: Rule, args: RuleArgs, undisch
     case Some(Assumption(a, Some(IntBinding(b)))) if b == context.depth => true
     case _ => false
   }
+  
+  override def toString = "%s(%s,%s,%s,%s%s)"
+    .format(Proof.getClass.getSimpleName,
+            conclusion,
+            rule,
+            args,
+            undischarged,
+            b match { case Some(binding) => s"[$binding]"; case None => "" }) 
 }
 final case class Assumption(s: Sentence, b: Option[Binding] = None) extends Premise(s, b) {
   def this(s: Sentence) = this(s, None)
@@ -27,7 +35,7 @@ final case class Assumption(s: Sentence, b: Option[Binding] = None) extends Prem
   // default proof from identity for assumption
   def proof = Proof(s, IdentityRule, EmptyArgs, Set(this), b)
   
-  override def toString = "%s(%s)".format(b match { case Some(binding) => "[%s]".format(binding); case None => "" }, s)
+  override def toString = "%s(%s)".format(b match { case Some(binding) => s"[$binding]"; case None => "" }, s)
 }
 
 object Premises {

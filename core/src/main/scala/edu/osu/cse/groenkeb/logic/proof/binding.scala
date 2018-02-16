@@ -4,9 +4,9 @@ sealed abstract class Binding
 final case class IntBinding(id: Int) extends Binding {
   override def toString = id.toString()
 }
-final case class NameBinding(name: String) extends Binding {
-  override def toString = name
+final case class GroupBinding(bindings: Binding*) extends Binding {
+  override def toString = bindings.mkString(",")
 }
 final case object GlobalBinding extends Binding {
-  override def toString = "<global>"
+  override def toString = "global"
 }

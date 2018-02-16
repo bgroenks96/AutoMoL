@@ -1,4 +1,4 @@
-package edu.osu.cse.groenkeb.automol.webx
+package edu.osu.cse.groenkeb.logic.utils
 
 /**
  * Generic generator type for sequences of values.
