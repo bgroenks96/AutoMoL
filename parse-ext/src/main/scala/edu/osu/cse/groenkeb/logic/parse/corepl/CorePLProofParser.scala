@@ -9,7 +9,7 @@ import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof.rules.core._
 
-final case object PrologProofParser extends edu.osu.cse.groenkeb.logic.parse.Parser[String, Proof, PrologProofParserOpts] {
+final case object CorePLProofParser extends edu.osu.cse.groenkeb.logic.parse.Parser[String, Proof, PrologProofParserOpts] {
   def parse(in: String, opts: PrologProofParserOpts): Proof = parse(in, Seq(opts))
   
   def parse(in: String, opts: Seq[PrologProofParserOpts]): Proof = {

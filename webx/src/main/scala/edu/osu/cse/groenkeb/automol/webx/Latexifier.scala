@@ -38,7 +38,7 @@ object Latexifier {
   
   private def ruleToString(rule: Rule, binding: Option[Binding])(implicit context: DischargeContext): String =
     (binding match {
-      case Some(IntBinding(id)) => "\\scriptsize{(%d)}  ".format(context.lookup(id))
+      case Some(b) => "\\scriptsize{(%s)}  ".format(context.lookup(b))
       case _ => ""
     }) + "  \\small{%s}".format((rule match {
       // Core VF rules
@@ -106,7 +106,7 @@ object Latexifier {
     }
   }
  
-  type IdMap = scala.collection.mutable.Map[Int, Int]
+  type IdMap = scala.collection.mutable.Map[Binding, Int]
   
   /**
    * Provides mutable context for transforming locally unique inference identifiers to globally unique values.
@@ -118,19 +118,28 @@ object Latexifier {
    */
   private class DischargeContext(private val generator: StatefulGenerator[Int],
                                  private val index: IdMap) {  
-    def this() = this(new StatefulGenerator(1, i => i + 1), scala.collection.mutable.Map[Int, Int]())
+    def this() = this(new StatefulGenerator(1, i => i + 1), scala.collection.mutable.Map[Binding, Int]())
     
     def this(parent: DischargeContext) = this(parent.generator, parent.index.clone())
     
-    def lookup(id: Int) = index.getOrElse(id, {
-      val next = generator.next
-      index(id) = next
-      next
-    })
+    def lookup(binding: Binding): Int = find(binding) match {
+      case Some(id) => id
+      case None => generate(binding)
+    }
     
     /**
      * Creates a copy of this DischargeContext that has the same generator and existing indices.
      */
     def copy = new DischargeContext(this)
+    
+    private def find(binding: Binding): Option[Int] = this.index.keySet.find { k => k.matches(binding) } match {
+      case Some(result) => this.index.get(result)
+      case None => None
+    }
+    
+    private def generate(binding: Binding): Int = this.index.put(binding, this.generator.next) match {
+      case Some(id) => id
+      case None => ???
+    }
   }
 }

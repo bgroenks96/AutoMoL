@@ -27,7 +27,7 @@ final case class Proof(conclusion: Sentence, rule: Rule, args: RuleArgs, undisch
             rule,
             args,
             undischarged,
-            b match { case Some(binding) => s"[$binding]"; case None => "" }) 
+            b match { case Some(binding) => s",[$binding]"; case None => "" }) 
 }
 final case class Assumption(s: Sentence, b: Option[Binding] = None) extends Premise(s, b) {
   def this(s: Sentence) = this(s, None)

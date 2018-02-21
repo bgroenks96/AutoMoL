@@ -13,7 +13,7 @@ import org.http4s.server._
 import org.http4s.dsl._
 import edu.osu.cse.groenkeb.logic.encoding.json._
 import edu.osu.cse.groenkeb.logic.parse._
-import edu.osu.cse.groenkeb.logic.parse.prolog._
+import edu.osu.cse.groenkeb.logic.parse.corepl._
 import edu.osu.cse.groenkeb.logic.model._
 import edu.osu.cse.groenkeb.logic.model.implicits._
 import edu.osu.cse.groenkeb.logic.proof.engine._
@@ -57,11 +57,10 @@ final class ProofQueryService(resPrefix: String) extends Http4sDsl[IO] {
     println("received parse query: " + json.noSpaces)
     json.as[ParseProofRequest] match {
       case Right(ParseProofRequest(PrologParser, input)) => {
-        val parser = PrologProofParser
         try
         {
           println(input)
-          val result = parser.parse(input.trim(), Nil)
+          val result = CorePLProofParser.parse(input.trim(), Nil)
           println(result)
           return result.asJson
         } catch {

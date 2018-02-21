@@ -12,9 +12,11 @@ final class CoreProofBuilder {
   val idGenerator = new StatefulGenerator[Int](0, i => i + 1)
   
   def trivialProof(s: Sentence, undis: Seq[Sentence]): Proof = {
-    val assumptions = Assumption(s, Some(IntBinding(idGenerator.next))) +: toAssumptions(undis)
-    val proof = assumptions.head.proof
-    Proof(s, proof.rule, proof.args, assumptions.toSet)
+    val assumptions = toAssumptions(undis)
+    assumptions.find { a => a.matches(s) } match {
+      case Some(used) => Proof(s, used.proof.rule, used.proof.args, assumptions.toSet)
+      case None => ???
+    }
   }
   
   def proof(s: Sentence, rule: Rule, args: RuleArgs, undis: Seq[Sentence]): Proof = rule match {
