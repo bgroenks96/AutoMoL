@@ -18,7 +18,7 @@ final case class GroupBinding(bindings: Binding*) extends Binding {
     case GlobalBinding => false
   }
     
-  override def toString = bindings.mkString(",")
+  override def toString = "[%s]".format(bindings.mkString(","))
 }
 final case object GlobalBinding extends Binding {
   override def matches(b: Binding) = b == GlobalBinding

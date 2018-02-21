@@ -69,4 +69,11 @@ final class CorePLProofParserTest {
     val proofTerm = "d([],if(a,if(a,a)),if_i(d([],if(a,a),if_i(d([a],a,a)))))"
     println(parser.parse(proofTerm, Nil))
   }
+  
+  @Test
+  def testProblem_89() {
+    val parser = CorePLProofParser
+    val proofTerm = "d([or(a,b),not(a)],not(not(b)),or_e(or(a,b),d([a,not(a)],#,not_e(not(a),d([a],a,a))),d([b],not(not(b)),not_i(d([b,not(b)],#,not_e(not(b),d([b],b,b)))))))"
+    println(parser.parse(proofTerm, Nil))
+  }
 }

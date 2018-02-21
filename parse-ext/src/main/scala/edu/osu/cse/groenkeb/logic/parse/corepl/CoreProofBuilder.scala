@@ -12,11 +12,9 @@ final class CoreProofBuilder {
   val idGenerator = new StatefulGenerator[Int](0, i => i + 1)
   
   def trivialProof(s: Sentence, undis: Seq[Sentence]): Proof = {
-    val assumptions = toAssumptions(undis)
-    assumptions.find { a => a.matches(s) } match {
-      case Some(used) => Proof(s, used.proof.rule, used.proof.args, assumptions.toSet)
-      case None => ???
-    }
+    val assumptions = Assumption(s, Some(IntBinding(idGenerator.next))) +: toAssumptions(undis).filterNot { a => a.matches(s) }
+    val idProof = assumptions.head.proof
+    Proof(s, idProof.rule, idProof.args, assumptions.toSet, idProof.binding)
   }
   
   def proof(s: Sentence, rule: Rule, args: RuleArgs, undis: Seq[Sentence]): Proof = rule match {
@@ -46,9 +44,9 @@ final class CoreProofBuilder {
   
   private def ifElim(s: Sentence, args: RuleArgs, undis: Seq[Sentence]): Proof = args.prems.headOption match {
     case Some(major) => major.sentence match {
-      case Implies(ante, _) =>
-        val assumptions = resolve(IfElimination, args, ante)
-        assert(!assumptions.isEmpty, s"Could not find assumption $ante for discharge of rule $IfElimination")
+      case Implies(_, cons) =>
+        val assumptions = resolve(IfElimination, args, cons)
+        assert(!assumptions.isEmpty, s"Could not find assumption $cons for discharge of rule $IfElimination")
         Proof(s, IfElimination, args, assumptions.toSet, Some(bindGroup(assumptions)))
       case _ => ???
     }
@@ -68,7 +66,7 @@ final class CoreProofBuilder {
   
   private def orElim(s: Sentence, args: RuleArgs, undis: Seq[Sentence]): Proof = args.prems.headOption match {
     case Some(major) => major.sentence match {
-      case And(left, right) =>
+      case Or(left, right) =>
         val assumptions = resolve(OrElimination, args, left, right)
         val hasLeft = assumptions.exists { a => a.matches(left) }
         val hasRight = assumptions.exists { a => a.matches(right) }
@@ -89,5 +87,5 @@ final class CoreProofBuilder {
   
   private def bindGroup(assumptions: Seq[Assumption]): GroupBinding = GroupBinding(assumptions.flatMap { a => a.binding }:_*)
   
-  private def toAssumptions(undis: Seq[Sentence]) = undis.map { a => Assumption(a, Some(IntBinding(idGenerator.next))) }
+  private def toAssumptions(undis: Seq[Sentence]) = undis.map { a => Assumption(a) }
 }

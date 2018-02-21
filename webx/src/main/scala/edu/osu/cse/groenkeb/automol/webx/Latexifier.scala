@@ -19,11 +19,11 @@ object Latexifier {
     else itr.next() match {
       case Proof(s, rule, args, prems, binding) => rule match {
         case NullRule => ""
-        case IdentityRule if binding == None => proofString.concat(sentenceToString(s))
-        case IdentityRule =>
+        case IdentityRule if context.has(binding) =>
           proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
                                            ruleToString(rule, binding), 
                                            sentenceToString(s)))
+        case IdentityRule => proofString.concat(sentenceToString(s))
         case r@ModelRule(_) if s != Absurdity =>
           proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
                                            ruleToString(rule, binding), 
@@ -122,6 +122,14 @@ object Latexifier {
     
     def this(parent: DischargeContext) = this(parent.generator, parent.index.clone())
     
+    def has(binding: Option[Binding]): Boolean = binding match {
+      case Some(b) => find(b) match {
+        case Some(_) => true
+        case None => false
+      }
+      case None => false
+    }
+    
     def lookup(binding: Binding): Int = find(binding) match {
       case Some(id) => id
       case None => generate(binding)
@@ -137,9 +145,10 @@ object Latexifier {
       case None => None
     }
     
-    private def generate(binding: Binding): Int = this.index.put(binding, this.generator.next) match {
-      case Some(id) => id
-      case None => ???
+    private def generate(binding: Binding): Int = {
+      val next = this.generator.next
+      this.index.put(binding, next)
+      return next
     }
   }
 }
