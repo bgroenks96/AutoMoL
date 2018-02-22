@@ -53,16 +53,16 @@ final case object CorePLProofParser extends edu.osu.cse.groenkeb.logic.parse.Par
     
     lazy val rule: Parser[(Rule, RuleArgs)] = (
       "not_i(" ~> proof <~ ")" ^^ { (_, major) => (NegationIntroduction, UnaryArgs(major)) }
-      | "not_e(" ~> sentence ~ "," ~ proof <~ ")" ^^ { (_, major,_, minor) => (NegationElimination, BinaryArgs(Assumption(major).proof, minor)) }
+      | "not_e(" ~> sentence ~ "," ~ proof <~ ")" ^^ { (_, major,_, minor) => (NegationElimination, BinaryArgs(builder.majorProof(major, minor), minor)) }
       | "and_i(" ~> proof ~ "," ~ proof <~ ")" ^^ { (_, left,_, right) => (AndIntroduction, BinaryArgs(left, right)) }
-      | "and_e(" ~> sentence ~ "," ~ proof <~ ")" ^^ { (_, major,_, minor) => (AndElimination, BinaryArgs(Assumption(major).proof, minor)) }
+      | "and_e(" ~> sentence ~ "," ~ proof <~ ")" ^^ { (_, major,_, minor) => (AndElimination, BinaryArgs(builder.majorProof(major, minor), minor)) }
       | "or_i(" ~> proof <~ ")" ^^ { (_, major) => (OrIntroduction, UnaryArgs(major)) }
       | "or_e(" ~> sentence ~ "," ~ proof ~ "," ~ proof <~ ")" ^^ {
-        (_, major,_, leftMinor,_, rightMinor) => (OrElimination, TernaryArgs(Assumption(major).proof, leftMinor, rightMinor))
+        (_, major,_, leftMinor,_, rightMinor) => (OrElimination, TernaryArgs(builder.majorProof(major, leftMinor, rightMinor), leftMinor, rightMinor))
       }
       | "if_i(" ~> proof <~ ")" ^^ { (_, major) => (IfIntroduction, UnaryArgs(major)) }
       | "if_e(" ~> sentence ~ "," ~ proof ~ "," ~ proof <~ ")" ^^ {
-        (_, major,_, anteMinor,_, consMinor) => (IfElimination, TernaryArgs(Assumption(major).proof, anteMinor, consMinor))
+        (_, major,_, anteMinor,_, consMinor) => (IfElimination, TernaryArgs(builder.majorProof(major, anteMinor, consMinor), anteMinor, consMinor))
       }
     )
     

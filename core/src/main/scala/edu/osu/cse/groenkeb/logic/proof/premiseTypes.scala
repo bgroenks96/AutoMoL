@@ -21,9 +21,8 @@ final case class Proof(conclusion: Sentence, rule: Rule, args: RuleArgs, undisch
     case _ => false
   }
   
-  override def toString = "%s(%s,%s,%s,%s%s)"
-    .format(Proof.getClass.getSimpleName,
-            conclusion,
+  override def toString = "Proof(%s,%s,%s,%s%s)"
+    .format(conclusion,
             rule,
             args,
             undischarged,
@@ -35,7 +34,7 @@ final case class Assumption(s: Sentence, b: Option[Binding] = None) extends Prem
   // default proof from identity for assumption
   def proof = Proof(s, IdentityRule, EmptyArgs, Set(this), b)
   
-  override def toString = "%s(%s)".format(b match { case Some(binding) => s"[$binding]"; case None => "" }, s)
+  override def toString = "%s%s".format(s, b match { case Some(binding) => s"-$binding"; case None => "" })
 }
 
 object Premises {

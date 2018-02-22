@@ -13,15 +13,15 @@ window.MathJax = {
     extensions: ["AMSmath.js", "AMSsymbols.js", "autoload-all.js"],
     Macros: {
           infer: ["\\begin{array}\[b\]{c c c c}"+
-          "\\style{border-bottom:1px solid;}{\\begin{array}\[b\]{c c c c}"+
+          "\\style{border-bottom:1px solid;text-align:center;}{\\begin{array}\[b\]{c c c c}"+
           "#3 \\\\"+
-          "\\end{array}} &  \\hspace{-1em}\\raise{-0.25em}{#1} \\\\"+
+          "\\end{array}} &  \\hspace{-0.8em}\\raise{-0.5em}{#1} \\\\"+
           "#2"+
           "\\end{array}",3,""
           ],
         inferbasic: [
         	"\\begin{array}\[b\]{c c c c}"+
-        	"\\style{border-top:1px solid;}{#2} & \\hspace{-0.75em}\\raise{0.5em}{#1} \\\\"+
+        	"\\style{border-top:1px solid;padding:10px;text-align:center;}{#2} & \\hspace{-1.2em}\\raise{1.0em}{#1} \\\\"+
         	"\\end{array}",2, ""
         ]
         }
