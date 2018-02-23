@@ -13,6 +13,11 @@ final class CoreProofBuilder {
   
   val undischargedAssumptions = scala.collection.mutable.Map[Sentence, Assumption]()
   
+  def reset = {
+    idGenerator.state = 0
+    undischargedAssumptions.clear()
+  }
+  
   def trivialProof(s: Sentence, undis: Seq[Sentence]): Proof = undischargedAssumptions.get(s) match {
     case Some(a) => a.proof
     case None =>

@@ -3,7 +3,6 @@
 	position: fixed;
 	left: 0;
 	right: 0;
-	height: 50%;
 }
 
 #top {
@@ -13,8 +12,10 @@
 	overflow-y: auto;
 	text-align: center;
 	vertical-align: middle;
+    height: 65%;
 }
 
 #bottom {
 	bottom: 0;
+    height: 35%;
 }

@@ -10,11 +10,7 @@ import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof.rules.core._
 
 final case object CorePLProofParser extends edu.osu.cse.groenkeb.logic.parse.Parser[String, Proof, PrologProofParserOpts] {
-  def parse(in: String, opts: PrologProofParserOpts): Proof = parse(in, Seq(opts))
   
-  def parse(in: String, opts: Seq[PrologProofParserOpts]): Proof = {
-    // implicit val W = Whitespace("""\s+"""r)
-    
     val builder = new CoreProofBuilder()
     
     lazy val proof: Parser[Proof] = (
@@ -65,6 +61,13 @@ final case object CorePLProofParser extends edu.osu.cse.groenkeb.logic.parse.Par
         (_, major,_, anteMinor,_, consMinor) => (IfElimination, TernaryArgs(builder.majorProof(major, anteMinor, consMinor), anteMinor, consMinor))
       }
     )
+  
+  def parse(in: String, opts: PrologProofParserOpts): Proof = parse(in, Seq(opts))
+  
+  def parse(in: String, opts: Seq[PrologProofParserOpts]): Proof = {
+    // implicit val W = Whitespace("""\s+"""r)
+      
+    builder.reset
     
     proof(LineStream[Eval](in)).value.fold(
         errors => throw ParserException("One or more errors parsing input: " + errors.mkString(",")),
