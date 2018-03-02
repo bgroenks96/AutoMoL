@@ -15,13 +15,13 @@ window.MathJax = {
           infer: ["\\begin{array}\[b\]{c c c c}"+
           "\\style{border-bottom:1px solid;padding:5px;text-align:center;}{\\begin{array}\[b\]{c c c c}"+
           "#3 \\\\"+
-          "\\end{array}} &  \\hspace{-0.85em}\\raise{-0.65em}{#1} \\\\"+
+          "\\end{array}} &  \\hspace{-1.2em}\\raise{-0.75em}{#1} \\\\"+
           "#2"+
           "\\end{array}",3,""
           ],
         inferbasic: [
         	"\\begin{array}\[b\]{c c c c}"+
-        	"\\style{border-top:1px solid;padding:5px;text-align:center;}{#2} & \\hspace{-1.1em}\\raise{0.75em}{#1} \\\\"+
+        	"\\style{border-top:1px solid;padding:5px;text-align:center;}{#2} & \\hspace{-1.1em}\\raise{0.70em}{#1} \\\\"+
         	"\\end{array}",2, ""
         ]
         }
