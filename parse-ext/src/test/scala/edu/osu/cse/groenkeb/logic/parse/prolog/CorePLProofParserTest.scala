@@ -76,4 +76,11 @@ final class CorePLProofParserTest {
     val proofTerm = "d([or(a,b),not(a)],not(not(b)),or_e(or(a,b),d([a,not(a)],#,not_e(not(a),d([a],a,a))),d([b],not(not(b)),not_i(d([b,not(b)],#,not_e(not(b),d([b],b,b)))))))"
     println(parser.parse(proofTerm, Nil))
   }
+  
+  @Test
+  def testProblem_140() {
+    val parser = CorePLProofParser
+    val proofTerm = "d([],if(and(and(or(p,q),or(not(p),q)),or(p,not(q))),not(or(not(p),not(q)))),if_i(d([and(and(or(p,q),or(not(p),q)),or(p,not(q)))],not(or(not(p),not(q))),and_e(and(and(or(p,q),or(not(p),q)),or(p,not(q))),d([and(or(p,q),or(not(p),q)),or(p,not(q))],not(or(not(p),not(q))),and_e(and(or(p,q),or(not(p),q)),d([or(not(p),q),or(p,q),or(p,not(q))],not(or(not(p),not(q))),or_e(or(not(p),q),d([or(p,q),not(p),or(p,not(q))],not(or(not(p),not(q))),or_e(or(p,q),d([p,not(p)],#,not_e(not(p),d([p],p,p))),d([or(p,not(q)),q],not(or(not(p),not(q))),or_e(or(p,not(q)),d([p,q],not(or(not(p),not(q))),not_i(d([or(not(p),not(q)),p,q],#,or_e(or(not(p),not(q)),d([p,not(p)],#,not_e(not(p),d([p],p,p))),d([q,not(q)],#,not_e(not(q),d([q],q,q))))))),d([q,not(q)],#,not_e(not(q),d([q],q,q))))))),d([or(p,q),q,or(p,not(q))],not(or(not(p),not(q))),or_e(or(p,q),d([p,q],not(or(not(p),not(q))),not_i(d([or(not(p),not(q)),p,q],#,or_e(or(not(p),not(q)),d([p,not(p)],#,not_e(not(p),d([p],p,p))),d([q,not(q)],#,not_e(not(q),d([q],q,q))))))),d([or(p,not(q)),q],not(or(not(p),not(q))),or_e(or(p,not(q)),d([p,q],not(or(not(p),not(q))),not_i(d([or(not(p),not(q)),p,q],#,or_e(or(not(p),not(q)),d([p,not(p)],#,not_e(not(p),d([p],p,p))),d([q,not(q)],#,not_e(not(q),d([q],q,q))))))),d([q,not(q)],#,not_e(not(q),d([q],q,q)))))))))))))))"
+    println(parser.parse(proofTerm, Nil))
+  }
 }
