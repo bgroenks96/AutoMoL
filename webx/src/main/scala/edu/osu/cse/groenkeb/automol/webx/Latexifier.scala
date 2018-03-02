@@ -8,39 +8,39 @@ import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.utils.StatefulGenerator
 
 object Latexifier {
-  
+
   def latexPrint(proof: Proof): String = {
     var itr = ProofTraverser.preOrderTraversal(proof).iterator
     latexPrint(itr, "\\[")(new DischargeContext()) + "\\]"
   }
-  
+
   private def latexPrint(itr: Iterator[Proof], proofString: String)(implicit context: DischargeContext): String = {
     if (!itr.hasNext) proofString
     else itr.next() match {
       case Proof(s, rule, args, prems, binding) => rule match {
         case NullRule => ""
         case IdentityRule if context.has(binding) =>
-          proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
-                                           ruleToString(rule, binding), 
+          proofString.concat(String.format("\\inferbasic[%s]{%s} ",
+                                           ruleToString(rule, binding),
                                            sentenceToString(s)))
         case IdentityRule => proofString.concat(sentenceToString(s))
         case r@ModelRule(_) if s != Absurdity =>
-          proofString.concat(String.format("\\inferbasic[%s]{%s} ", 
-                                           ruleToString(rule, binding), 
+          proofString.concat(String.format("\\inferbasic[%s]{%s} ",
+                                           ruleToString(rule, binding),
                                            sentenceToString(s)))
-        case rule =>  proofString.concat(String.format("\\infer[%s]{%s}{%s} ",     
-                                         ruleToString(rule, binding), 
+        case rule =>  proofString.concat(String.format("\\infer[%s]{%s}{%s} ",
+                                         ruleToString(rule, binding),
                                          sentenceToString(s),
         		                             (args.prems map {p => latexPrint(itr, "")(context.copy)}).reduce((x, y) => s"$x\\hspace{1.0em}$y")))
       }
     }
   }
-  
+
   private def ruleToString(rule: Rule, binding: Option[Binding])(implicit context: DischargeContext): String =
     (binding match {
-      case Some(b) => "\\scriptsize{(%s)}  ".format(context.lookup(b))
+      case Some(b) => "\\scriptsize{(%s)}".format(context.lookup(b))
       case _ => ""
-    }) + "  \\small{%s}".format((rule match {
+    }) + "\\hspace{0.3em}\\small{%s}".format((rule match {
       // Core VF rules
       case AndVerification => "\\wedge V"
       case AndFalsification  => "\\wedge F"
@@ -69,7 +69,7 @@ object Latexifier {
       case NullRule            => ""
       case _ => "undef"
     }))
-  
+
   private def sentenceToString(sentence: Sentence, parenthize: Boolean = false): String = {
     sentence match {
       case Absurdity                 => "\\bot"
@@ -81,14 +81,14 @@ object Latexifier {
       case NullSentence              => ""
     }
   }
-  
+
   private def unaryConnectiveToString(conn: UnaryConnective): String = {
     conn match{
       case Not => "\\neg "
       case _     => "un:Error"
     }
   }
-  
+
   private def binaryConnectiveToString(conn: BinaryConnective): String = {
     conn match{
       case And     => "\\wedge "
@@ -97,7 +97,7 @@ object Latexifier {
       case _         => "bin:Error"
     }
   }
-  
+
   private def quantifiedSentenceToString(quant: Quantifier): String = {
     quant match{
       case ExistentialQuantifier(t) => "\\exists " + t.name.toString()
@@ -105,9 +105,9 @@ object Latexifier {
       case _                        => "quant:error"
     }
   }
- 
+
   type IdMap = scala.collection.mutable.Map[Binding, Int]
-  
+
   /**
    * Provides mutable context for transforming locally unique inference identifiers to globally unique values.
    * Inference bindings are assigned by the depth in the proof tree where the assumptions were introduced. This means
@@ -117,11 +117,11 @@ object Latexifier {
    * ensure that newly generated identifiers in each sub-tree are unique.
    */
   private class DischargeContext(private val generator: StatefulGenerator[Int],
-                                 private val index: IdMap) {  
+                                 private val index: IdMap) {
     def this() = this(new StatefulGenerator(1, i => i + 1), scala.collection.mutable.Map[Binding, Int]())
-    
+
     def this(parent: DischargeContext) = this(parent.generator, parent.index.clone())
-    
+
     def has(binding: Option[Binding]): Boolean = binding match {
       case Some(b) => find(b) match {
         case Some(_) => true
@@ -129,22 +129,22 @@ object Latexifier {
       }
       case None => false
     }
-    
+
     def lookup(binding: Binding): Int = find(binding) match {
       case Some(id) => id
       case None => generate(binding)
     }
-    
+
     /**
      * Creates a copy of this DischargeContext that has the same generator and existing indices.
      */
     def copy = new DischargeContext(this)
-    
+
     private def find(binding: Binding): Option[Int] = this.index.keySet.find { k => k.matches(binding) } match {
       case Some(result) => this.index.get(result)
       case None => None
     }
-    
+
     private def generate(binding: Binding): Int = {
       val next = this.generator.next
       this.index.put(binding, next)

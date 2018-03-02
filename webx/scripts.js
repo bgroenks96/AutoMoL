@@ -1,7 +1,7 @@
 function updateProof(){
 		MathJax.Hub.Queue(["Typeset", MathJax.Hub, "top"]);
 }
-		
+
 // the following adapted from to Farnando Carpani
 //https://codepen.io/pkra/pen/VpEqdd?editors=1010
 //https://groups.google.com/forum/#!msg/mathjax-users/Do5E5delM9w/wsnDFOvxCgAJ
@@ -13,15 +13,16 @@ window.MathJax = {
     extensions: ["AMSmath.js", "AMSsymbols.js", "autoload-all.js"],
     Macros: {
           infer: ["\\begin{array}\[b\]{c c c c}"+
-          "\\style{border-bottom:1px solid;padding:5px;text-align:center;}{\\begin{array}\[b\]{c c c c}"+
-          "#3 \\\\"+
-          "\\end{array}} &  \\hspace{-0.85em}\\raise{-0.65em}{#1} \\\\"+
-          "#2"+
+          "\\style{padding:5px;text-align:center;}{\\begin{array}\[b\]{c c c c}"+
+          "\\style{padding:5px;text-align:center;}{#3} \\\\"+
+          "\\end{array}} &  \\hspace{-1.15em}\\raise{-0.70em}{#1} \\\\"+
+          "\\style{border-top:1px solid;padding:5px;text-align:center;}{\\begin{array}\[b\]{c c c c}"+
+					"#2\\end{array}}"+
           "\\end{array}",3,""
           ],
         inferbasic: [
         	"\\begin{array}\[b\]{c c c c}"+
-        	"\\style{border-top:1px solid;padding:5px;text-align:center;}{#2} & \\hspace{-1.1em}\\raise{0.75em}{#1} \\\\"+
+        	"\\style{border-top:1px solid;padding:5px;text-align:center;}{#2} & \\hspace{-1.2em}\\raise{0.7em}{#1} \\\\"+
         	"\\end{array}",2, ""
         ]
         }
@@ -39,7 +40,7 @@ window.MathJax = {
   SVG: { font: 'STIX-Web'},
   AuthorInit: function() {
     MathJax.Hub.Register.StartupHook("Begin", function() {
-        // your code to run once MathJax is ready, e.g., custom extensions etc.        
+        // your code to run once MathJax is ready, e.g., custom extensions etc.
       MathJax.Hub.Queue( function(){
         // something to queue after the initial typesetting is done
       }
