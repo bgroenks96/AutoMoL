@@ -38,9 +38,9 @@ object Latexifier {
   
   private def ruleToString(rule: Rule, binding: Option[Binding])(implicit context: DischargeContext): String =
     (binding match {
-      case Some(b) => "\\scriptsize{(%s)}  ".format(context.lookup(b))
+      case Some(b) => "\\scriptsize{(%s)}".format(context.lookup(b))
       case _ => ""
-    }) + "  \\small{%s}".format((rule match {
+    }) + "\\hspace{0.3em}\\small{%s}".format((rule match {
       // Core VF rules
       case AndVerification => "\\wedge V"
       case AndFalsification  => "\\wedge F"
