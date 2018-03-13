@@ -15,16 +15,9 @@ final class CoreProofBuilder {
   
   def reset = {
     idGenerator.state = 0
-    undischargedAssumptions.clear()
   }
   
-  def trivialProof(s: Sentence, undis: Seq[Sentence]): Proof = undischargedAssumptions.get(s) match {
-    case Some(a) => a.proof
-    case None =>
-      val assumption = Assumption(s, Some(IntBinding(idGenerator.next)))
-      undischargedAssumptions.put(s, assumption)
-      assumption.proof
-  }
+  def trivialProof(s: Sentence, undis: Seq[Sentence]): Proof = Assumption(s, Some(IntBinding(idGenerator.next))).proof
   
   def majorProof(s: Sentence, minorProofs: Proof*): Proof = trivialProof(s, minorProofs.flatMap { p => p.undischarged.map { a => a.sentence } })
   
@@ -38,16 +31,16 @@ final class CoreProofBuilder {
   }
   
   private def negationIntro(s: Sentence, args: RuleArgs, undis: Seq[Sentence]): Proof = s match {
-    case Not(a) =>
-      val discharged = resolveDischarges(NegationIntroduction, args, a)
+    case Not(a) if args.prems.length == 1 =>
+      val discharged = resolveDischarges(NegationIntroduction, (a, args.prems.head))
       assert(!discharged.isEmpty, s"Could not find assumption $a for discharge of rule $NegationIntroduction")
       Proof(s, NegationIntroduction, args, assumptionsFrom(args) -- discharged, Some(bindGroup(discharged)))
     case _ => ???
   }
   
   private def ifIntro(s: Sentence, args: RuleArgs, undis: Seq[Sentence]): Proof = s match {
-    case Implies(ante, _) =>
-      val discharged = resolveDischarges(IfIntroduction, args, ante)
+    case Implies(ante, _) if args.prems.length == 1 =>
+      val discharged = resolveDischarges(IfIntroduction, (ante, args.prems.head))
       args.prems.head.conclusion match {
         // Require discharge for absurdity case
         case Absurdity =>
@@ -64,48 +57,49 @@ final class CoreProofBuilder {
     case _ => ???
   }
   
-  private def ifElim(s: Sentence, args: RuleArgs, undis: Seq[Sentence]): Proof = args.prems.headOption match {
-    case Some(major) => major.sentence match {
+  private def ifElim(s: Sentence, args: RuleArgs, undis: Seq[Sentence]): Proof = args match {
+    case TernaryArgs(major, lminor, rminor) => major.sentence match {
       case Implies(_, cons) =>
-        val discharged = resolveDischarges(IfElimination, args, cons)
+        val discharged = resolveDischarges(IfElimination, (cons, rminor))
         assert(!discharged.isEmpty, s"Could not find assumption $cons for discharge of rule $IfElimination")
         Proof(s, IfElimination, args, assumptionsFrom(args) -- discharged, Some(bindGroup(discharged)))
       case _ => ???
     }
-    case None => ???
+    case _ => ???
   }
   
-  private def andElim(s: Sentence, args: RuleArgs, undis: Seq[Sentence]): Proof = args.prems.headOption match {
-    case Some(major) => major.sentence match {
+  private def andElim(s: Sentence, args: RuleArgs, undis: Seq[Sentence]): Proof = args match {
+    case BinaryArgs(major, minor) => major.sentence match {
       case And(left, right) =>
-        val discharged = resolveDischarges(AndElimination, args, left, right)
+        val discharged = resolveDischarges(AndElimination, (left, minor), (right, minor))
         assert(!discharged.isEmpty, s"Could not find either assumption $left or $right for discharge of rule $AndElimination")
         Proof(s, AndElimination, args, assumptionsFrom(args) -- discharged, Some(bindGroup(discharged)))
       case _ => ???
     }
-    case None => ???
+    case _ => ???
   }
   
-  private def orElim(s: Sentence, args: RuleArgs, undis: Seq[Sentence]): Proof = args.prems.headOption match {
-    case Some(major) => major.sentence match {
+  private def orElim(s: Sentence, args: RuleArgs, undis: Seq[Sentence]): Proof = args match {
+    case TernaryArgs(major, lminor, rminor) => major.sentence match {
       case Or(left, right) =>
-        val discharged = resolveDischarges(OrElimination, args, left, right)
-        val hasLeft = discharged.exists { a => a.matches(left) }
-        val hasRight = discharged.exists { a => a.matches(right) }
+        val dischargedLeft = resolveDischarges(OrElimination, (left, lminor))
+        val dischargedRight = resolveDischarges(OrElimination, (right, rminor))
+        val hasLeft = dischargedLeft.exists { a => a.matches(left) }
+        val hasRight = dischargedRight.exists { a => a.matches(right) }
         assert(hasLeft, s"Could not find assumption $left for discharge of rule $OrElimination")
         assert(hasRight, s"Could not find assumption $right for discharge of rule $OrElimination")
+        val discharged = dischargedLeft ++ dischargedRight
         Proof(s, OrElimination, args, assumptionsFrom(args) -- discharged, Some(bindGroup(discharged)))
       case _ => ???
     }
-    case None => ???
+    case _ => ???
   }
   
-  private def resolveDischarges(rule: Rule, args: RuleArgs, discharged: Sentence*): Seq[Assumption] = {
+  private def resolveDischarges(rule: Rule, toDischarge: (Sentence, Proof)*): Seq[Assumption] = {
     for {
-      s <- discharged
-      a <- args.prems.flatMap { p => p.undischarged }.find { a => a.matches(s) }
+      (s, p) <- toDischarge
+      a <- p.undischarged.filter { a => a.matches(s) }
     } yield {
-      undischargedAssumptions.remove(s)
       a
     }
   }
