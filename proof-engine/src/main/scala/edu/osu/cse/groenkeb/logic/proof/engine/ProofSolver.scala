@@ -71,10 +71,10 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
         case EmptyProof(c) => c.matches(param.goal)
         case AnyProof(c) => c.matches(param.goal)
         case RelevantProof(c, d, r@_*) => d match {
-          case Required(assumptions@_*) => proof.conclusion.matches(c) && 
+          case Required(assumptions@_*) => (proof.conclusion.matches(c) || proof.conclusion == Absurdity) && 
                                            d.assumptions.forall { a => proof.undischarged.exists { p => p.matches(a) } }
-          case Vacuous(assumptions@_*) => proof.conclusion.matches(c)
-          case Variate(assumptions@_*) => proof.conclusion.matches(c) &&
+          case Vacuous(assumptions@_*) => (proof.conclusion.matches(c) || proof.conclusion == Absurdity)
+          case Variate(assumptions@_*) => (proof.conclusion.matches(c) || proof.conclusion == Absurdity) &&
                                           d.assumptions.exists { a => proof.undischarged.exists { p => p.matches(a) } }
         }
       }

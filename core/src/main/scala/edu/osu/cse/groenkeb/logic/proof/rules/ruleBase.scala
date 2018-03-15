@@ -9,14 +9,16 @@ abstract class BaseRule extends Rule {
   
   def bind(implicit context: ProofContext) = Some(IntBinding(context.depth))
   
-  implicit def sentenceExtensions(s: Sentence) = new {
-    def is(arg: Sentence) = s == arg
-  }
-  
   implicit def booleanExtensions(b: Boolean) = new {
     def and(arg: Boolean) = b && arg
     def or(arg: Boolean) = b || arg
     def not = !b
+  }
+  
+  implicit def sentenceExtensions(s: Sentence) = new {
+    def is(arg: Sentence) = s == arg
+    def is(arg: (Sentence, Sentence)) = (s == arg._1) or (s == arg._2)
+    def or(arg: Sentence) = (s, arg)
   }
   
   implicit def assumptionSetExtensions(assumptions: Set[Assumption]) = new {
