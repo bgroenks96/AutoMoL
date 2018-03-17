@@ -154,7 +154,7 @@ class BasicCoreProofTests {
     val not_a = Not(a)
     val not_b = Not(b)
     val ab = And(a, b)
-    val if_na_nb = Implies(a, not_b)
+    val if_na_nb = If(a, not_b)
     val context = ProofContext(not_a, standardRules, assume(if_na_nb, b))
     val solver = new ProofSolver
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -179,7 +179,7 @@ class BasicCoreProofTests {
   def testIfIntro_1() {
     val a = atom("a")
     val b = atom("b")
-    val if_a_b = Implies(a, b)
+    val if_a_b = If(a, b)
     val context = ProofContext(if_a_b, standardRules, assume(b))
     val solver = new ProofSolver
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -193,7 +193,7 @@ class BasicCoreProofTests {
     val a = atom("a")
     val b = atom("b")
     val not_a = Not(a)
-    val if_a_b = Implies(a, b)
+    val if_a_b = If(a, b)
     val context = ProofContext(if_a_b, standardRules, assume(not_a))
     val solver = new ProofSolver
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
@@ -206,7 +206,7 @@ class BasicCoreProofTests {
   def testIfElim() {
     val a = atom("a")
     val b = atom("b")
-    val if_a_b = Implies(a, b)
+    val if_a_b = If(a, b)
     val context = ProofContext(b, standardRules, assume(a, if_a_b))
     val solver = new ProofSolver
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }

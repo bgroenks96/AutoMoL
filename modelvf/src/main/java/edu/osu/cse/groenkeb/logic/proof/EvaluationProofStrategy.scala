@@ -25,7 +25,7 @@ final class EvaluationProofStrategy extends ProofStrategy {
     case Not(s) => context.rules.subset { r => r == NegationVerification }
     case And(left, right) => context.rules.subset { r => r == AndVerification }
     case Or(left, right) => context.rules.subset { r => r == OrVerification }
-    case Implies(left, right) => context.rules.subset { r => r == ConditionalVerification }
+    case If(left, right) => context.rules.subset { r => r == ConditionalVerification }
     case ForAll(term, sentence) => context.rules.subset { r => r.isInstanceOf[UniversalVerification] }
     case Exists(term, sentence) => context.rules.subset { r => r.isInstanceOf[ExistentialVerification] }
     case _ => context.rules
@@ -37,7 +37,7 @@ final class EvaluationProofStrategy extends ProofStrategy {
       case Not(s) => context.rules.subset { r => r == NegationFalsification }
       case And(left, right) => context.rules.subset { r => r == AndFalsification }
       case Or(left, right) => context.rules.subset { r => r == OrFalsification }
-      case Implies(left, right) => context.rules.subset { r => r == ConditionalFalsification }
+      case If(left, right) => context.rules.subset { r => r == ConditionalFalsification }
       case ForAll(term, sentence) => context.rules.subset { r => r.isInstanceOf[UniversalFalsification] }
       case Exists(term, sentence) => context.rules.subset { r => r.isInstanceOf[ExistentialFalsification] }
       case _ => Nil

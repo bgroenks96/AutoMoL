@@ -88,12 +88,12 @@ case object OrFalsification extends FalsificationRule {
 
 case object ConditionalFalsification extends FalsificationRule {
   def major(sentence: Sentence) = sentence match {
-    case Implies(_,_) => true
+    case If(_,_) => true
     case _ => false
   }
   
   def params(major: Option[Sentence])(implicit context: ProofContext) = major match {
-    case Some(sentence @ Implies(ante, conseq)) =>
+    case Some(sentence @ If(ante, conseq)) =>
       Some(TernaryParams(
         EmptyProof(sentence),
         RelevantProof(ante, Vacuous(), Assumption(sentence)),
@@ -103,7 +103,7 @@ case object ConditionalFalsification extends FalsificationRule {
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = args match {
     case TernaryArgs(
-      major@Proof(Implies(ante, cons), IdentityRule,_, Only(majorAssumption), _),
+      major@Proof(If(ante, cons), IdentityRule,_, Only(majorAssumption), _),
       minorAnte,
       minorCons@Proof(Absurdity, _, _, assumptionsCons, _)) if (goal is Absurdity) and (minorCons uses cons) =>
         minorAnte match {

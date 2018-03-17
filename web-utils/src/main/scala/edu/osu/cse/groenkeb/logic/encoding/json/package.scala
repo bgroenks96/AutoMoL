@@ -16,7 +16,7 @@ package object json {
     c.value.asString match {
       case Some("And") => Right(And)
       case Some("Or") => Right(Or)
-      case Some("Cond") => Right(Implies)
+      case Some("Cond") => Right(If)
       case Some(s) => Left(DecodingFailure("Unrecognized binary connective identifier: " + s, List(CursorOp.MoveLast)))
       case None => Left(DecodingFailure("Invalid JSON type for binary connective", List(CursorOp.MoveLast)))
     }
@@ -25,7 +25,7 @@ package object json {
   implicit val binaryConnectiveEncoder: Encoder[BinaryConnective] = Encoder.instance { (s: BinaryConnective) => s match {
     case And => Json.fromString("And")
     case Or => Json.fromString("Or")
-    case Implies => Json.fromString("Cond")
+    case If => Json.fromString("Cond")
   }}
   
   implicit val unaryConnectiveDecoder: Decoder[UnaryConnective] = Decoder.instance { c =>

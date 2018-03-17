@@ -6,19 +6,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestName
 
-import edu.osu.cse.groenkeb.logic.Absurdity
-import edu.osu.cse.groenkeb.logic.Domain
-import edu.osu.cse.groenkeb.logic.NamedPredicate
-import edu.osu.cse.groenkeb.logic.ObjectRelation
-import edu.osu.cse.groenkeb.logic.Sentences
-import edu.osu.cse.groenkeb.logic.Term
-import edu.osu.cse.groenkeb.logic.model.AtomicDiagram
-import edu.osu.cse.groenkeb.logic.model.FirstOrderModel
+import edu.osu.cse.groenkeb.logic._
+import edu.osu.cse.groenkeb.logic.model._
 import edu.osu.cse.groenkeb.logic.model.rules._
-import edu.osu.cse.groenkeb.logic.parse.DefaultFirstOrderOpMatcher
-import edu.osu.cse.groenkeb.logic.parse.DefaultPropOpMatcher
-import edu.osu.cse.groenkeb.logic.parse.NodeRecursiveTokenizer
-import edu.osu.cse.groenkeb.logic.parse.SentenceParser
+import edu.osu.cse.groenkeb.logic.parse._
 import edu.osu.cse.groenkeb.logic.proof.engine._
 import edu.osu.cse.groenkeb.logic.proof.rules._
 

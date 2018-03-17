@@ -42,7 +42,7 @@ final case object CorePLProofParser extends edu.osu.cse.groenkeb.logic.parse.Par
       "not(" ~> sentence <~ ")" ^^ { (_, s) => Not(s) }
       | "and(" ~> sentence ~ "," ~ sentence <~")" ^^ { (_, left,_, right) => And(left, right) }
       | "or(" ~> sentence ~ "," ~ sentence <~")" ^^ { (_, left,_, right) => Or(left, right) }
-      | "if(" ~> sentence ~ "," ~ sentence <~")" ^^ { (_, left,_, right) => Implies(left, right) }
+      | "if(" ~> sentence ~ "," ~ sentence <~")" ^^ { (_, left,_, right) => If(left, right) }
       | "#" ^^ { (_, s) => Absurdity }
       | """[a-z]""".r ^^ { (_, name) => AtomicSentence(Atom(NamedPredicate(name))) }
     )

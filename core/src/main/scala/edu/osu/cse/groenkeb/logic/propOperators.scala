@@ -42,9 +42,9 @@ case object Or extends BinaryConnective {
   override def toString() = "or"
 }
 
-case object Implies extends BinaryConnective {
+case object If extends BinaryConnective {
   def matches(op: Operator) = op match {
-    case Implies => true
+    case If => true
     case _ => false
   }
   
@@ -53,10 +53,10 @@ case object Implies extends BinaryConnective {
     case _ => throw new IllegalArgumentException(args.toString)
   }
   
-  def apply(left: Sentence, right: Sentence) = BinarySentence(left, right, Implies)
+  def apply(left: Sentence, right: Sentence) = BinarySentence(left, right, If)
   
   def unapply(sentence: Sentence) = sentence match {
-    case BinarySentence(left, right, Implies) => Some((left, right))
+    case BinarySentence(left, right, If) => Some((left, right))
     case _ => None
   }
 

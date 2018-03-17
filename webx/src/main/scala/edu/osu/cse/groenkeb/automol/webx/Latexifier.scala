@@ -93,7 +93,7 @@ object Latexifier {
     conn match{
       case And     => "\\wedge "
       case Or      => "\\vee "
-      case Implies => "\\rightarrow "
+      case If => "\\rightarrow "
       case _         => "bin:Error"
     }
   }

@@ -82,26 +82,26 @@ case object IfIntroduction extends BaseRule {
   def major(sentence: Sentence) = false
   
   def yields(conc: Sentence) = conc match {
-    case Implies(_,_) => true
+    case If(_,_) => true
     case _ => false
   }
 
   def params(major: Option[Sentence] = None)(implicit context: ProofContext) = goal match {
-    case Implies(ante, conseq) if major == None =>
+    case If(ante, conseq) if major == None =>
       Some(OptionParams(
         UnaryParams(AnyProof(conseq)),
-        UnaryParams(RelevantProof(Absurdity, Required(Assumption(ante, bind)), Assumption(Implies(ante, conseq))))))
+        UnaryParams(RelevantProof(Absurdity, Required(Assumption(ante, bind)), Assumption(If(ante, conseq))))))
     case _ => None
   }
   
   def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
-    case Implies(ante, conseq) => args match {
+    case If(ante, conseq) => args match {
       case UnaryArgs(anteDisproof@Proof(Absurdity, _, _, assumptions, _)) if anteDisproof uses ante =>
-        Some(Proof(Implies(ante, conseq), this, args, assumptions.discharge(ante), bind))
+        Some(Proof(If(ante, conseq), this, args, assumptions.discharge(ante), bind))
       case UnaryArgs(consProof@Proof(`conseq`, _, _, assumptions, _)) if consProof uses ante =>
-        Some(Proof(Implies(ante, conseq), this, args, assumptions.discharge(ante), bind))
+        Some(Proof(If(ante, conseq), this, args, assumptions.discharge(ante), bind))
       case UnaryArgs(Proof(`conseq`, _, _, assumptions, _)) =>
-        Some(Proof(Implies(ante, conseq), this, args, assumptions))
+        Some(Proof(If(ante, conseq), this, args, assumptions))
       case _ => None
     }
     case _ => None

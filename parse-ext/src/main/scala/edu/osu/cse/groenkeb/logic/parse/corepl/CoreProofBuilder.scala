@@ -39,7 +39,7 @@ final class CoreProofBuilder {
   }
   
   private def ifIntro(s: Sentence, args: RuleArgs, undis: Seq[Sentence]): Proof = s match {
-    case Implies(ante, _) if args.prems.length == 1 =>
+    case If(ante, _) if args.prems.length == 1 =>
       val discharged = resolveDischarges(IfIntroduction, (ante, args.prems.head))
       args.prems.head.conclusion match {
         // Require discharge for absurdity case
@@ -59,7 +59,7 @@ final class CoreProofBuilder {
   
   private def ifElim(s: Sentence, args: RuleArgs, undis: Seq[Sentence]): Proof = args match {
     case TernaryArgs(major, lminor, rminor) => major.sentence match {
-      case Implies(_, cons) =>
+      case If(_, cons) =>
         val discharged = resolveDischarges(IfElimination, (cons, rminor))
         assert(!discharged.isEmpty, s"Could not find assumption $cons for discharge of rule $IfElimination")
         Proof(s, IfElimination, args, assumptionsFrom(args) -- discharged, Some(bindGroup(discharged)))
