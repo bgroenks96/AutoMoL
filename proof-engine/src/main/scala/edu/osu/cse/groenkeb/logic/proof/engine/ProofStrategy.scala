@@ -1,22 +1,16 @@
 package edu.osu.cse.groenkeb.logic.proof.engine
 
+import edu.osu.cse.groenkeb.logic.Sentence
 import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof._
 
-import scala.collection.immutable.Seq
-
 trait ProofStrategy {
   /**
-   * Returns a sequence of rules in order of strategic precedence given the current proof context. 
-   * The returned sequence must be a subset of the rule set in the given context.
+   * Generates a sequence of possible Actions (inference rule + optional major premise)
+   * in descending order of relevance/confidence that the solver should apply in searching
+   * for a proof the given goal.
    */
-  def rules(implicit context: ProofContext): RuleSet
-  
-  /**
-   * Returns a sequence of premises in order of strategic precedence given the current proof context.
-   * The returned sequence must be a subset of the premises in the given context.
-   */
-  def premises(implicit context: ProofContext): Seq[Premise]
+  def actions(implicit context: ProofContext): Seq[ProofStrategy.Action]
   
   /**
    * Returns an appropriate final ProofResult for the given ProofResult, according to this strategy.
@@ -24,4 +18,8 @@ trait ProofStrategy {
    * Cut where the search engine would have defaulted to Continue, etc).
    */
   def decide(result: ProofResult)(implicit context: ProofContext): ProofResult
+}
+
+object ProofStrategy {
+  final case class Action(rule: Rule, major: Option[Sentence] = None)
 }

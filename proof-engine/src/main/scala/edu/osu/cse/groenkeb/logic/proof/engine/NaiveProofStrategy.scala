@@ -1,16 +1,21 @@
 package edu.osu.cse.groenkeb.logic.proof.engine
 
-import edu.osu.cse.groenkeb.logic.proof.Proof
-import edu.osu.cse.groenkeb.logic.proof.Premise
+import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.proof.rules.Rule
 import edu.osu.cse.groenkeb.logic.proof.rules.RuleSet
+import edu.osu.cse.groenkeb.logic.proof.engine.ProofStrategy.Action
 import scala.collection.immutable.Seq
-import edu.osu.cse.groenkeb.logic.proof.ProofContext
 
 case class NaiveProofStrategy() extends ProofStrategy {
-  def rules(implicit context: ProofContext): RuleSet = context.rules
-  
-  def premises(implicit context: ProofContext): Seq[Premise] = Seq(context.available.toSeq:_*)
+
+  def actions(implicit context: ProofContext) =
+    for {
+      rule <- context.rules
+      action <- context.available.filter { p => rule.major(p.sentence) } match {
+        case avail if avail.isEmpty => Seq(Action(rule))
+        case avail => avail.map { p => Action(rule, Some(p.sentence)) }.toSeq
+      }
+    } yield action
   
   def decide(result: ProofResult)(implicit context: ProofContext): ProofResult = result
 }

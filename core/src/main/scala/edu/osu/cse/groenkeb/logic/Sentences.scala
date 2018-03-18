@@ -9,7 +9,5 @@ object Sentences {
   
   def not(s: Sentence) = Not(s)
   
-  def nil() = NullSentence
-  
   def absurdity = Absurdity
 }

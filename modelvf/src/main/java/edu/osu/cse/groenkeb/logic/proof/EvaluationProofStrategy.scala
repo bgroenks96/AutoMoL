@@ -6,17 +6,14 @@ import edu.osu.cse.groenkeb.logic.model.rules._
 import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof.engine.ProofResult
 import edu.osu.cse.groenkeb.logic.proof.engine.ProofStrategy
-
-import scala.collection.immutable.Seq
+import edu.osu.cse.groenkeb.logic.proof.engine.ProofStrategy.Action
 
 final class EvaluationProofStrategy extends ProofStrategy {
 
-  def rules(implicit context: ProofContext): RuleSet = context.goal match {
-    case Absurdity => falsificationRules
-    case _ => verificationRules
+  def actions(implicit context: ProofContext) = context.goal match {
+    case Absurdity => actions(falsificationRules, context.available)
+    case _ => actions(verificationRules, context.available)
   }
-  
-  def premises(implicit context: ProofContext): Seq[Premise] = Seq(context.available.toSeq:_*)
   
   def decide(result: ProofResult)(implicit context: ProofContext): ProofResult = result
   
@@ -43,4 +40,13 @@ final class EvaluationProofStrategy extends ProofStrategy {
       case _ => Nil
     }
   })
+  
+  private def actions(rules: RuleSet, available: Set[Premise]) =
+    for {
+      rule <- rules
+      action <- available.filter { p => rule.major(p.sentence) } match {
+        case avail if avail.isEmpty => Seq(Action(rule))
+        case avail => avail.map { p => Action(rule, Some(p.sentence)) }.toSeq
+      }
+    } yield action
 }

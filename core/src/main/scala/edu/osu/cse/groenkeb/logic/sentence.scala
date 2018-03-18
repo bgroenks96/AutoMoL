@@ -96,18 +96,3 @@ final case class QuantifiedSentence(val operand: Sentence, val quantifier: Quant
   override def toString() = String.format("%s(%s)", quantifier, operand)
 }
 
-final case object NullSentence extends Sentence
-{
-  def matches(s: Sentence) = s match {
-    case NullSentence => true
-    case _ => false
-  }
-  
-  def contains(s: Sentence) = false
-  
-  def substitute(orig: Term, sub: Term) = this
-  
-  def decompose() = Nil
-  
-  override def toString() = ""
-}

@@ -2,14 +2,11 @@ package edu.osu.cse.groenkeb.logic.proof.engine
 
 import scala.Left
 import scala.Right
-import scala.collection.immutable.Nil
-import scala.collection.immutable.Seq
-import scala.collection.immutable.Set
-import scala.collection.immutable.Stream
 
 import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof._
+import edu.osu.cse.groenkeb.logic.proof.engine.ProofStrategy.Action
 
 sealed abstract class SolverOpts
 case object Trace extends SolverOpts
@@ -19,14 +16,14 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
   
   def prove(context: ProofContext): Stream[ProofResult] = {
     implicit val cntxt = context
-    ProofSearch(step { proof(strategy.premises) } )()
+    ProofSearch(step { proof(context.available.toSeq) } )()
   }
 
-  private def proof(premises: scala.Seq[Premise])(implicit context: ProofContext): ProofResult = {
+  private def proof(premises: Seq[Premise])(implicit context: ProofContext): ProofResult = {
     if (trace) println(context)
     premises match {
-      case Nil => inferFrom(RuleSet(strategy.rules))
-      case Seq(head, rem @ _*) => head match {
+      case Nil => tryInfer(strategy.actions)
+      case Seq(head, rem@_*) => head match {
         case a: Assumption if context.hasGoal(a.sentence) => success(a.proof, proof(rem))
         case p @ Proof(s, rule, args, undischarged, _) if context.hasGoal(s) => success(p, { proof(rem) })
         case _ => proof(rem)
@@ -34,7 +31,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     }
   }
 
-  private def inferFrom(rules: RuleSet)(implicit context: ProofContext): ProofResult = {
+  private def tryInfer(actions: scala.Seq[Action])(implicit context: ProofContext): ProofResult = {
     // inferFromResults matches the given sequence of Success results to a RuleArgs type and performs the final inference
     // step.
     def inferFromUnaryResult(res1: ProofResult)(implicit rule: Rule): Option[Proof] = res1 match {
@@ -161,21 +158,13 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
         case Some(proof) => pending((c, r) => r.head.head, step { success(proof) })
       }
     }
-
-    rules match {
-      case RuleSet(Nil) => failure()
-      case RuleSet(Seq(head, rem @ _*)) => 
-        def tryNext(rule: Rule, majors: Seq[Option[Sentence]]): ProofResult = majors match {
-          case Nil => failure({ inferFrom(RuleSet(immutable(rem))) })
-          case Seq(head, rem @ _*) => rule.params(head) match {
-            case None => failure({ tryNext(rule, immutable(rem)) })
-            case Some(params) => pendingParams(params)(rule).andThen(step({
-              tryNext(rule, immutable(rem))
-            }))
-          }
-        }
-        
-        tryNext(head, Seq(None) ++ (strategy.premises map { p => Some(p.sentence) }))
+    
+    actions match {
+      case Nil => failure()
+      case Seq(Action(rule, major), rem@_*) => rule.params(major) match {
+        case None => failure({ tryInfer(rem) })
+        case Some(params) => pendingParams(params)(rule).andThen(step({ tryInfer(rem) }))
+      }
     }
   }
 
@@ -186,11 +175,11 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     }
     case AnyProof(conc) => {
       val newContext = context.withGoal(conc, rule)
-      proof(strategy.premises(newContext))(newContext)
+      proof(newContext.available.toSeq)(newContext)
     }
     case RelevantProof(conc, discharges, restrict@_*) => {
       val newContext = context.withGoal(conc, rule).withAssumptions(discharges.assumptions:_*).restrict(restrict:_*)
-      proof(strategy.premises(newContext))(newContext)
+      proof(newContext.available.toSeq)(newContext)
     }
   }
   
