@@ -116,7 +116,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
         }
         case Seq(s1, s2, s3) => failure()
         // ternaryResults only supports three results for two parameters
-        case _ => throw new IllegalArgumentException("unexpected parameter count for binary results")
+        case _ => throw new IllegalArgumentException("unexpected parameter count for ternary results")
       }
     }
     
@@ -133,8 +133,11 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     }
 
     def optionResults(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]]): ProofResult = paramResults match {
-      case Seq(res) => res.head
-      case _ => throw new IllegalArgumentException("unexpected parameter count for binary results")
+      // OptionParams are traversed by a single chain of proof steps, so we can assume that the given results should have only
+      // a single stream of results
+      case Seq(Stream(head, tail@_*)) => head
+      case Seq(Stream()) => failure()
+      case _ => throw new IllegalArgumentException("unexpected parameter count for option results")
     }
 
     // ------------------------- //
@@ -150,6 +153,8 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
                 step { tryParam(param2) })
       case NParams(params) => pending(nResults(immutable(params)), params.map { p => step { tryParam(p) }}:_*)
       case OptionParams(opts @ _*) =>
+        // We want option params to be applied one at a time, so here they are collapsed into a single chain of
+        // proof steps, where each option is appended as a continuation to the previously applied step.
         pending(optionResults, opts.map {
           params => step({ pendingParams(params) })
         }.reduce((acc, step) => acc.then(step)))
