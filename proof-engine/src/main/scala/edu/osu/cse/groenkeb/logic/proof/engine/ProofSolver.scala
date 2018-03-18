@@ -36,56 +36,47 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
 
   private def inferFrom(rules: RuleSet)(implicit context: ProofContext): ProofResult = {
     // inferFromResults matches the given sequence of Success results to a RuleArgs type and performs the final inference
-    // step. It is assumed that the given result has already been validated to fulfill the necessary inference requirements.
-    // Failure to meet this precondition is an error on the part of the caller.
-    def inferFromUnaryResult(res0: Success)(implicit rule: Rule): Proof =
-      rule.infer(UnaryArgs(res0.proof)) match {
-        case Some(proof) => proof
-        // Exceptional case: one or more of the supplied Success results failed to satisfy the precondition.
-        // This would indicate a bug in either the calling code or in the rule.
-        case None => throw new IllegalArgumentException("one or more arguments failed to satisfy the rule [%s]: %s".format(rule, res0))
+    // step.
+    def inferFromUnaryResult(res1: ProofResult)(implicit rule: Rule): Option[Proof] = res1 match {
+      case Success(subproof, _, _) => rule.infer(UnaryArgs(subproof)) match {
+        case Some(proof) => Some(proof)
+        case None => None
       }
+      case _ => None
+    }
 
-    def inferFromBinaryResults(res0: Success, res1: Success)(implicit rule: Rule): Proof =
-      rule.infer(BinaryArgs(res0.proof, res1.proof)) match {
-        case Some(proof) => proof
-        case None => throw new IllegalArgumentException("one or more arguments failed to satisfy the rule [%s]: %s %s".format(rule, res0, res1))
+    def inferFromBinaryResults(res1: ProofResult, res2: ProofResult)(implicit rule: Rule): Option[Proof] = (res1, res2) match {
+      case (Success(subproof1, _, _), Success(subproof2, _, _)) => rule.infer(BinaryArgs(subproof1, subproof2)) match {
+        case Some(proof) => Some(proof)
+        case None => None
       }
+      case _ => None
+    }
 
-    def inferFromTernaryResults(res0: Success, res1: Success, res2: Success)(implicit rule: Rule): Proof =
-      rule.infer(TernaryArgs(res0.proof, res1.proof, res2.proof)) match {
-        case Some(proof) => proof
-        case None => throw new IllegalArgumentException("one or more arguments failed to satisfy the rule [%s]: %s %s %s".format(rule, res0, res1, res2))
-      }
-    
-    def inferFromNResults(resN: Seq[Success])(implicit rule: Rule): Proof =
-      rule.infer(NArgs(resN.map { s => s.proof })) match {
-        case Some(proof) => proof
-        case None => throw new IllegalArgumentException("one or more arguments failed to satisfy the rule [%s]: %s".format(rule, resN))
-      }
-
-    // onlyValid filters the given proof results to include only those that are both successful and 'valid', i.e. satisfy
-    // the specified goal as well as the requirements for discharge.
-    def onlyValid(results: Stream[ProofResult], param: RuleParam): Stream[Success] = {
-      def isValid(proof: Proof) = param match {
-        case EmptyProof(c) => c.matches(param.goal)
-        case AnyProof(c) => c.matches(param.goal)
-        case RelevantProof(c, d, r@_*) => d match {
-          case Required(assumptions@_*) => (proof.conclusion.matches(c) || proof.conclusion == Absurdity) && 
-                                           d.assumptions.forall { a => proof.undischarged.exists { p => p.matches(a) } }
-          case Vacuous(assumptions@_*) => (proof.conclusion.matches(c) || proof.conclusion == Absurdity)
-          case Variate(assumptions@_*) => (proof.conclusion.matches(c) || proof.conclusion == Absurdity) &&
-                                          d.assumptions.exists { a => proof.undischarged.exists { p => p.matches(a) } }
+    def inferFromTernaryResults(res1: ProofResult, res2: ProofResult, res3: ProofResult)
+                               (implicit rule: Rule): Option[Proof] = (res1, res2, res3) match {
+      case (Success(subproof1, _, _), Success(subproof2, _, _), Success(subproof3, _, _)) =>
+        rule.infer(TernaryArgs(subproof1, subproof2, subproof3)) match {
+          case Some(proof) => Some(proof)
+          case None => None
         }
-      }
-      
-      results.collect { case res:Success if isValid(res.proof) => res }
+      case _ => None
+    }
+    
+    def inferFromNResults(resN: Seq[ProofResult])(implicit rule: Rule): Option[Proof] = resN match {
+      case results if results.forall { r => r.isInstanceOf[Success] } =>
+        rule.infer(NArgs(resN.collect({case Success(subproof, _, _) => subproof}))) match {
+          case Some(proof) => Some(proof)
+          case None => None
+        }
+      case _ => None
     }
 
     // advance discards the head of the first Stream in 'paramResults' that has more than a single result, leaving the remainder
     // of the Streams unchanged.
     def advance(paramResults: scala.collection.Seq[Stream[ProofResult]]): Seq[Stream[ProofResult]] = paramResults match {
       case Nil => Nil
+      case Seq(Stream(head)) => Seq(Stream())
       case Seq(Stream(head, next, tail@_*), rem@_*) => Seq(Stream.cons(next, { tail.toStream })) ++ rem
       case Seq(Stream(head), rem@_*) => Seq(Stream(head)) ++ advance(rem)
     }
@@ -93,11 +84,12 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     // ------ Aggregator Functions ------- //
 
     def unaryResults(p0: RuleParam)(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])(implicit rule: Rule): ProofResult =
-      paramResults match {
-        case Seq(results0) => onlyValid(results0, p0) match {
-          case Stream() => failure()
-          case Stream(head, rem@_*) => success(inferFromUnaryResult(head), { unaryResults(p0)(resultContext, Seq(rem.toStream)) })
+      paramResults.map { s => s.filter { r => r.isInstanceOf[Success] } } match {
+        case results@Seq(Stream(head, rem@_*)) => inferFromUnaryResult(head) match {
+          case Some(proof) => success(proof, { unaryResults(p0)(resultContext, advance(results)) })
+          case None => failure({ unaryResults(p0)(resultContext, advance(results)) })
         }
+        case Seq(s1) => failure()
         // unaryResults only supports a single set of results for a single parameter
         case _ => throw new IllegalArgumentException("unexpected parameter count for unary results")
       }
@@ -105,12 +97,12 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
 
     def binaryResults(p0: RuleParam, p1: RuleParam)(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])
                      (implicit rule: Rule): ProofResult = {
-      paramResults match {
-        case Seq(results0, results1) => (onlyValid(results0, p0), onlyValid(results1, p1)) match {
-          case (filtered0, filtered1) if filtered0.isEmpty || filtered1.isEmpty => failure()
-          case (filtered0, filtered1) =>
-            success(inferFromBinaryResults(filtered0.head, filtered1.head), { binaryResults(p0, p1)(resultContext, advance(paramResults)) })
+      paramResults.map { s => s.filter { r => r.isInstanceOf[Success] } } match {
+        case results@Seq(Stream(head1, rem1@_*), Stream(head2, rem2@_*)) => inferFromBinaryResults(head1, head2) match {
+          case Some(proof) => success(proof, { binaryResults(p0, p1)(resultContext, advance(results)) })
+          case None => failure({ binaryResults(p0, p1)(resultContext, advance(results)) })
         }
+        case Seq(s1, s2) => failure()
         // binaryResults only supports two results for two parameters
         case _ => throw new IllegalArgumentException("unexpected parameter count for binary results")
       }
@@ -119,12 +111,13 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     def ternaryResults(p0: RuleParam, p1: RuleParam, p2: RuleParam)
                       (resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])
                       (implicit rule: Rule): ProofResult = {
-      paramResults match {
-        case Seq(r0, r1, r2) => (onlyValid(r0, p0), onlyValid(r1, p1), onlyValid(r2, p2)) match {
-          case (f0, f1, f2) if f0.isEmpty || f1.isEmpty || f2.isEmpty => failure()
-          case (f0, f1, f2) =>
-            success(inferFromTernaryResults(f0.head, f1.head, f2.head), { ternaryResults(p0, p1, p2)(resultContext, advance(paramResults)) })
+      paramResults.map { s => s.filter { r => r.isInstanceOf[Success] } } match {
+        case results@Seq(Stream(head1, rem1@_*), Stream(head2, rem2@_*), Stream(head3, rem3@_*)) => 
+          inferFromTernaryResults(head1, head2, head3) match {
+            case Some(proof) => success(proof, { ternaryResults(p0, p1, p2)(resultContext, advance(results)) })
+            case None => failure({ ternaryResults(p0, p1, p2)(resultContext, advance(results)) })
         }
+        case Seq(s1, s2, s3) => failure()
         // ternaryResults only supports three results for two parameters
         case _ => throw new IllegalArgumentException("unexpected parameter count for binary results")
       }
@@ -132,12 +125,12 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     
     def nResults(params: Seq[RuleParam])
                 (resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])(implicit rule: Rule): ProofResult = {
-      val filtered = for ((res, p) <- (paramResults zip params)) yield onlyValid(res, p)
-      filtered match {
+      paramResults.map { s => s.filter { r => r.isInstanceOf[Success] } } match {
         case anyMissing if anyMissing.length < params.length => failure()
-        case all if all.forall { res => !res.isEmpty } =>
-          success(inferFromNResults(filtered.map { r => r.head }),
-          { nResults(params)(resultContext, advance(paramResults)) })
+        case all if all.forall { res => !res.isEmpty } => inferFromNResults(all.map { r => r.head }) match {
+          case Some(proof) => success(proof, { nResults(params)(resultContext, advance(all)) })
+          case None => failure({ nResults(params)(resultContext, advance(all)) })
+        }
         case _ => failure()
       }
     }

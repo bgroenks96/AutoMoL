@@ -20,6 +20,7 @@ import edu.osu.cse.groenkeb.logic.proof.rules.RuleSet
 case class FirstOrderModel(val diagram: AtomicDiagram) extends Model {
   def domain = diagram.domain
   def withDomain(domain: Domain) = FirstOrderModel(AtomicDiagram(domain.merge(this.domain), diagram.relations:_*))
+  def validate(atom: Atom): Boolean = diagram.validate(atom)
   def verify(sentence: Sentence): Boolean = sentence match {
     case AtomicSentence(atom) => diagram.has(atom.toRelation)
     case UnarySentence(operand, conn) => conn.evaluate(verify, operand)

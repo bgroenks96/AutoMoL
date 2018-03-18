@@ -24,15 +24,19 @@ case class ModelRule(val model: FirstOrderModel) extends BaseRule {
   }
 
   def infer(args: RuleArgs)(implicit context: ProofContext) = goal match {
-    case AtomicSentence(atom) => args match {
-      case EmptyArgs if model.verify(goal) => Some(Proof(goal, ModelRule.this, args, Set()))
-      case _ => None
-    }
-    case Absurdity => args match {
-      case UnaryArgs(Proof(s: AtomicSentence, IdentityRule, _, assumptions, _)) if !model.verify(s) =>
-        Some(Proof(Absurdity, ModelRule.this, args, assumptions))
-      case _ => None
-    }
+    case AtomicSentence(atom) =>
+      if (!model.validate(atom)) throw new IllegalArgumentException(String.format("%s is not defined in the model", atom))
+      args match {
+        case EmptyArgs if model.verify(goal) => Some(Proof(goal, ModelRule.this, args, Set()))
+        case _ => None
+      }
+    case Absurdity =>
+      args match {
+        case UnaryArgs(Proof(s: AtomicSentence, IdentityRule, _, assumptions, _)) if !model.verify(s) =>
+          if (!model.validate(s.atom)) throw new IllegalArgumentException(String.format("%s is not defined in the model", s.atom))
+          Some(Proof(Absurdity, ModelRule.this, args, assumptions))
+        case _ => None
+      }
     case _ => None
   }
 
