@@ -45,8 +45,8 @@ class ModelVerificationTests {
   
   @Test
   def testFalsifyTrivial() {
-    val domain = Domain()
-    val diagram = AtomicDiagram(domain)
+    val domain = Domain(Term("a"))
+    val diagram = AtomicDiagram(domain, emptyMonadicRelation("F"))
     val model = FirstOrderModel(diagram)
     val rules = RuleSet(Seq(ModelRule(model)))
     val context = ProofContext(Absurdity, rules, Seq(Assumption(Sentences.atom("F[a]"))))
@@ -75,8 +75,8 @@ class ModelVerificationTests {
   
   @Test
   def testFalsifyAnd() {
-    val domain = Domain()
-    val diagram = AtomicDiagram(domain)
+    val domain = Domain(Term("a"))
+    val diagram = AtomicDiagram(domain, emptyMonadicRelation("R"), emptyMonadicRelation("Q"))
     val model = FirstOrderModel(diagram)
     val rules = RuleSet(Seq(ModelRule(model), AndFalsification))
     val context = ProofContext(Absurdity, rules, Seq(Assumption(Sentences.and(Sentences.atom("R[a]"), Sentences.atom("Q[a]")))))
@@ -105,7 +105,7 @@ class ModelVerificationTests {
     implicit val opMatcher = new DefaultPropOpMatcher()
     val sentence = "(and (and R[a] R[b]) (and R[c] R[d]))"
     val parser = SentenceParser(NodeRecursiveTokenizer())
-    val model = FirstOrderModel()
+    val model = FirstOrderModel(AtomicDiagram(Domain(Term("a"), Term("b"), Term("c"), Term("d")), emptyMonadicRelation("R")))
     val rules = RuleSet(Seq(ModelRule(model), AndFalsification))
     val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
     val solver = new ProofSolver
@@ -133,7 +133,7 @@ class ModelVerificationTests {
     implicit val opMatcher = new DefaultPropOpMatcher()
     val sentence = "(or R[a] R[b])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
-    val model = FirstOrderModel()
+    val model = FirstOrderModel(AtomicDiagram(Domain(Term("a"), Term("b")), emptyMonadicRelation("R")))
     val rules = RuleSet(Seq(ModelRule(model), OrFalsification))
     val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
     val solver = new ProofSolver
@@ -147,7 +147,7 @@ class ModelVerificationTests {
     implicit val opMatcher = new DefaultPropOpMatcher()
     val sentence = "(not R[a])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
-    val model = FirstOrderModel()
+    val model = FirstOrderModel(AtomicDiagram(Domain(Term("a"), Term("b")), emptyMonadicRelation("R")))
     val rules = RuleSet(Seq(ModelRule(model), NegationVerification))
     val context = ProofContext(parser.parse(sentence), rules, Nil)
     val solver = new ProofSolver
@@ -189,7 +189,7 @@ class ModelVerificationTests {
     implicit val opMatcher = new DefaultPropOpMatcher()
     val sentence = "(if R[a] R[b])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
-    val model = FirstOrderModel();
+    val model = FirstOrderModel(AtomicDiagram(Domain(Term("a"), Term("b")), emptyMonadicRelation("R")));
     val rules = RuleSet(Seq(ModelRule(model), ConditionalVerification))
     val context = ProofContext(parser.parse(sentence), rules, Nil)
     val solver = new ProofSolver
@@ -203,7 +203,7 @@ class ModelVerificationTests {
     implicit val opMatcher = new DefaultPropOpMatcher()
     val sentence = "(if R[a] R[b])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
-    val model = FirstOrderModel(parser.parse("R[a]"));
+    val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("Q[b]"));
     val rules = RuleSet(Seq(ModelRule(model), ConditionalFalsification))
     val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
     val solver = new ProofSolver
@@ -245,7 +245,7 @@ class ModelVerificationTests {
     implicit val opMatcher = new DefaultPropOpMatcher()
     val sentence = "(or F[a] (not F[a]))"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
-    val model = FirstOrderModel();
+    val model = FirstOrderModel(AtomicDiagram(Domain(Term("a")), emptyMonadicRelation("F")))
     val rules = standardRules(model)
     val context = ProofContext(parser.parse(sentence), rules, Nil)
     val solver = new ProofSolver
@@ -273,7 +273,7 @@ class ModelVerificationTests {
     implicit val opMatcher = new DefaultPropOpMatcher()
     val sentence = "or Q[b] (if Q[a] R[c])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
-    val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("R[b]"), parser.parse("Q[a]"));
+    val model = FirstOrderModel(parser.parse("R[a]"), parser.parse("R[b]"), parser.parse("Q[a]"), parser.parse("Q[c]"));
     val rules = standardRules(model)
     val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
     val solver = new ProofSolver
@@ -343,7 +343,7 @@ class ModelVerificationTests {
     implicit val opMatcher = new DefaultFirstOrderOpMatcher()
     val sentence = "Ex R[x]"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
-    val model = FirstOrderModel(parser.parse("Q[a]"), parser.parse("Q[b]"));
+    val model = FirstOrderModel(AtomicDiagram(Domain(Term("a"), Term("b")), emptyMonadicRelation("R")));
     val rules = standardRules(model)
     val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
     val solver = new ProofSolver
@@ -357,7 +357,7 @@ class ModelVerificationTests {
     implicit val opMatcher = new DefaultFirstOrderOpMatcher()
     val sentence = "Ex R[a]"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
-    val model = FirstOrderModel(parser.parse("Q[a]"), parser.parse("Q[b]"));
+    val model = FirstOrderModel(AtomicDiagram(Domain(Term("a")), emptyMonadicRelation("R")));
     val rules = standardRules(model)
     val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
     val solver = new ProofSolver
@@ -371,7 +371,7 @@ class ModelVerificationTests {
     implicit val opMatcher = new DefaultFirstOrderOpMatcher()
     val sentence = "Ex (and Q[x] R[x])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
-    val model = FirstOrderModel(parser.parse("Q[a]"), parser.parse("Q[b]"));
+    val model = FirstOrderModel(parser.parse("Q[a]"), parser.parse("Q[b]"), parser.parse("R[c]"));
     val rules = standardRules(model)
     val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
     val solver = new ProofSolver
@@ -413,7 +413,7 @@ class ModelVerificationTests {
     implicit val opMatcher = new DefaultFirstOrderOpMatcher()
     val sentence = "and (Ex (and Q[x] R[x])) (Ex Q[x])"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
-    val model = FirstOrderModel(parser.parse("Q[a]"), parser.parse("Q[b]"));
+    val model = FirstOrderModel(parser.parse("Q[a]"), parser.parse("Q[b]"), parser.parse("R[c]"));
     val rules = standardRules(model)
     val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
     val solver = new ProofSolver
@@ -427,7 +427,7 @@ class ModelVerificationTests {
     implicit val opMatcher = new DefaultPropOpMatcher()
     val sentence = "(not (not (not R[a])))"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
-    val model = FirstOrderModel()
+    val model = FirstOrderModel(AtomicDiagram(Domain(Term("a")), emptyMonadicRelation("R")))
     val rules = standardRules(model)
     val context = ProofContext(parser.parse(sentence), rules, Seq())
     val solver = new ProofSolver
@@ -441,7 +441,7 @@ class ModelVerificationTests {
     implicit val opMatcher = new DefaultPropOpMatcher()
     val sentence = "(not (not (not (not R[a]))))"
     val parser = new SentenceParser(new NodeRecursiveTokenizer())
-    val model = FirstOrderModel()
+    val model = FirstOrderModel(AtomicDiagram(Domain(Term("a")), emptyMonadicRelation("R")))
     val rules = standardRules(model)
     val context = ProofContext(Absurdity, rules, Seq(Assumption(parser.parse(sentence))))
     val solver = new ProofSolver
@@ -449,6 +449,10 @@ class ModelVerificationTests {
     Assert.assertFalse(results.isEmpty)
     ProofUtils.prettyPrint(results.head.proof)
   }
+  
+  private def emptyMonadicRelation(name: String) = EmptyRelation(NamedPredicate(name), 1)
+  
+  private def emptyDiadicRelation(name: String) = EmptyRelation(NamedPredicate(name), 2)
   
   private def standardRules(model: FirstOrderModel) =
     RuleSet(Seq(ModelRule(model),

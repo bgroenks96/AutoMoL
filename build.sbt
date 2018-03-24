@@ -20,18 +20,6 @@ lazy val core = project.enablePlugins(ScalaJSPlugin)
     name := "automol-core"
   )
 
-lazy val proofEngine = project.in(file("proof-engine")).dependsOn(core)
-    .settings(
-      commonSettings,
-      name := "automol-proof-engine"
-    )
-
-lazy val modelvf = project.dependsOn(proofEngine)
-    .settings(
-      commonSettings,
-      name := "automol-modelvf"
-    )
-
 lazy val parseExt = project.in(file("parse-ext")).dependsOn(core)
     .settings(
       commonSettings,
@@ -41,6 +29,18 @@ lazy val parseExt = project.in(file("parse-ext")).dependsOn(core)
         "com.codecommit" %% "parseback-core" % parsebackVersion,
         "com.codecommit" %% "parseback-cats" % parsebackVersion
       )
+    )
+    
+lazy val proofEngine = project.in(file("proof-engine")).dependsOn(core, parseExt)
+    .settings(
+      commonSettings,
+      name := "automol-proof-engine"
+    )
+
+lazy val modelvf = project.dependsOn(proofEngine)
+    .settings(
+      commonSettings,
+      name := "automol-modelvf"
     )
 
 lazy val webUtils = project.in(file("web-utils")).dependsOn(core).enablePlugins(ScalaJSPlugin)
@@ -54,7 +54,7 @@ lazy val webUtils = project.in(file("web-utils")).dependsOn(core).enablePlugins(
         ).map(_ % circeVersion)
     )
 
-lazy val server = project.dependsOn(webUtils, modelvf, parseExt)
+lazy val server = project.dependsOn(webUtils, modelvf)
     .settings(
         commonSettings,
         name := "automol-server",
