@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
 )
 
 val circeVersion = "0.9.0-M2"
-val parsebackVersion = "0.3"
+val attoVersion = "0.6.2-M1"
 
 lazy val core = project.enablePlugins(ScalaJSPlugin)
   .settings(
@@ -25,10 +25,7 @@ lazy val parseExt = project.in(file("parse-ext")).dependsOn(core)
       commonSettings,
       name := "automol-parse-ext",
       resolvers += "bintray-djspiewak-maven" at "https://dl.bintray.com/djspiewak/maven",
-      libraryDependencies ++= Seq(
-        "com.codecommit" %% "parseback-core" % parsebackVersion,
-        "com.codecommit" %% "parseback-cats" % parsebackVersion
-      )
+      libraryDependencies += "org.tpolecat" %% "atto-core"  % attoVersion
     )
     
 lazy val proofEngine = project.in(file("proof-engine")).dependsOn(core, parseExt)

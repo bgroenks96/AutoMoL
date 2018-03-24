@@ -47,7 +47,7 @@ final case class AtomicSentence(atom: Atom) extends Sentence
 
 final case class BinarySentence(val left: Sentence, val right: Sentence, val conn: BinaryConnective) extends Sentence
 {
-  require(left != Absurdity && right != Absurdity)
+  require(left != Absurdity && right != Absurdity, (left, right))
   def matches(s: Sentence) = s match {
     case BinarySentence(left, right, conn) => this.left.matches(left) && this.right.matches(right) && this.conn.matches(conn)
     case _ => false

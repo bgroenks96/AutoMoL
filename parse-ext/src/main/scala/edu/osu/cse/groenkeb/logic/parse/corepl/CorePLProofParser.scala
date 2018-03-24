@@ -1,8 +1,7 @@
 package edu.osu.cse.groenkeb.logic.parse.corepl
 
-import cats.Eval
-import parseback._
-import parseback.compat.cats._
+import atto._, atto.ParseResult._, Atto._
+import cats.implicits._
 import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.parse.ParserException
 import edu.osu.cse.groenkeb.logic.proof._
@@ -13,66 +12,79 @@ final case object CorePLProofParser extends edu.osu.cse.groenkeb.logic.parse.Par
   
     val builder = new CoreProofBuilder()
     
-    lazy val proof: Parser[Proof] = (
-      "d(" ~> list ~ "," ~ sentence ~ "," ~ inference <~ ")" ^^ {
-        (_, prems, _, conc, _, inf) => inf match {
+    lazy val proof: Parser[Proof] = {
+      (string("d(") ~> list <~ char(','), sentence <~ char(','), inference <~ char(')')).mapN {
+        (prems, conc, inf) => inf match {
           case Left((rule, args)) => builder.proof(conc, rule, args, prems)
           case Right(`conc`) => builder.trivialProof(conc, prems)
           case Right(s) => throw new ParserException(s"malformed proof term: trivial inference premise $s does not match conclusion $conc")
         }
       }
-    )
+    }
     
-    lazy val inference: Parser[Either[(Rule, RuleArgs), Sentence]] = (
-      rule ^^ { (_, rule, args) => Left((rule, args)) }
-      | sentence ^^ { (_, s) => Right(s) }
-    )
+    lazy val inference: Parser[Either[(Rule, RuleArgs), Sentence]] = {
+      rule.map { ruleAndArgs => Left(ruleAndArgs) }
+    } | sentence.map { s => Right(s) }
     
-    lazy val list: Parser[List[Sentence]] = (
-      "[" ~> innerList <~ "]" ^^ { (_, sentences) => sentences }
-      | "[]" ^^ { (_,_) => Nil }
-    )
+  
+    lazy val list: Parser[List[Sentence]] = {
+      (char('[') ~> innerList <~ char(']')) |
+      string("[]").map { _ => Nil }
+    }
     
     lazy val innerList: Parser[List[Sentence]] = (
-      sentence ~ "," ~ innerList ^^ { (_, head, _, innerList) => List(head) ++ innerList }
-      | sentence ^^ { (_, s) => List(s) }
-    )
+      for {
+        head <- sentence
+        _ <- char(',')
+        tail <- innerList
+      } yield List(head) ++ tail
+    ) | sentence.map { s => List(s) }
+    
+    private def upcast(sentence: Sentence) = sentence
     
     lazy val sentence: Parser[Sentence] = (
-      "not(" ~> sentence <~ ")" ^^ { (_, s) => Not(s) }
-      | "and(" ~> sentence ~ "," ~ sentence <~")" ^^ { (_, left,_, right) => And(left, right) }
-      | "or(" ~> sentence ~ "," ~ sentence <~")" ^^ { (_, left,_, right) => Or(left, right) }
-      | "if(" ~> sentence ~ "," ~ sentence <~")" ^^ { (_, left,_, right) => If(left, right) }
-      | "#" ^^ { (_, s) => Absurdity }
-      | """[a-z]""".r ^^ { (_, name) => AtomicSentence(Atom(NamedPredicate(name))) }
+      (string("not(") ~> sentence <~ string(")")).map { s => Not(s) } |
+      (string("and(") ~> sentence <~ char(','), sentence <~ char(')')).mapN { (left, right) => upcast(And(left, right)) } |
+      (string("or(") ~> sentence <~ char(','), sentence <~ char(')')).mapN { (left, right) => upcast(Or(left, right)) } |
+      (string("if(") ~> sentence <~ char(','), sentence <~ char(')')).mapN { (left, right) => upcast(If(left, right)) } |
+      char('#').map { _ => upcast(Absurdity) } |
+      stringOf(letter).map { name => AtomicSentence(Atom(NamedPredicate(name))) }
     )
     
+    private def upcast(appliedRule: (Rule, RuleArgs)) = appliedRule
+    
     lazy val rule: Parser[(Rule, RuleArgs)] = (
-      "not_i(" ~> proof <~ ")" ^^ { (_, major) => (NegationIntroduction, UnaryArgs(major)) }
-      | "not_e(" ~> sentence ~ "," ~ proof <~ ")" ^^ { (_, major,_, minor) => (NegationElimination, BinaryArgs(builder.majorProof(major, minor), minor)) }
-      | "and_i(" ~> proof ~ "," ~ proof <~ ")" ^^ { (_, left,_, right) => (AndIntroduction, BinaryArgs(left, right)) }
-      | "and_e(" ~> sentence ~ "," ~ proof <~ ")" ^^ { (_, major,_, minor) => (AndElimination, BinaryArgs(builder.majorProof(major, minor), minor)) }
-      | "or_i(" ~> proof <~ ")" ^^ { (_, major) => (OrIntroduction, UnaryArgs(major)) }
-      | "or_e(" ~> sentence ~ "," ~ proof ~ "," ~ proof <~ ")" ^^ {
-        (_, major,_, leftMinor,_, rightMinor) => (OrElimination, TernaryArgs(builder.majorProof(major, leftMinor, rightMinor), leftMinor, rightMinor))
-      }
-      | "if_i(" ~> proof <~ ")" ^^ { (_, major) => (IfIntroduction, UnaryArgs(major)) }
-      | "if_e(" ~> sentence ~ "," ~ proof ~ "," ~ proof <~ ")" ^^ {
-        (_, major,_, anteMinor,_, consMinor) => (IfElimination, TernaryArgs(builder.majorProof(major, anteMinor, consMinor), anteMinor, consMinor))
+      (string("not_i(") ~> proof <~ char(')')).map { major => (NegationIntroduction, UnaryArgs(major)) } |
+      (string("not_e(") ~> sentence <~ char(','), proof <~ char(')')).mapN {
+        (major, minor) => upcast(NegationElimination, BinaryArgs(builder.majorProof(major, minor), minor))
+      } |
+      (string("and_i(") ~> proof <~ char(','), proof <~ char(')')).mapN {
+        (left, right) => upcast(AndIntroduction, BinaryArgs(left, right))
+      } |
+      (string("and_e(") ~> sentence <~ char(','), proof <~ char(')')).mapN {
+        (major, minor) => upcast(AndElimination, BinaryArgs(builder.majorProof(major, minor), minor))
+      } |
+      (string("or_i(") ~> proof <~ char(')')).map { major => upcast(OrIntroduction, UnaryArgs(major)) } |
+      (string("or_e(") ~> sentence <~ char(','), proof <~ char(','), proof <~ char(')')).mapN {
+        (major, leftMinor, rightMinor) =>
+          upcast(OrElimination, TernaryArgs(builder.majorProof(major, leftMinor, rightMinor), leftMinor, rightMinor))
+      } |
+      (string("if_i(") ~> proof <~ char(')')).map { major => upcast(IfIntroduction, UnaryArgs(major)) } |
+      (string("if_e(") ~> sentence <~ char(','), proof <~ char(','), proof <~ char(')')).mapN {
+        (major, anteMinor, consMinor) =>
+          upcast(IfElimination, TernaryArgs(builder.majorProof(major, anteMinor, consMinor), anteMinor, consMinor))
       }
     )
   
   def parse(in: String, opts: PrologProofParserOpts): Proof = parse(in, Seq(opts))
   
   def parse(in: String, opts: Seq[PrologProofParserOpts]): Proof = {
-    // implicit val W = Whitespace("""\s+"""r)
-      
     builder.reset
     
-    proof(LineStream[Eval](in)).value.fold(
-        errors => throw ParserException("One or more errors parsing input: " + errors.mkString(",")),
-        proof => proof.toList.head
-    )
+    proof.parseOnly(in) match {
+      case Done(_, res) => res
+      case Fail(in, _, msg) => throw ParserException(s"error parsing input: $in | $msg")
+    }
   }
 }
 
