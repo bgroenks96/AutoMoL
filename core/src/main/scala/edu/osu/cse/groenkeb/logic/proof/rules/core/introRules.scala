@@ -90,7 +90,7 @@ case object IfIntroduction extends BaseRule {
     case If(ante, conseq) if major == None =>
       Some(OptionParams(
         UnaryParams(AnyProof(conseq)),
-        UnaryParams(RelevantProof(Absurdity, Required(Assumption(ante, bind)), Assumption(If(ante, conseq))))))
+        UnaryParams(RelevantProof(conseq, Vacuous(Assumption(ante, bind)), Assumption(If(ante, conseq))))))
     case _ => None
   }
   
