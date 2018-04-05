@@ -6,6 +6,7 @@ trait Operator {
 }
 
 trait Quantifier extends Operator {
+  def term: Term
   def evaluate(domain: Domain, func: Sentence => Boolean, arg: Sentence): Boolean
 }
 

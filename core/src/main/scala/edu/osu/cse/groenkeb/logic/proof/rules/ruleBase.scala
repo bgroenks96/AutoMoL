@@ -1,6 +1,7 @@
 package edu.osu.cse.groenkeb.logic.proof.rules
 
 import edu.osu.cse.groenkeb.logic._
+import edu.osu.cse.groenkeb.logic.dsl._
 import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.utils.Empty
 
@@ -8,18 +9,6 @@ abstract class BaseRule extends Rule {
   def goal(implicit context: ProofContext) = context.goal
   
   def bind(implicit context: ProofContext) = Some(IntBinding(context.depth))
-  
-  implicit def booleanExtensions(b: Boolean) = new {
-    def and(arg: Boolean) = b && arg
-    def or(arg: Boolean) = b || arg
-    def not = !b
-  }
-  
-  implicit def sentenceExtensions(s: Sentence) = new {
-    def is(arg: Sentence) = s == arg
-    def is(arg: (Sentence, Sentence)) = (s == arg._1) or (s == arg._2)
-    def or(arg: Sentence) = (s, arg)
-  }
   
   implicit def assumptionSetExtensions(assumptions: Set[Assumption]) = new {
     def discharge(sentences: Sentence*)(implicit context: ProofContext) =

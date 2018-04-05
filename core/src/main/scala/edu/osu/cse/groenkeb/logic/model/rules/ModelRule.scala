@@ -1,6 +1,7 @@
 package edu.osu.cse.groenkeb.logic.model.rules
 
 import edu.osu.cse.groenkeb.logic._
+import edu.osu.cse.groenkeb.logic.dsl._
 import edu.osu.cse.groenkeb.logic.model._
 import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.proof.rules._

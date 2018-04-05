@@ -2,10 +2,10 @@ addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.fu
 
 lazy val commonSettings = Seq(
     organization := "edu.osu.cse.groenkeb",
-    scalaVersion := "2.11.8",
+    scalaVersion := "2.12.3",
     version      := "0.1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "2.2.2" % Test,
+      "org.scalatest" %% "scalatest" % "3.0.5" % Test,
       "junit" % "junit" % "4.11" % Test,
       "com.novocode" % "junit-interface" % "0.11" % Test
     )
@@ -32,6 +32,16 @@ lazy val proofEngine = project.in(file("proof-engine")).dependsOn(core, parseExt
     .settings(
       commonSettings,
       name := "automol-proof-engine"
+    )
+    
+lazy val learn = project.in(file("learn")).dependsOn(core, parseExt, proofEngine)
+    .settings(
+      commonSettings,
+      name := "automol-learn",
+      libraryDependencies += "org.deeplearning4j" % "rl4j" % "0.9.1",
+      libraryDependencies ++= Seq(
+            "be.botkop" %% "numsca" % "0.1.2",
+        )
     )
 
 lazy val modelvf = project.dependsOn(proofEngine)

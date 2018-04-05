@@ -45,7 +45,7 @@ final case class AtomicSentence(atom: Atom) extends Sentence
   override def toString() = atom.toString()
 }
 
-final case class BinarySentence(val left: Sentence, val right: Sentence, val conn: BinaryConnective) extends Sentence
+final case class BinarySentence(left: Sentence, right: Sentence, conn: BinaryConnective) extends Sentence
 {
   require(left != Absurdity && right != Absurdity, (left, right))
   def matches(s: Sentence) = s match {
@@ -62,7 +62,7 @@ final case class BinarySentence(val left: Sentence, val right: Sentence, val con
   override def toString() = String.format("%s(%s,%s)", conn, left, right)
 }
 
-final case class UnarySentence(val operand: Sentence, val conn: UnaryConnective) extends Sentence
+final case class UnarySentence(operand: Sentence, conn: UnaryConnective) extends Sentence
 {
   require(operand != Absurdity)
   def matches(s: Sentence) = s match {
@@ -79,7 +79,7 @@ final case class UnarySentence(val operand: Sentence, val conn: UnaryConnective)
   override def toString() = String.format("%s(%s)", conn, operand)
 }
 
-final case class QuantifiedSentence(val operand: Sentence, val quantifier: Quantifier) extends Sentence
+final case class QuantifiedSentence(operand: Sentence, quantifier: Quantifier) extends Sentence
 {
     require(operand != Absurdity)
     def matches(s: Sentence) = s match {
