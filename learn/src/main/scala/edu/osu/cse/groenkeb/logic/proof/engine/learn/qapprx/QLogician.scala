@@ -11,7 +11,7 @@ import edu.osu.cse.groenkeb.logic.proof.engine.learn.AutoLogician
 
 final class QLogician(features: Seq[Feature[ProblemState, Action]], gamma: Double) extends AutoLogician[ProblemState, UpdateParams] {  
   // Sort by negative Q-value, thus ensuring descending order
-  private implicit val OrderByQValue = Ordering[Double].on((qv: QValue) => -qv.value)
+  private implicit val orderByQValue = Ordering[Double].on((qv: QValue) => -qv.value)
   
   private val biasTerm = Array(Array(0, 1))
   

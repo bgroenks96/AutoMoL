@@ -42,9 +42,9 @@ class PosQuestionsTests {
         ProofUtils.prettyPrint(results.head.proof);
         println(s"Finished after $steps attempted steps")
         println("--------------")
-        meanStepCount += meanStepCount + (steps - meanStepCount) / (i+1)
+        meanStepCount += (steps - meanStepCount) / (i+1)
     }
-    println(s"Average step count: $meanStepCount")
+    println(s"Average step count: ${Math.round(meanStepCount)}")
   }
   
   @Test
@@ -69,9 +69,9 @@ class PosQuestionsTests {
         ProofUtils.prettyPrint(results.head.proof);
         println(s"Finished after $steps attempted steps")
         println("--------------")
-        meanStepCount += meanStepCount + (steps - meanStepCount) / (i+1)
+        meanStepCount += (steps - meanStepCount) / (i+1)
     }
-    println(s"Average step count: $meanStepCount")
+    println(s"Average step count: ${Math.round(meanStepCount)}")
   }
   
   private def upcast(sentence: Sentence) = sentence

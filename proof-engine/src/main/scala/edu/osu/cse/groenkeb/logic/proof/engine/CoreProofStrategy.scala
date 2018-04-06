@@ -8,13 +8,15 @@ import edu.osu.cse.groenkeb.logic.proof.rules.core._
 import edu.osu.cse.groenkeb.logic.proof.engine.ProofStrategy.Action
 
 case class CoreProofStrategy() extends ProofStrategy {
+  private implicit val ruleOrdering = Ordering[Int].on[Rule]((r: Rule) => ruleOrdinal(r))
+  
   def actions(implicit context: ProofContext) = generateActions
   
   def decide(result: ProofResult)(implicit context: ProofContext): ProofResult = result
   
   private def generateActions(implicit context: ProofContext) = {
     for {
-      rule <- filterRules
+      rule <- filterRules.sorted
       action <- context.available.filter { p => rule.major(p.sentence) } match {
         case avail if avail.isEmpty => Seq(Action(rule))
         case avail => avail.map { p => Action(rule, Some(p.sentence)) }.toSeq
@@ -22,7 +24,7 @@ case class CoreProofStrategy() extends ProofStrategy {
     } yield action
   }
   
-  private def filterRules(implicit context: ProofContext) = context.rules.collect {
+  private def filterRules(implicit context: ProofContext): Seq[Rule] = context.rules.collect {
     case r@AndElimination => r
     case r@OrElimination => r
     case r@NegationElimination /*if context.goal is Absurdity*/ => r
