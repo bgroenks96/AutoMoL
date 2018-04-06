@@ -13,7 +13,7 @@ final class QLogician(features: Seq[Feature[ProblemState, Action]], gamma: Doubl
   // Sort by negative Q-value, thus ensuring descending order
   private implicit val orderByQValue = Ordering[Double].on((qv: QValue) => -qv.value)
   
-  private val biasTerm = Array(Array(0, 1))
+  private val biasTermPadShape = Array(Array(0, 1))
   
   private val history = Map[QArgs, QValue]()
   
@@ -35,8 +35,8 @@ final class QLogician(features: Seq[Feature[ProblemState, Action]], gamma: Doubl
       val newQVals = computeQValues(params.newState, availableActions)
       // Assume optimal behavior for next action
       val maxQVal = newQVals.max
-      // Calculate delta term: reward + gamma*(q_max - q)
-      val delta = params.reward + gamma*(maxQVal.value - qval.value)
+      // Calculate delta term: reward + gamma*q_max - q
+      val delta = params.reward + gamma*maxQVal.value - qval.value
       // Update weights using alpha adjusted gradient
       weights += params.alpha * delta * qval.fvals
       // Drop (state, action) record from history
@@ -60,9 +60,7 @@ final class QLogician(features: Seq[Feature[ProblemState, Action]], gamma: Doubl
    * Evaluates feature values for the given state and action.
    */
   private def evaluateFeatures(state: ProblemState, action: Action): Tensor = {
-    val fvals = for {
-      f <- features
-    } yield f.eval(state, action)
+    val fvals = features.map(f => f(state, action))
     Tensor(fvals.toArray)
   }
   
@@ -70,7 +68,7 @@ final class QLogician(features: Seq[Feature[ProblemState, Action]], gamma: Doubl
    * Computes the raw Q-value for the given feature vector using the current weights.
    */
   private def qfunc(fvals: Tensor): Double = {
-    val fvalsWithBias = ns.pad(fvals, biasTerm, PadMode.CONSTANT)
+    val fvalsWithBias = ns.pad(fvals, biasTermPadShape, PadMode.CONSTANT)
     fvalsWithBias(-1) := 1
     ns.dot(this.weights, fvalsWithBias.T).squeeze()
   }
