@@ -2,10 +2,16 @@ package edu.osu.cse.groenkeb.logic.proof.engine.qlearn
 
 import edu.osu.cse.groenkeb.logic.proof.engine.repr.SentenceGraph
 import edu.osu.cse.groenkeb.logic.proof.ProofContext
+import edu.osu.cse.groenkeb.logic.proof.Proof
 
 object ProblemState {
-  def apply(context: ProofContext, parent: Option[ProblemState] = None): ProblemState =
-    ProblemState(SentenceGraph(context.goal), context.available.map(a => SentenceGraph(a.sentence)), parent)
+  def createFrom(context: ProofContext, parent: Option[ProblemState] = None): WorkingState =
+    WorkingState(SentenceGraph(context.goal) ++
+                 context.available.map(p => SentenceGraph(p.sentence)).reduce((a, b) => a ++ b),
+                 parent)
 }
 
-final case class ProblemState(goal: SentenceGraph, available: Set[SentenceGraph], parent: Option[ProblemState])
+sealed abstract class ProblemState(parent: Option[ProblemState])
+final case class WorkingState(graph: SentenceGraph, parent: Option[ProblemState]) extends ProblemState(parent)
+final case class SolvedState(proof: Proof, parent: Option[ProblemState]) extends ProblemState(parent)
+final case class FailedState(parent: Option[ProblemState]) extends ProblemState(parent)

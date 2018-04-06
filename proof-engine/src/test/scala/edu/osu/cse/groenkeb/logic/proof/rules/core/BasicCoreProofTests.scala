@@ -18,7 +18,8 @@ class BasicCoreProofTests {
   val _name = new TestName()
   
   implicit val strategy = new NaiveProofStrategy()
-  implicit val options = Seq(Trace)
+  implicit val trace = Trace()
+  implicit val options = Seq(trace)
   implicit val parser = new SentenceParser(new NodeRecursiveTokenizer())(new DefaultPropOpMatcher())
   
   @org.junit.Rule
@@ -37,6 +38,7 @@ class BasicCoreProofTests {
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
     Assert.assertFalse(results.isEmpty)
     ProofUtils.prettyPrint(results.head.proof)
+    println(trace.stepCount)
   }
   
   @Test
@@ -62,6 +64,7 @@ class BasicCoreProofTests {
     val results = solver.prove(context).collect { case r:Success => r.asInstanceOf[Success] }
     Assert.assertFalse(results.isEmpty)
     ProofUtils.prettyPrint(results.head.proof)
+    println(trace.stepCount)
   }
   
   @Test
@@ -87,6 +90,7 @@ class BasicCoreProofTests {
     Assert.assertFalse(results.isEmpty)
     ProofUtils.prettyPrint(results.head.proof)
     println(results.head.proof)
+    println(trace.stepCount)
   }
   
   @Test
@@ -116,6 +120,7 @@ class BasicCoreProofTests {
     Assert.assertFalse(results.isEmpty)
     ProofUtils.prettyPrint(results.head.proof)
     println(results.head.proof)
+    println(trace.stepCount)
   }
   
   @Test
@@ -130,6 +135,7 @@ class BasicCoreProofTests {
     Assert.assertFalse(results.isEmpty)
     ProofUtils.prettyPrint(results.head.proof)
     println(results.head.proof)
+    println(trace.stepCount)
   }
   
   @Test
@@ -161,6 +167,7 @@ class BasicCoreProofTests {
     Assert.assertFalse(results.isEmpty)
     ProofUtils.prettyPrint(results.head.proof)
     println(results.head.proof)
+    println(trace.stepCount)
   }
   
   @Test
@@ -173,6 +180,7 @@ class BasicCoreProofTests {
     Assert.assertFalse(results.isEmpty)
     ProofUtils.prettyPrint(results.head.proof)
     println(results.head.proof)
+    println(trace.stepCount)
   }
   
   @Test
@@ -186,6 +194,7 @@ class BasicCoreProofTests {
     Assert.assertFalse(results.isEmpty)
     ProofUtils.prettyPrint(results.head.proof)
     println(results.head.proof)
+    println(trace.stepCount)
   }
   
   @Test
@@ -200,6 +209,7 @@ class BasicCoreProofTests {
     Assert.assertFalse(results.isEmpty)
     ProofUtils.prettyPrint(results.head.proof)
     println(results.head.proof)
+    println(trace.stepCount)
   }
   
   @Test
@@ -213,6 +223,7 @@ class BasicCoreProofTests {
     Assert.assertFalse(results.isEmpty)
     ProofUtils.prettyPrint(results.head.proof)
     println(results.head.proof)
+    println(trace.stepCount)
   }
   
   private def assume(sentences: Sentence*) = sentences.map { s => Assumption(s) }

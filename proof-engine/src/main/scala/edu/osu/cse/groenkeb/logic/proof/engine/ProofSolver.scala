@@ -8,19 +8,17 @@ import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.proof.engine.ProofStrategy.Action
 
-sealed abstract class SolverOpts
-case object Trace extends SolverOpts
-
 final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrategy(),
                         options: Seq[SolverOpts] = Nil) {
   
   def prove(context: ProofContext): Stream[ProofResult] = {
+    resetTrace
     implicit val cntxt = context
     ProofSearch(step { proof(context.available.toSeq) } )()
   }
 
   private def proof(premises: Seq[Premise])(implicit context: ProofContext): ProofResult = {
-    if (trace) println(context)
+    trace
     premises match {
       case Nil => tryInfer(strategy.actions)
       case Seq(head, rem@_*) => head match {
@@ -187,8 +185,6 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
       proof(newContext.available.toSeq)(newContext)
     }
   }
-  
-  private def trace = this.options.contains(Trace)
 
   ///////// Utility Methods ///////////
 
@@ -219,4 +215,14 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
   }
 
   private def immutable[T](seq: scala.Seq[T]) = scala.collection.immutable.Seq(seq:_*)
+  
+  private def trace(implicit context: ProofContext): Unit = this.options.find(o => o.isInstanceOf[Trace]) match {
+    case Some(Trace(state)) => state.trace
+    case None => Unit
+  }
+  
+  private def resetTrace: Unit = this.options.find(o => o.isInstanceOf[Trace]) match {
+    case Some(Trace(state)) => state.reset
+    case None => Unit
+  }
 }

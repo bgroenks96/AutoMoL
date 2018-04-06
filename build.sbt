@@ -38,9 +38,10 @@ lazy val learn = project.in(file("learn")).dependsOn(core, parseExt, proofEngine
     .settings(
       commonSettings,
       name := "automol-learn",
-      libraryDependencies += "org.deeplearning4j" % "rl4j" % "0.9.1",
       libraryDependencies ++= Seq(
             "be.botkop" %% "numsca" % "0.1.2",
+            "org.deeplearning4j" % "rl4j-api" % "0.9.1",
+            "org.deeplearning4j" % "rl4j-core" % "0.9.1"
         )
     )
 

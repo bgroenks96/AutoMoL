@@ -23,26 +23,34 @@ class PosQuestionsTests {
   
   @Test
   def testPosquestionsNaiveStrategy = {
+    implicit val trace = Trace()
+    implicit val options = Seq(trace)
     val solver = new ProofSolver()
     val rules = standardRules
     val questions = loadPosquestions.toList
     val proofs = for {
       (assumptions, goal) <- questions
     } yield {
-      solver.prove(ProofContext(goal, rules, assume(assumptions:_*))).collect({ case r:Success => r })
+      (solver.prove(ProofContext(goal, rules, assume(assumptions:_*))).collect({ case r:Success => r }), trace.stepCount)
     }
     
+    var meanStepCount = 0.0
     proofs.zipWithIndex.foreach {
-      case (results, i) =>
+      case ((results, steps), i) =>
         println("Problem " + (i + 1))
         Assert.assertFalse(s"Failed on problem $i; ${questions(i)}", results.isEmpty)
         ProofUtils.prettyPrint(results.head.proof);
+        println(s"Finished after $steps attempted steps")
         println("--------------")
+        meanStepCount += meanStepCount + (steps - meanStepCount) / (i+1)
     }
+    println(s"Average step count: $meanStepCount")
   }
   
   @Test
   def testPosquestionsWithStrategy = {
+    implicit val trace = Trace()
+    implicit val options = Seq(trace)
     implicit val strategy = new CoreProofStrategy()
     val solver = new ProofSolver()
     val rules = standardRules
@@ -50,16 +58,20 @@ class PosQuestionsTests {
     val proofs = for {
       (assumptions, goal) <- questions
     } yield {
-      solver.prove(ProofContext(goal, rules, assume(assumptions:_*))).collect({ case r:Success => r })
+      (solver.prove(ProofContext(goal, rules, assume(assumptions:_*))).collect({ case r:Success => r }), trace.stepCount)
     }
     
+    var meanStepCount = 0.0
     proofs.zipWithIndex.foreach {
-      case (results, i) =>
+      case ((results, steps), i) =>
         println("Problem " + (i + 1))
         Assert.assertFalse(s"Failed on problem $i; ${questions(i)}", results.isEmpty)
         ProofUtils.prettyPrint(results.head.proof);
+        println(s"Finished after $steps attempted steps")
         println("--------------")
+        meanStepCount += meanStepCount + (steps - meanStepCount) / (i+1)
     }
+    println(s"Average step count: $meanStepCount")
   }
   
   private def upcast(sentence: Sentence) = sentence
