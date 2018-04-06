@@ -1,9 +1,14 @@
-package edu.osu.cse.groenkeb.logic.engine.repr
+package edu.osu.cse.groenkeb.logic.engine.learn
 
 import org.junit.Test
 import org.junit.Assert
 import edu.osu.cse.groenkeb.logic._
-import edu.osu.cse.groenkeb.logic.proof.engine.repr._
+import edu.osu.cse.groenkeb.logic.proof.engine.learn.VarNode
+import edu.osu.cse.groenkeb.logic.proof.engine.learn.UnaryNode
+import edu.osu.cse.groenkeb.logic.proof.engine.learn.SentenceGraph
+import edu.osu.cse.groenkeb.logic.proof.engine.learn.QuantifierNode
+import edu.osu.cse.groenkeb.logic.proof.engine.learn.BinaryNode
+import edu.osu.cse.groenkeb.logic.proof.engine.learn.AtomicNode
 
 final class SentenceGraphTests {
   @Test

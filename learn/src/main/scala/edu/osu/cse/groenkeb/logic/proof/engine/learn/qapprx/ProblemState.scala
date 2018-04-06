@@ -1,6 +1,6 @@
-package edu.osu.cse.groenkeb.logic.proof.engine.qlearn
+package edu.osu.cse.groenkeb.logic.proof.engine.learn.qapprx
 
-import edu.osu.cse.groenkeb.logic.proof.engine.repr.SentenceGraph
+import edu.osu.cse.groenkeb.logic.proof.engine.learn.SentenceGraph
 import edu.osu.cse.groenkeb.logic.proof.ProofContext
 import edu.osu.cse.groenkeb.logic.proof.Proof
 

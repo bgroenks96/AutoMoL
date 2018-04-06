@@ -1,9 +1,10 @@
-package edu.osu.cse.groenkeb.logic.proof.engine.qlearn
+package edu.osu.cse.groenkeb.logic.proof.engine.learn.qapprx
 
 import edu.osu.cse.groenkeb.logic.proof.engine.ProofStrategy.Action
 
 import org.deeplearning4j.rl4j.mdp.MDP
 import org.deeplearning4j.rl4j.space.ObservationSpace
+import org.deeplearning4j.rl4j.space.DiscreteSpace
 import org.deeplearning4j.gym.StepReply
 
 final class Environment extends MDP[ProblemState, Action, ProblemActionSpace] {

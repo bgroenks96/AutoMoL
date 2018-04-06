@@ -1,7 +1,7 @@
-package edu.osu.cse.groenkeb.logic.proof.engine.repr
+package edu.osu.cse.groenkeb.logic.proof.engine.learn
 
 import edu.osu.cse.groenkeb.logic._
-import scala.annotation.tailrec
+import scala.collection.Seq
 
 sealed abstract class GraphNode
 final case class QuantifierNode(sentence: QuantifiedSentence) extends GraphNode {
