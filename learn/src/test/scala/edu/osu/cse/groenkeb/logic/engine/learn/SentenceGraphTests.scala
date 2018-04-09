@@ -23,10 +23,12 @@ final class SentenceGraphTests {
     
     // assert
     Assert.assertEquals(2, graph.size)
-    Assert.assertTrue(graph.adj.contains(AtomicNode(s)))
-    Assert.assertTrue(graph.adj.contains(VarNode(term)))
-    Assert.assertTrue(graph.adj(AtomicNode(s)).equals(Set(VarNode(term))))
-    Assert.assertTrue(graph.adj(VarNode(term)).isEmpty)
+    Assert.assertTrue(graph.has(AtomicNode(s)))
+    Assert.assertTrue(graph.has(VarNode(term)))
+    Assert.assertTrue(graph.adjOut(AtomicNode(s)).equals(Seq(VarNode(term))))
+    Assert.assertTrue(graph.adjIn(AtomicNode(s)).isEmpty)
+    Assert.assertTrue(graph.adjOut(VarNode(term)).isEmpty)
+    Assert.assertTrue(graph.adjIn(VarNode(term)).equals(Seq(AtomicNode(s))))
     println(graph)
   }
   
@@ -42,12 +44,15 @@ final class SentenceGraphTests {
     
     // assert
     Assert.assertEquals(3, graph.size)
-    Assert.assertTrue(graph.adj.contains(UnaryNode(s)))
-    Assert.assertTrue(graph.adj.contains(AtomicNode(atomR)))
-    Assert.assertTrue(graph.adj.contains(VarNode(termA)))
-    Assert.assertTrue(graph.adj(UnaryNode(s)).equals(Set(AtomicNode(atomR))))
-    Assert.assertTrue(graph.adj(AtomicNode(atomR)).equals(Set(VarNode(termA))))
-    Assert.assertTrue(graph.adj(VarNode(termA)).isEmpty)
+    Assert.assertTrue(graph.has(UnaryNode(s)))
+    Assert.assertTrue(graph.has(AtomicNode(atomR)))
+    Assert.assertTrue(graph.has(VarNode(termA)))
+    Assert.assertTrue(graph.adjOut(UnaryNode(s)).equals(Seq(AtomicNode(atomR))))
+    Assert.assertTrue(graph.adjIn(UnaryNode(s)).isEmpty)
+    Assert.assertTrue(graph.adjOut(AtomicNode(atomR)).equals(Seq(VarNode(termA))))
+    Assert.assertTrue(graph.adjIn(AtomicNode(atomR)).equals(Seq(UnaryNode(s))))
+    Assert.assertTrue(graph.adjOut(VarNode(termA)).isEmpty)
+    Assert.assertTrue(graph.adjIn(VarNode(termA)).equals(Seq(atomR)))
     println(graph)
   }
   

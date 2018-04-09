@@ -4,8 +4,9 @@ import scala.collection.mutable.Map
 
 import edu.osu.cse.groenkeb.logic.proof.engine.ProofStrategy.Action
 import edu.osu.cse.groenkeb.logic.proof.engine.learn.AutoLogician
+import edu.osu.cse.groenkeb.logic.proof.engine.learn.ProblemState
 
-final class QLogician(features: Seq[Feature[ProblemState, Action]], gamma: Double) extends AutoLogician[ProblemState, UpdateParams] {  
+final class QLogician(model: QModel, gamma: Double) extends AutoLogician[ProblemState, QUpdate] {  
   // Sort by negative Q-value, thus ensuring descending order
   private implicit val orderByQValue = Ordering[Double].on((qv: QValue) => -qv.value)
   
@@ -23,7 +24,7 @@ final class QLogician(features: Seq[Feature[ProblemState, Action]], gamma: Doubl
     sortedQVals.collect { case v@QValue(args@QArgs(_, action), _) => history.put(args, v); action }
   }
   
-  def update(params: UpdateParams, availableActions: Seq[Action]) = history.get(params.args) match {
+  def update(params: QUpdate, availableActions: Seq[Action]) = history.get(params.args) match {
     case Some(qval) =>
       // Drop (state, action) record from history
       history.remove(params.args)
@@ -32,5 +33,3 @@ final class QLogician(features: Seq[Feature[ProblemState, Action]], gamma: Doubl
   
   def computeQValues(state: ProblemState, actions: Seq[Action]): Seq[QValue] = ???
 }
-
-final case class UpdateParams(newState: ProblemState, args: QArgs, reward: Double, alpha: Double)
