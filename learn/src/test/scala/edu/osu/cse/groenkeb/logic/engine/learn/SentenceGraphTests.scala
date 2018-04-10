@@ -3,12 +3,7 @@ package edu.osu.cse.groenkeb.logic.engine.learn
 import org.junit.Test
 import org.junit.Assert
 import edu.osu.cse.groenkeb.logic._
-import edu.osu.cse.groenkeb.logic.proof.engine.learn.VarNode
-import edu.osu.cse.groenkeb.logic.proof.engine.learn.UnaryNode
-import edu.osu.cse.groenkeb.logic.proof.engine.learn.SentenceGraph
-import edu.osu.cse.groenkeb.logic.proof.engine.learn.QuantifierNode
-import edu.osu.cse.groenkeb.logic.proof.engine.learn.BinaryNode
-import edu.osu.cse.groenkeb.logic.proof.engine.learn.AtomicNode
+import edu.osu.cse.groenkeb.logic.proof.engine.learn._
 
 final class SentenceGraphTests {
   @Test
@@ -16,44 +11,47 @@ final class SentenceGraphTests {
     // arrange
     val term = Term("a")
     val atom = Atom(NamedPredicate("R"), term)
-    val s = AtomicSentence(atom)
     
     // act
-    val graph = SentenceGraph(s)
+    val (graph, _) = SentenceGraph(AtomicSentence(atom))
     
     // assert
-    Assert.assertEquals(2, graph.size)
-    Assert.assertTrue(graph.has(AtomicNode(s)))
-    Assert.assertTrue(graph.has(VarNode(term)))
-    Assert.assertTrue(graph.adjOut(AtomicNode(s)).equals(Seq(VarNode(term))))
-    Assert.assertTrue(graph.adjIn(AtomicNode(s)).isEmpty)
-    Assert.assertTrue(graph.adjOut(VarNode(term)).isEmpty)
-    Assert.assertTrue(graph.adjIn(VarNode(term)).equals(Seq(AtomicNode(s))))
     println(graph)
+    Assert.assertTrue(graph.has(AtomicNode(atom)))
+    Assert.assertTrue(graph.has(PredicateNode(atom.predicate)))
+    Assert.assertTrue(graph.has(VarNode(term)))
+    Assert.assertTrue(graph.adjOut(AtomicNode(atom)).equals(Seq(PredicateNode(atom.predicate), VarNode(term))))
+    Assert.assertTrue(graph.adjIn(AtomicNode(atom)).isEmpty)
+    Assert.assertTrue(graph.adjOut(PredicateNode(atom.predicate)).isEmpty)
+    Assert.assertTrue(graph.adjIn(PredicateNode(atom.predicate)).equals(Seq(AtomicNode(atom))))
+    Assert.assertTrue(graph.adjOut(VarNode(term)).isEmpty)
+    Assert.assertTrue(graph.adjIn(VarNode(term)).equals(Seq(AtomicNode(atom))))
   }
   
   @Test
   def testUnarySentenceToGraph_Not() {
     // arrange
     val termA = Term("a")
-    val atomR = AtomicSentence(Atom(NamedPredicate("R"), termA))
-    val s = Not(atomR)
+    val atomR = Atom(NamedPredicate("R"), termA)
+    val s = Not(AtomicSentence(atomR))
     
     // act
-    val graph = SentenceGraph(s)
+    val (graph, _) = SentenceGraph(s)
     
     // assert
-    Assert.assertEquals(3, graph.size)
+    println(graph)
     Assert.assertTrue(graph.has(UnaryNode(s)))
     Assert.assertTrue(graph.has(AtomicNode(atomR)))
+    Assert.assertTrue(graph.has(PredicateNode(atomR.predicate)))
     Assert.assertTrue(graph.has(VarNode(termA)))
     Assert.assertTrue(graph.adjOut(UnaryNode(s)).equals(Seq(AtomicNode(atomR))))
     Assert.assertTrue(graph.adjIn(UnaryNode(s)).isEmpty)
-    Assert.assertTrue(graph.adjOut(AtomicNode(atomR)).equals(Seq(VarNode(termA))))
+    Assert.assertTrue(graph.adjOut(AtomicNode(atomR)).equals(Seq(PredicateNode(atomR.predicate), VarNode(termA))))
     Assert.assertTrue(graph.adjIn(AtomicNode(atomR)).equals(Seq(UnaryNode(s))))
+    Assert.assertTrue(graph.adjOut(PredicateNode(atomR.predicate)).isEmpty)
+    Assert.assertTrue(graph.adjIn(PredicateNode(atomR.predicate)).equals(Seq(AtomicNode(atomR))))
     Assert.assertTrue(graph.adjOut(VarNode(termA)).isEmpty)
-    Assert.assertTrue(graph.adjIn(VarNode(termA)).equals(Seq(atomR)))
-    println(graph)
+    Assert.assertTrue(graph.adjIn(VarNode(termA)).equals(Seq(AtomicNode(atomR))))
   }
   
   @Test
@@ -61,26 +59,34 @@ final class SentenceGraphTests {
     // arrange
     val termA = Term("a")
     val termB = Term("b")
-    val atomR = AtomicSentence(Atom(NamedPredicate("R"), termA))
-    val atomQ = AtomicSentence(Atom(NamedPredicate("Q"), termB))
-    val s = And(atomR, atomQ)
+    val atomR = Atom(NamedPredicate("R"), termA)
+    val atomQ = Atom(NamedPredicate("Q"), termB)
+    val s = And(AtomicSentence(atomR), AtomicSentence(atomQ))
     
     // act
-    val graph = SentenceGraph(s)
+    val (graph, _) = SentenceGraph(s)
     
     // assert
-    Assert.assertEquals(5, graph.size)
-    Assert.assertTrue(graph.adj.contains(BinaryNode(s)))
-    Assert.assertTrue(graph.adj.contains(AtomicNode(atomR)))
-    Assert.assertTrue(graph.adj.contains(AtomicNode(atomQ)))
-    Assert.assertTrue(graph.adj.contains(VarNode(termA)))
-    Assert.assertTrue(graph.adj.contains(VarNode(termB)))
-    Assert.assertTrue(graph.adj(BinaryNode(s)).equals(Set(AtomicNode(atomR), AtomicNode(atomQ))))
-    Assert.assertTrue(graph.adj(AtomicNode(atomR)).equals(Set(VarNode(termA))))
-    Assert.assertTrue(graph.adj(AtomicNode(atomQ)).equals(Set(VarNode(termB))))
-    Assert.assertTrue(graph.adj(VarNode(termA)).isEmpty)
-    Assert.assertTrue(graph.adj(VarNode(termB)).isEmpty)
     println(graph)
+    Assert.assertTrue(graph.has(BinaryNode(s)))
+    Assert.assertTrue(graph.has(AtomicNode(atomR)))
+    Assert.assertTrue(graph.has(AtomicNode(atomQ)))
+    Assert.assertTrue(graph.has(VarNode(termA)))
+    Assert.assertTrue(graph.has(VarNode(termB)))
+    Assert.assertTrue(graph.adjOut(BinaryNode(s)).equals(Seq(AtomicNode(atomR), AtomicNode(atomQ))))
+    Assert.assertTrue(graph.adjIn(BinaryNode(s)).isEmpty)
+    Assert.assertTrue(graph.adjOut(AtomicNode(atomR)).equals(Seq(PredicateNode(atomR.predicate), VarNode(termA))))
+    Assert.assertTrue(graph.adjIn(AtomicNode(atomR)).equals(Seq(BinaryNode(s))))
+    Assert.assertTrue(graph.adjOut(AtomicNode(atomQ)).equals(Seq(PredicateNode(atomQ.predicate), VarNode(termB))))
+    Assert.assertTrue(graph.adjIn(AtomicNode(atomQ)).equals(Seq(BinaryNode(s))))
+    Assert.assertTrue(graph.adjOut(PredicateNode(atomR.predicate)).isEmpty)
+    Assert.assertTrue(graph.adjIn(PredicateNode(atomR.predicate)).equals(Seq(AtomicNode(atomR))))
+    Assert.assertTrue(graph.adjOut(PredicateNode(atomQ.predicate)).isEmpty)
+    Assert.assertTrue(graph.adjIn(PredicateNode(atomQ.predicate)).equals(Seq(AtomicNode(atomQ))))
+    Assert.assertTrue(graph.adjOut(VarNode(termA)).isEmpty)
+    Assert.assertTrue(graph.adjIn(VarNode(termA)).equals(Seq(AtomicNode(atomR))))
+    Assert.assertTrue(graph.adjOut(VarNode(termB)).isEmpty)
+    Assert.assertTrue(graph.adjIn(VarNode(termB)).equals(Seq(AtomicNode(atomQ))))
   }
   
   @Test
@@ -88,25 +94,33 @@ final class SentenceGraphTests {
     // arrange
     val termA = Term("a")
     val termB = Term("b")
-    val atomR = AtomicSentence(Atom(NamedPredicate("R"), termA))
-    val atomQ = AtomicSentence(Atom(NamedPredicate("Q"), termB))
-    val s = Or(atomR, atomQ)
+    val atomR = Atom(NamedPredicate("R"), termA)
+    val atomQ = Atom(NamedPredicate("Q"), termB)
+    val s = Or(AtomicSentence(atomR), AtomicSentence(atomQ))
     
     // act
-    val graph = SentenceGraph(s)
+    val (graph, _) = SentenceGraph(s)
     
     // assert
-    Assert.assertEquals(5, graph.size)
-    Assert.assertTrue(graph.adj.contains(BinaryNode(s)))
-    Assert.assertTrue(graph.adj.contains(AtomicNode(atomR)))
-    Assert.assertTrue(graph.adj.contains(AtomicNode(atomQ)))
-    Assert.assertTrue(graph.adj.contains(VarNode(termA)))
-    Assert.assertTrue(graph.adj.contains(VarNode(termB)))
-    Assert.assertTrue(graph.adj(BinaryNode(s)).equals(Set(AtomicNode(atomR), AtomicNode(atomQ))))
-    Assert.assertTrue(graph.adj(AtomicNode(atomR)).equals(Set(VarNode(termA))))
-    Assert.assertTrue(graph.adj(AtomicNode(atomQ)).equals(Set(VarNode(termB))))
-    Assert.assertTrue(graph.adj(VarNode(termA)).isEmpty)
-    Assert.assertTrue(graph.adj(VarNode(termB)).isEmpty)
+    Assert.assertTrue(graph.has(BinaryNode(s)))
+    Assert.assertTrue(graph.has(AtomicNode(atomR)))
+    Assert.assertTrue(graph.has(AtomicNode(atomQ)))
+    Assert.assertTrue(graph.has(VarNode(termA)))
+    Assert.assertTrue(graph.has(VarNode(termB)))
+    Assert.assertTrue(graph.adjOut(BinaryNode(s)).equals(Seq(AtomicNode(atomR), AtomicNode(atomQ))))
+    Assert.assertTrue(graph.adjIn(BinaryNode(s)).isEmpty)
+    Assert.assertTrue(graph.adjOut(AtomicNode(atomR)).equals(Seq(PredicateNode(atomR.predicate), VarNode(termA))))
+    Assert.assertTrue(graph.adjIn(AtomicNode(atomR)).equals(Seq(BinaryNode(s))))
+    Assert.assertTrue(graph.adjOut(AtomicNode(atomQ)).equals(Seq(PredicateNode(atomQ.predicate), VarNode(termB))))
+    Assert.assertTrue(graph.adjIn(AtomicNode(atomQ)).equals(Seq(BinaryNode(s))))
+    Assert.assertTrue(graph.adjOut(PredicateNode(atomR.predicate)).isEmpty)
+    Assert.assertTrue(graph.adjIn(PredicateNode(atomR.predicate)).equals(Seq(AtomicNode(atomR))))
+    Assert.assertTrue(graph.adjOut(PredicateNode(atomQ.predicate)).isEmpty)
+    Assert.assertTrue(graph.adjIn(PredicateNode(atomQ.predicate)).equals(Seq(AtomicNode(atomQ))))
+    Assert.assertTrue(graph.adjOut(VarNode(termA)).isEmpty)
+    Assert.assertTrue(graph.adjIn(VarNode(termA)).equals(Seq(AtomicNode(atomR))))
+    Assert.assertTrue(graph.adjOut(VarNode(termB)).isEmpty)
+    Assert.assertTrue(graph.adjIn(VarNode(termB)).equals(Seq(AtomicNode(atomQ))))
     println(graph)
   }
   
@@ -115,29 +129,38 @@ final class SentenceGraphTests {
     // arrange
     val termA = Term("a")
     val termB = Term("b")
-    val atomR = AtomicSentence(Atom(NamedPredicate("R"), termA))
-    val atomQ = AtomicSentence(Atom(NamedPredicate("Q"), termB))
-    var andRQ = And(atomR, atomQ)
+    val atomR = Atom(NamedPredicate("R"), termA)
+    val atomQ = Atom(NamedPredicate("Q"), termB)
+    var andRQ = And(AtomicSentence(atomR), AtomicSentence(atomQ))
     val s = And(andRQ, andRQ)
     
     // act
-    val graph = SentenceGraph(s)
+    val (graph, _) = SentenceGraph(s)
     
     // assert
-    Assert.assertEquals(6, graph.size)
-    Assert.assertTrue(graph.adj.contains(BinaryNode(s)))
-    Assert.assertTrue(graph.adj.contains(BinaryNode(andRQ)))
-    Assert.assertTrue(graph.adj.contains(AtomicNode(atomR)))
-    Assert.assertTrue(graph.adj.contains(AtomicNode(atomQ)))
-    Assert.assertTrue(graph.adj.contains(VarNode(termA)))
-    Assert.assertTrue(graph.adj.contains(VarNode(termB)))
-    Assert.assertTrue(graph.adj(BinaryNode(s)).equals(Set(BinaryNode(andRQ))))
-    Assert.assertTrue(graph.adj(BinaryNode(andRQ)).equals(Set(AtomicNode(atomR), AtomicNode(atomQ))))
-    Assert.assertTrue(graph.adj(AtomicNode(atomR)).equals(Set(VarNode(termA))))
-    Assert.assertTrue(graph.adj(AtomicNode(atomQ)).equals(Set(VarNode(termB))))
-    Assert.assertTrue(graph.adj(VarNode(termA)).isEmpty)
-    Assert.assertTrue(graph.adj(VarNode(termB)).isEmpty)
     println(graph)
+    Assert.assertTrue(graph.has(BinaryNode(s)))
+    Assert.assertTrue(graph.has(BinaryNode(andRQ)))
+    Assert.assertTrue(graph.has(AtomicNode(atomR)))
+    Assert.assertTrue(graph.has(AtomicNode(atomQ)))
+    Assert.assertTrue(graph.has(VarNode(termA)))
+    Assert.assertTrue(graph.has(VarNode(termB)))
+    Assert.assertTrue(graph.adjOut(BinaryNode(s)).equals(Seq(BinaryNode(andRQ), BinaryNode(andRQ))))
+    Assert.assertTrue(graph.adjIn(BinaryNode(s)).isEmpty)
+    Assert.assertTrue(graph.adjOut(BinaryNode(andRQ)).equals(Seq(AtomicNode(atomR), AtomicNode(atomQ))))
+    Assert.assertTrue(graph.adjIn(BinaryNode(andRQ)).equals(Seq(BinaryNode(s))))
+    Assert.assertTrue(graph.adjOut(AtomicNode(atomR)).equals(Seq(PredicateNode(atomR.predicate), VarNode(termA))))
+    Assert.assertTrue(graph.adjIn(AtomicNode(atomR)).equals(Seq(BinaryNode(andRQ))))
+    Assert.assertTrue(graph.adjOut(AtomicNode(atomQ)).equals(Seq(PredicateNode(atomQ.predicate), VarNode(termB))))
+    Assert.assertTrue(graph.adjIn(AtomicNode(atomQ)).equals(Seq(BinaryNode(andRQ))))
+    Assert.assertTrue(graph.adjOut(PredicateNode(atomR.predicate)).isEmpty)
+    Assert.assertTrue(graph.adjIn(PredicateNode(atomR.predicate)).equals(Seq(AtomicNode(atomR))))
+    Assert.assertTrue(graph.adjOut(PredicateNode(atomQ.predicate)).isEmpty)
+    Assert.assertTrue(graph.adjIn(PredicateNode(atomQ.predicate)).equals(Seq(AtomicNode(atomQ))))
+    Assert.assertTrue(graph.adjOut(VarNode(termA)).isEmpty)
+    Assert.assertTrue(graph.adjIn(VarNode(termA)).equals(Seq(AtomicNode(atomR))))
+    Assert.assertTrue(graph.adjOut(VarNode(termB)).isEmpty)
+    Assert.assertTrue(graph.adjIn(VarNode(termB)).equals(Seq(AtomicNode(atomQ))))
   }
   
   @Test
@@ -145,26 +168,33 @@ final class SentenceGraphTests {
     // arrange
     val termX = Term("x")
     val termA = Term("a")
-    val atomR = AtomicSentence(Atom(NamedPredicate("R"), termX))
-    val atomQ = AtomicSentence(Atom(NamedPredicate("Q"), termA))
-    val orRQ = Or(atomR, atomQ)
+    val atomR = Atom(NamedPredicate("R"), termX)
+    val atomQ = Atom(NamedPredicate("Q"), termA)
+    val orRQ = Or(AtomicSentence(atomR), AtomicSentence(atomQ))
     val s = QuantifiedSentence(orRQ, ExistentialQuantifier(termX))
     
     // act
-    val graph = SentenceGraph(s)
+    val (graph, _) = SentenceGraph(s)
     
     // assert
-    Assert.assertEquals(6, graph.size)
-    Assert.assertTrue(graph.adj.contains(QuantifierNode(s)))
-    Assert.assertTrue(graph.adj.contains(AtomicNode(atomR)))
-    Assert.assertTrue(graph.adj.contains(AtomicNode(atomQ)))
-    Assert.assertTrue(graph.adj.contains(VarNode(termX)))
-    Assert.assertTrue(graph.adj(QuantifierNode(s)).equals(Set(BinaryNode(orRQ), VarNode(termX))))
-    Assert.assertTrue(graph.adj(BinaryNode(orRQ)).equals(Set(AtomicNode(atomR), AtomicNode(atomQ))))
-    Assert.assertTrue(graph.adj(AtomicNode(atomR)).equals(Set(VarNode(termX))))
-    Assert.assertTrue(graph.adj(AtomicNode(atomQ)).equals(Set(VarNode(termA))))
-    Assert.assertTrue(graph.adj(VarNode(termX)).isEmpty)
-    Assert.assertTrue(graph.adj(VarNode(termA)).isEmpty)
     println(graph)
+    Assert.assertTrue(graph.has(QuantifierNode(s)))
+    Assert.assertTrue(graph.has(AtomicNode(atomR)))
+    Assert.assertTrue(graph.has(AtomicNode(atomQ)))
+    Assert.assertTrue(graph.has(VarNode(termX)))
+    Assert.assertTrue(graph.adjOut(QuantifierNode(s)).equals(Seq(VarNode(termX), BinaryNode(orRQ))))
+    Assert.assertTrue(graph.adjIn(QuantifierNode(s)).isEmpty)
+    Assert.assertTrue(graph.adjOut(BinaryNode(orRQ)).equals(Seq(AtomicNode(atomR), AtomicNode(atomQ))))
+    Assert.assertTrue(graph.adjIn(BinaryNode(orRQ)).equals(Seq(QuantifierNode(s))))
+    Assert.assertTrue(graph.adjOut(AtomicNode(atomR)).equals(Seq(PredicateNode(atomR.predicate), VarNode(termX))))
+    Assert.assertTrue(graph.adjIn(AtomicNode(atomR)).equals(Seq(BinaryNode(orRQ))))
+    Assert.assertTrue(graph.adjOut(AtomicNode(atomQ)).equals(Seq(PredicateNode(atomQ.predicate), VarNode(termA))))
+    Assert.assertTrue(graph.adjIn(AtomicNode(atomQ)).equals(Seq(BinaryNode(orRQ))))
+    Assert.assertTrue(graph.adjOut(PredicateNode(atomR.predicate)).isEmpty)
+    Assert.assertTrue(graph.adjIn(PredicateNode(atomR.predicate)).equals(Seq(AtomicNode(atomR))))
+    Assert.assertTrue(graph.adjOut(PredicateNode(atomQ.predicate)).isEmpty)
+    Assert.assertTrue(graph.adjIn(PredicateNode(atomQ.predicate)).equals(Seq(AtomicNode(atomQ))))
+    Assert.assertTrue(graph.adjOut(VarNode(termX)).isEmpty)
+    Assert.assertTrue(graph.adjOut(VarNode(termA)).isEmpty)
   }
 }

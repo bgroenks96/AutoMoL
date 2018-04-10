@@ -7,13 +7,15 @@ import edu.osu.cse.groenkeb.logic.proof.ProofContext
 import scala.collection.Seq
 
 object SentenceGraph {  
-  def from(sentence: Sentence) = build(sentence)
+  def apply(sentence: Sentence): (SentenceGraph, GraphNode) = build(sentence)
   
   private def build(sentence: Sentence, parent: Option[GraphNode] = None): (SentenceGraph, GraphNode) = sentence match {
-    case s@AtomicSentence(atom) =>
-      val node = AtomicNode(s)
-      val children = atom.terms.map(t => VarNode(t))
-      (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, children, parent))), node)
+    case AtomicSentence(atom) =>
+      val node = AtomicNode(atom)
+      val pred = Map(PredicateNode(atom.predicate) -> Adjacency(Seq(node), Nil))
+      val terms = atom.terms.map(t => VarNode(t) -> Adjacency(Seq(node), Nil)).toMap
+      val children = pred ++ terms
+      (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, children.keys.toSeq, parent)) ++ children), node)
     case s@BinarySentence(left, right, _) =>
       val node = BinaryNode(s)
       val (leftGraph, leftNode) = build(left, Some(node))
@@ -25,8 +27,9 @@ object SentenceGraph {
       (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, Seq(operandNode), parent))) ++ operandGraph, node)
     case s@QuantifiedSentence(sentence, quant) =>
       val node = QuantifierNode(s)
+      val termNode = VarNode(quant.term)
       val (exprGraph, exprNode) = build(sentence, Some(node))
-      (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, Seq(exprNode), parent))) ++ exprGraph, node)
+      (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, Seq(termNode, exprNode), parent))) ++ exprGraph, node)
     case _ => ???
   }
   
@@ -53,9 +56,13 @@ final case class SentenceGraph(adj: Map[GraphNode, Adjacency]) {
 }
 
 final case class Adjacency(in: Seq[GraphNode] = Nil, out: Seq[GraphNode] = Nil) {
-  def ++(adj: Adjacency) = Adjacency((in ++ adj.in).distinct, (out ++ adj.out).distinct)
+  def ++(adj: Adjacency) = Adjacency(merge(in, adj.in), merge(out, adj.out))
   
-  override def toString = s"{in: [${in.mkString(",")} | out: ${out.mkString(",")}]}"
+  // merges s2 into s1, ignoring nodes in s2 duplicating those in s1, but preserving duplicates
+  // that are independent to each sequence
+  private def merge(s1: Seq[GraphNode], s2: Seq[GraphNode]) = s1 ++ s2.filterNot { s => s1.contains(s) }
+  
+  override def toString = s"in: [${in.mkString(",")}] out: [${out.mkString(",")}]"
 }
 
 sealed abstract class GraphNode
@@ -68,8 +75,11 @@ final case class BinaryNode(sentence: BinarySentence) extends GraphNode {
 final case class UnaryNode(sentence: UnarySentence) extends GraphNode {
   override def toString = sentence.toString()
 }
-final case class AtomicNode(sentence: AtomicSentence) extends GraphNode {
-  override def toString = sentence.toString()
+final case class AtomicNode(atom: Atom) extends GraphNode {
+  override def toString = atom.toString()
+}
+final case class PredicateNode(pred: Predicate) extends GraphNode {
+  override def toString = pred.toString()
 }
 final case class VarNode(term: Term) extends GraphNode {
   override def toString = term.toString()
