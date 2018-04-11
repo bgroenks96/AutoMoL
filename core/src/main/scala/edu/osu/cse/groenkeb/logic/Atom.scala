@@ -18,8 +18,8 @@ case class Atom(val predicate: Predicate, val terms: Term*) {
 
 object Atom {
   def parse(str: String) = {
-    val propPattern = "([A-z]+)".r
-    val objPattern = "([A-z]+)\\[([A-z0-9,]+)*\\]".r
+    val propPattern = "([A-z0-9_]+)".r
+    val objPattern = "([A-z0-9_]+)\\[([A-z0-9,_]+)*\\]".r
     val idpred = IdentityPredicate.name
     str match {
       case objPattern(`idpred`, argstr) => Atom(IdentityPredicate(), argstr.split(",").map { s => Term(s) }:_*)

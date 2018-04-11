@@ -48,6 +48,8 @@ final case class SentenceGraph(adj: Map[GraphNode, Adjacency]) {
   
   def adjOut(node: GraphNode) = adj.getOrElse(node, Adjacency()).out
   
+  def degree(node: GraphNode) = adj.getOrElse(node, Adjacency()).degree
+  
   def ++(graph: SentenceGraph) =
     SentenceGraph(graph.adj ++ adj.map{ case (k,v) => k -> (v ++ graph.adj.getOrElse(k, Adjacency())) })
     
@@ -58,6 +60,12 @@ final case class SentenceGraph(adj: Map[GraphNode, Adjacency]) {
 final case class Adjacency(in: Seq[GraphNode] = Nil, out: Seq[GraphNode] = Nil) {
   def ++(adj: Adjacency) = Adjacency(merge(in, adj.in), merge(out, adj.out))
   
+  def degreeIn = in.length
+  
+  def degreeOut = out.length
+  
+  def degree = degreeIn + degreeOut
+  
   // merges s2 into s1, ignoring nodes in s2 duplicating those in s1, but preserving duplicates
   // that are independent to each sequence
   private def merge(s1: Seq[GraphNode], s2: Seq[GraphNode]) = s1 ++ s2.filterNot { s => s1.contains(s) }
@@ -66,6 +74,9 @@ final case class Adjacency(in: Seq[GraphNode] = Nil, out: Seq[GraphNode] = Nil) 
 }
 
 sealed abstract class GraphNode
+final case class RootNode(goal: Sentence, assumptions: Seq[Sentence]) extends GraphNode {
+  override def toString = (goal +: assumptions).mkString(";")
+}
 final case class QuantifierNode(sentence: QuantifiedSentence) extends GraphNode {
   override def toString = sentence.toString()
 }
