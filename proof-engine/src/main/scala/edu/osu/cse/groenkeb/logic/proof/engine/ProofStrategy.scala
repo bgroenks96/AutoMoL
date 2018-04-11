@@ -10,7 +10,7 @@ trait ProofStrategy {
    * in descending order of relevance/confidence that the solver should apply in searching
    * for a proof the given goal.
    */
-  def actions(implicit context: ProofContext): Seq[ProofStrategy.Action]
+  def actions(implicit context: ProofContext): Seq[Action]
   
   /**
    * Returns an appropriate final ProofResult for the given ProofResult, according to this strategy.
@@ -18,8 +18,4 @@ trait ProofStrategy {
    * Cut where the search engine would have defaulted to Continue, etc).
    */
   def decide(result: ProofResult)(implicit context: ProofContext): ProofResult
-}
-
-object ProofStrategy {
-  final case class Action(rule: Rule, major: Option[Sentence] = None)
 }

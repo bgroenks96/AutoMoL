@@ -5,7 +5,6 @@ import edu.osu.cse.groenkeb.logic.dsl._
 import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof.rules.core._
-import edu.osu.cse.groenkeb.logic.proof.engine.ProofStrategy.Action
 
 case class CoreProofStrategy() extends ProofStrategy {
   private implicit val ruleOrdering = Ordering[Int].on[Rule]((r: Rule) => ruleOrdinal(r))

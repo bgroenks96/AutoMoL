@@ -6,7 +6,6 @@ import scala.Right
 import edu.osu.cse.groenkeb.logic._
 import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof._
-import edu.osu.cse.groenkeb.logic.proof.engine.ProofStrategy.Action
 
 final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrategy(),
                         options: Seq[SolverOpts] = Nil) {
@@ -32,16 +31,16 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
   private def tryInfer(actions: scala.Seq[Action])(implicit context: ProofContext): ProofResult = {
     // inferFromResults matches the given sequence of Success results to a RuleArgs type and performs the final inference
     // step.
-    def inferFromUnaryResult(res1: ProofResult)(implicit rule: Rule): Option[Proof] = res1 match {
-      case Success(subproof, _, _) => rule.infer(UnaryArgs(subproof)) match {
+    def inferFromUnaryResult(res1: ProofResult)(implicit action: Action): Option[Proof] = res1 match {
+      case Success(subproof, _, _) => action.rule.infer(UnaryArgs(subproof)) match {
         case Some(proof) => Some(proof)
         case None => None
       }
       case _ => None
     }
 
-    def inferFromBinaryResults(res1: ProofResult, res2: ProofResult)(implicit rule: Rule): Option[Proof] = (res1, res2) match {
-      case (Success(subproof1, _, _), Success(subproof2, _, _)) => rule.infer(BinaryArgs(subproof1, subproof2)) match {
+    def inferFromBinaryResults(res1: ProofResult, res2: ProofResult)(implicit action: Action): Option[Proof] = (res1, res2) match {
+      case (Success(subproof1, _, _), Success(subproof2, _, _)) => action.rule.infer(BinaryArgs(subproof1, subproof2)) match {
         case Some(proof) => Some(proof)
         case None => None
       }
@@ -49,18 +48,18 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     }
 
     def inferFromTernaryResults(res1: ProofResult, res2: ProofResult, res3: ProofResult)
-                               (implicit rule: Rule): Option[Proof] = (res1, res2, res3) match {
+                               (implicit action: Action): Option[Proof] = (res1, res2, res3) match {
       case (Success(subproof1, _, _), Success(subproof2, _, _), Success(subproof3, _, _)) =>
-        rule.infer(TernaryArgs(subproof1, subproof2, subproof3)) match {
+        action.rule.infer(TernaryArgs(subproof1, subproof2, subproof3)) match {
           case Some(proof) => Some(proof)
           case None => None
         }
       case _ => None
     }
     
-    def inferFromNResults(resN: Seq[ProofResult])(implicit rule: Rule): Option[Proof] = resN match {
+    def inferFromNResults(resN: Seq[ProofResult])(implicit action: Action): Option[Proof] = resN match {
       case results if results.forall { r => r.isInstanceOf[Success] } =>
-        rule.infer(NArgs(resN.collect({case Success(subproof, _, _) => subproof}))) match {
+        action.rule.infer(NArgs(resN.collect({case Success(subproof, _, _) => subproof}))) match {
           case Some(proof) => Some(proof)
           case None => None
         }
@@ -78,7 +77,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
 
     // ------ Aggregator Functions ------- //
 
-    def unaryResults(p0: RuleParam)(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])(implicit rule: Rule): ProofResult =
+    def unaryResults(p0: RuleParam)(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])(implicit action: Action): ProofResult =
       paramResults.map { s => s.filter { r => r.isInstanceOf[Success] } } match {
         case results@Seq(Stream(head, rem@_*)) => inferFromUnaryResult(head) match {
           case Some(proof) => success(proof, { unaryResults(p0)(resultContext, advance(results)) })
@@ -91,7 +90,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
 
 
     def binaryResults(p0: RuleParam, p1: RuleParam)(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])
-                     (implicit rule: Rule): ProofResult = {
+                     (implicit action: Action): ProofResult = {
       paramResults.map { s => s.filter { r => r.isInstanceOf[Success] } } match {
         case results@Seq(Stream(head1, rem1@_*), Stream(head2, rem2@_*)) => inferFromBinaryResults(head1, head2) match {
           case Some(proof) => success(proof, { binaryResults(p0, p1)(resultContext, advance(results)) })
@@ -105,7 +104,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
 
     def ternaryResults(p0: RuleParam, p1: RuleParam, p2: RuleParam)
                       (resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])
-                      (implicit rule: Rule): ProofResult = {
+                      (implicit action: Action): ProofResult = {
       paramResults.map { s => s.filter { r => r.isInstanceOf[Success] } } match {
         case results@Seq(Stream(head1, rem1@_*), Stream(head2, rem2@_*), Stream(head3, rem3@_*)) => 
           inferFromTernaryResults(head1, head2, head3) match {
@@ -119,7 +118,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     }
     
     def nResults(params: Seq[RuleParam])
-                (resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])(implicit rule: Rule): ProofResult = {
+                (resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])(implicit action: Action): ProofResult = {
       paramResults.map { s => s.filter { r => r.isInstanceOf[Success] } } match {
         case anyMissing if anyMissing.length < params.length => failure()
         case all if all.forall { res => !res.isEmpty } => inferFromNResults(all.map { r => r.head }) match {
@@ -141,7 +140,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     // ------------------------- //
 
     // pendingParams creates a new 'Pending' instance for the given RuleParams and Rule
-    def pendingParams(params: RuleParams)(implicit rule: Rule): Pending = params match {
+    def pendingParams(params: RuleParams)(implicit action: Action): Pending = params match {
       case UnaryParams(param0) => pending(unaryResults(param0), step { tryParam(param0) })
       case BinaryParams(param0, param1) => pending(binaryResults(param0, param1), step { tryParam(param0) }, step { tryParam(param1) })
       case TernaryParams(param0, param1, param2) =>
@@ -156,7 +155,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
         pending(optionResults, opts.map {
           params => step({ pendingParams(params) })
         }.reduce((acc, step) => acc.then(step)))
-      case EmptyParams => rule.infer(EmptyArgs) match {
+      case EmptyParams => action.rule.infer(EmptyArgs) match {
         case None => pending((c, r) => r.head.head, step { failure() } )
         case Some(proof) => pending((c, r) => r.head.head, step { success(proof) })
       }
@@ -164,24 +163,24 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     
     actions match {
       case Nil => failure()
-      case Seq(Action(rule, major), rem@_*) => rule.params(major) match {
+      case Seq(a@Action(rule, major), rem@_*) => rule.params(major) match {
         case None => failure({ tryInfer(rem) })
-        case Some(params) => pendingParams(params)(rule).andThen(step({ tryInfer(rem) }))
+        case Some(params) => pendingParams(params)(a).andThen(step({ tryInfer(rem) }))
       }
     }
   }
 
-  private def tryParam(param: RuleParam)(implicit rule: Rule, context: ProofContext): ProofResult = param match {
+  private def tryParam(param: RuleParam)(implicit action: Action, context: ProofContext): ProofResult = param match {
     case EmptyProof(conc) => context.available.collect({ case a:Assumption => a }).find { a => a.matches(conc) } match {
       case Some(assumption) => success(assumption.proof)
       case None => failure()
     }
     case AnyProof(conc) => {
-      val newContext = context.withGoal(conc, rule)
+      val newContext = context.withGoal(conc, action)
       proof(newContext.available.toSeq)(newContext)
     }
     case RelevantProof(conc, discharges, restrict@_*) => {
-      val newContext = context.withGoal(conc, rule).withAssumptions(discharges.assumptions:_*).restrict(restrict:_*)
+      val newContext = context.withGoal(conc, action).withAssumptions(discharges.assumptions:_*).restrict(restrict:_*)
       proof(newContext.available.toSeq)(newContext)
     }
   }

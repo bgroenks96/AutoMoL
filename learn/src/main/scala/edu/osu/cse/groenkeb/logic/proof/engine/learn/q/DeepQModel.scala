@@ -4,11 +4,12 @@ import ml.dmlc.mxnet._
 import ml.dmlc.mxnet.module.Module
 
 import edu.osu.cse.groenkeb.logic.proof.engine.learn.ProblemState
-import edu.osu.cse.groenkeb.logic.proof.engine.ProofStrategy.Action
-import edu.osu.cse.groenkeb.logic.proof.ProofContext
+import edu.osu.cse.groenkeb.logic.proof._
 
 final class DeepQModel extends QModel {
-  private val ctx = Context.defaultCtx
+  private implicit val ctx = Context.defaultCtx
   
-  def update(availableActions: Seq[Action])(implicit context: ProofContext): Seq[Action] = ???
+  def consult(state: ProblemState, availableActions: Seq[Action]): Seq[QValue] = ???
+  
+  def update(params: QUpdate, availableActions: Seq[Action]): QValue = ???
 }

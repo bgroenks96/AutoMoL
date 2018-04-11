@@ -40,7 +40,8 @@ lazy val learn = project.in(file("learn")).dependsOn(core, parseExt, proofEngine
       name := "automol-learn",
       libraryDependencies ++= Seq(
         "org.slf4j" % "slf4j-api" % "1.7.25",
-        "org.slf4j" % "slf4j-simple" % "1.7.25"
+        "org.slf4j" % "slf4j-simple" % "1.7.25",
+        "be.botkop" %% "numsca" % "0.1.3",
        )
     )
 

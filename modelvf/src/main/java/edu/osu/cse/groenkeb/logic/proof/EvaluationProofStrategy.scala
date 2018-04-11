@@ -6,7 +6,6 @@ import edu.osu.cse.groenkeb.logic.model.rules._
 import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.proof.engine.ProofResult
 import edu.osu.cse.groenkeb.logic.proof.engine.ProofStrategy
-import edu.osu.cse.groenkeb.logic.proof.engine.ProofStrategy.Action
 
 final class EvaluationProofStrategy extends ProofStrategy {
 
