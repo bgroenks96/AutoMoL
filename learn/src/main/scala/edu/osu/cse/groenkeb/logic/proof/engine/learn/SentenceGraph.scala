@@ -75,7 +75,7 @@ final case class Adjacency(in: Seq[GraphNode] = Nil, out: Seq[GraphNode] = Nil) 
 
 sealed abstract class GraphNode
 final case class RootNode(goal: Sentence, assumptions: Seq[Sentence]) extends GraphNode {
-  override def toString = (goal +: assumptions).mkString(";")
+  override def toString = "root"
 }
 final case class QuantifierNode(sentence: QuantifiedSentence) extends GraphNode {
   override def toString = sentence.toString()
@@ -87,10 +87,10 @@ final case class UnaryNode(sentence: UnarySentence) extends GraphNode {
   override def toString = sentence.toString()
 }
 final case class AtomicNode(atom: Atom) extends GraphNode {
-  override def toString = atom.toString()
+  override def toString = s"atom:${atom.toString()}"
 }
 final case class PredicateNode(pred: Predicate) extends GraphNode {
-  override def toString = pred.toString()
+  override def toString = s"pred:${pred.toString()}"
 }
 final case class VarNode(term: Term) extends GraphNode {
   override def toString = term.toString()

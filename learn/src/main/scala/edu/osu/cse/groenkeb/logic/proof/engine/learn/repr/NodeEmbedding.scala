@@ -7,12 +7,16 @@ import edu.osu.cse.groenkeb.logic.proof.engine.learn.util.MxUtil
 import ml.dmlc.mxnet._
 import scala.collection.mutable.ArrayStack
 
+object NodeEmbedding {
+  val embeddingSize = 10
+}
+
 final class NodeEmbedding(val node: GraphNode, val nodeDegree: Int) {
   private implicit val ctx = Context.defaultCtx
   
-  private val embeddingSize = 9
-  
   private val values: ArrayStack[NDArray] = ArrayStack(initialEmbedding)
+  
+  private val embeddingSize = NodeEmbedding.embeddingSize
   
   def currentValue = values.last
   
@@ -37,6 +41,7 @@ final class NodeEmbedding(val node: GraphNode, val nodeDegree: Int) {
     case QuantifierNode(ForAll(_,_)) => MxUtil.onehot(6, NDArray.zeros(1, embeddingSize))
     case QuantifierNode(Exists(_,_)) => MxUtil.onehot(7, NDArray.zeros(1, embeddingSize))
     case VarNode(_) => MxUtil.onehot(8, NDArray.zeros(1, embeddingSize))
+    case PredicateNode(_) => MxUtil.onehot(9, NDArray.zeros(1, embeddingSize))
     case _ => ???
   }
 }

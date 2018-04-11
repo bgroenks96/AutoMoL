@@ -12,8 +12,9 @@ import scala.collection.immutable.ListMap
 import edu.osu.cse.groenkeb.logic.proof.engine.learn.GraphNode
 import edu.osu.cse.groenkeb.logic.proof.engine.learn.SentenceGraph
 
-final class GraphEmbeddingModel(embeddingDims: Int, hiddenDims: Int = 128) {
+final class GraphEmbeddingModel(hiddenDims: Int = 128) {
   private implicit val ctx = Context.defaultCtx
+  private val embeddingDims = NodeEmbedding.embeddingSize
   private val inEdgeModule = initEdgeModule
   private val outEdgeModule = initEdgeModule
   private val updateModule = initUpdateModule
@@ -48,21 +49,26 @@ final class GraphEmbeddingModel(embeddingDims: Int, hiddenDims: Int = 128) {
    * Returns the new embedding value NDArray as a result.
    */
   def embeddingStep(node: NodeEmbedding, inEdges: Seq[NodeEmbedding], outEdges: Seq[NodeEmbedding]) = {
-    val us = NDArray.concatenate(Array.fill(inEdges.length)(node.currentValue):_*)
     val vIn = NDArray.zeros(ctx, embeddingDims)
-    val ins = iter(inEdges)
-    val inIter = new NDArrayIter(Array(ins, us))
-    while (inIter.hasNext) {
-      inEdgeModule.forward(inIter.next())
-      vIn += inEdgeModule.getOutputsMerged().head
+    if (inEdges.length > 0) {
+      val uIns = NDArray.broadcast_to(Map("shape" -> (inEdges.length, embeddingDims)))(node.currentValue).get
+      val ins = iter(inEdges)
+      val inIter = new NDArrayIter(Array(ins, uIns))
+      while (inIter.hasNext) {
+        inEdgeModule.forward(inIter.next())
+        vIn += inEdgeModule.getOutputsMerged().head
+      }
     }
     
     val vOut = NDArray.zeros(ctx, embeddingDims)
-    val outs = iter(outEdges)
-    val outIter = new NDArrayIter(Array(us, outs))
-    while (outIter.hasNext) {
-      inEdgeModule.forward(inIter.next())
-      vOut += inEdgeModule.getOutputsMerged().head
+    if (outEdges.length > 0) {
+      val uOuts = NDArray.broadcast_to(Map("shape" -> (outEdges.length, embeddingDims)))(node.currentValue).get
+      val outs = iter(outEdges)
+      val outIter = new NDArrayIter(Array(uOuts, outs))
+      while (outIter.hasNext) {
+        inEdgeModule.forward(outIter.next())
+        vOut += inEdgeModule.getOutputsMerged().head
+      }
     }
     
     val deg = MxUtil.array(node.nodeDegree)
@@ -114,14 +120,14 @@ final class GraphEmbeddingModel(embeddingDims: Int, hiddenDims: Int = 128) {
   private def initEdgeModule: Module = {
     val xv = Symbol.Variable("xv")
     val xu = Symbol.Variable("xu")
-    val concat = Symbol.Concat("cat")(xv, xu)()
+    val concat = Symbol.Concat("cat")(xv, xu)(Map("dim" -> 0))
     val fc1 = Symbol.FullyConnected("fc1")(concat)(Map("num_hidden" -> hiddenDims))
     val relu1 = Symbol.Activation("relu1")(fc1)(Map("act_type" -> "relu"))
     val fc2 = Symbol.FullyConnected("fc2")(relu1)(Map("num_hidden" -> embeddingDims))
     val relu2 = Symbol.Activation("relu2")(fc2)(Map("act_type" -> "relu"))
     val module = new Module(relu2, dataNames=Array("xv", "xu"))
-    val xvInputDesc = DataDesc("xv", Shape(embeddingDims), layout="NC")
-    val xuInputDesc = DataDesc("xu", Shape(embeddingDims), layout="NC")
+    val xvInputDesc = DataDesc("xv", Shape(1, embeddingDims), layout="NC")
+    val xuInputDesc = DataDesc("xu", Shape(1, embeddingDims), layout="NC")
     module.bind(Array(xvInputDesc, xuInputDesc), forTraining=true)
     module.initParams(new Xavier())
     module.initOptimizer(optimizer=new RMSProp(learningRate=0.1f))
@@ -135,15 +141,15 @@ final class GraphEmbeddingModel(embeddingDims: Int, hiddenDims: Int = 128) {
     val dv = Symbol.Variable("dv")
     val vSum = vIn + vOut
     val dvInv = Symbol.reciprocal("dvInv")(dv)()
-    val prod = dvInv * vSum
+    val prod = Symbol.broadcast_mul()(dvInv, vSum)()
     val newXv = xv + prod
     val fc1 = Symbol.FullyConnected("fc1")(newXv)(Map("num_hidden" -> hiddenDims))
     val relu1 = Symbol.Activation("relu1")(fc1)(Map("act_type" -> "relu"))
     val module = new Module(relu1, dataNames=Array("xv", "vIn", "vOut", "dv"))
-    val vInInputDesc = DataDesc("vIn", Shape(embeddingDims), layout="NC")
-    val vOutInputDesc = DataDesc("vOut", Shape(embeddingDims), layout="NC")
-    val xvInputDesc = DataDesc("xv", Shape(embeddingDims), layout="NC")
-    val dvInputDesc = DataDesc("dv", Shape(1), layout="NC")
+    val vInInputDesc = DataDesc("vIn", Shape(1, embeddingDims), layout="NC")
+    val vOutInputDesc = DataDesc("vOut", Shape(1, embeddingDims), layout="NC")
+    val xvInputDesc = DataDesc("xv", Shape(1, embeddingDims), layout="NC")
+    val dvInputDesc = DataDesc("dv", Shape(1, 1), layout="NC")
     module.bind(Array(vInInputDesc, vOutInputDesc, xvInputDesc, dvInputDesc), forTraining=true, inputsNeedGrad=true)
     module.initParams(new Xavier())
     module.initOptimizer(optimizer=new RMSProp(learningRate=0.1f))
@@ -156,14 +162,15 @@ final class GraphEmbeddingModel(embeddingDims: Int, hiddenDims: Int = 128) {
       val syms = Array.ofDim[Symbol](len)
       val names = Array.ofDim[String](len)
       for (i <- 0 until len) {
-        syms(i) = Symbol.Variable("x_" + i)
+        names(i) = "x_" + i
+        syms(i) = Symbol.Variable(names(i))
       }
       val cc = Symbol.Concat()(syms:_*)(Map("dim" -> 0))
       val max = Symbol.max()(cc)(Map("axis" -> 0))
       (max, names, Array[String]())
     }
-    val module = new BucketingModule(symGen, MxUtil.bkt(0))
-    module.bind(Array(DataDesc("x_1", Shape(1,embeddingDims))), forTraining=true, inputsNeedGrad=true)
+    val module = new BucketingModule(symGen, MxUtil.bkt(1))
+    module.bind(Array(DataDesc("x_0", Shape(1,embeddingDims))), forTraining=true, inputsNeedGrad=true)
     module.initParams(new Xavier())
     module
   }
