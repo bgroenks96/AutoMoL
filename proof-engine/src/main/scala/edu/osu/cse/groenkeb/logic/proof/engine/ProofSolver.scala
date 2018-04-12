@@ -164,24 +164,24 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     actions match {
       case Nil => failure()
       case Seq(a@Action(rule, major), rem@_*) => rule.params(major) match {
-        case None => failure({ tryInfer(rem) })(context.withGoal(context.goal, a))
-        case Some(params) => pendingParams(params)(a).andThen(step({ tryInfer(rem) }))
+        case None => strategy.feedback(a, failure({ tryInfer(rem) })(context.withGoal(context.goal, a)))
+        case Some(params) => strategy.feedback(a, pendingParams(params)(a).andThen(step({ tryInfer(rem) })))
       }
     }
   }
 
   private def tryParam(param: RuleParam)(implicit action: Action, context: ProofContext): ProofResult = param match {
     case EmptyProof(conc) => context.available.collect({ case a:Assumption => a }).find { a => a.matches(conc) } match {
-      case Some(assumption) => success(assumption.proof)
-      case None => failure()
+      case Some(assumption) => strategy.feedback(action, success(assumption.proof))
+      case None => strategy.feedback(action, failure())
     }
     case AnyProof(conc) => {
       val newContext = context.withGoal(conc, action)
-      proof(newContext.available.toSeq)(newContext)
+      strategy.feedback(action, proof(newContext.available.toSeq)(newContext))
     }
     case RelevantProof(conc, discharges, restrict@_*) => {
       val newContext = context.withGoal(conc, action).withAssumptions(discharges.assumptions:_*).restrict(restrict:_*)
-      proof(newContext.available.toSeq)(newContext)
+      strategy.feedback(action, proof(newContext.available.toSeq)(newContext))
     }
   }
 

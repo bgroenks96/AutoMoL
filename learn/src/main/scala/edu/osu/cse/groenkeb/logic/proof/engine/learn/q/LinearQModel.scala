@@ -65,16 +65,15 @@ final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
    * Evaluates feature values for the given state and action.
    */
   private def evaluateFeatures(state: ProblemState, action: Action): Tensor = {
-    val fvals = features.map(f => f(state, action))
-    Tensor(fvals.toArray)
+    val fvals = ns.pad(Tensor(features.map(f => f(state, action)).toArray), biasTermPadShape, PadMode.CONSTANT)
+    fvals(fvals.shape(1) - 1) := 1
+    fvals
   }
   
   /**
    * Computes the raw Q-value for the given feature vector using the current weights.
    */
   private def qfunc(fvals: Tensor): Double = {
-    val fvalsWithBias = ns.pad(fvals, biasTermPadShape, PadMode.CONSTANT)
-    fvalsWithBias(fvalsWithBias.shape(1) - 1) := 1
-    ns.dot(this.weights, fvalsWithBias.T).squeeze()
+    ns.dot(this.weights, fvals.T).squeeze()
   }
 }

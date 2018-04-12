@@ -12,7 +12,7 @@ import scala.collection.immutable.ListMap
 import edu.osu.cse.groenkeb.logic.proof.engine.learn.GraphNode
 import edu.osu.cse.groenkeb.logic.proof.engine.learn.SentenceGraph
 
-final class GraphEmbeddingModel(hiddenDims: Int = 128) {
+final class DeepGraphEmbedding(hiddenDims: Int = 128) {
   private implicit val ctx = Context.defaultCtx
   private val embeddingDims = NodeEmbedding.embeddingSize
   private val inEdgeModule = initEdgeModule

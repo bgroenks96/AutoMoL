@@ -8,6 +8,9 @@ import scala.collection.Seq
 
 object SentenceGraph {
   def apply(sentence: Sentence, parent: Option[GraphNode] = None): (SentenceGraph, GraphNode) = sentence match {
+    case Absurdity =>
+      val node = AbsurdityNode
+      (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, Nil, parent))), node)
     case AtomicSentence(atom) =>
       val node = AtomicNode(atom)
       val pred = Map(PredicateNode(atom.predicate) -> Adjacency(Seq(node), Nil))
@@ -92,4 +95,7 @@ final case class PredicateNode(pred: Predicate) extends GraphNode {
 }
 final case class VarNode(term: Term) extends GraphNode {
   override def toString = term.toString()
+}
+final case object AbsurdityNode extends GraphNode {
+  override def toString = "!"
 }

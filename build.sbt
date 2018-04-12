@@ -42,6 +42,7 @@ lazy val learn = project.in(file("learn")).dependsOn(core, parseExt, proofEngine
         "org.slf4j" % "slf4j-api" % "1.7.25",
         "org.slf4j" % "slf4j-simple" % "1.7.25",
         "be.botkop" %% "numsca" % "0.1.3",
+        "com.github.haifengl" %% "smile-scala" % "1.5.1",
        )
     )
 

@@ -10,9 +10,9 @@ import edu.osu.cse.groenkeb.logic.proof.rules.core._
 
 import scala.collection.immutable.Seq
 import edu.osu.cse.groenkeb.logic.proof.engine.learn.ProblemGraph
-import edu.osu.cse.groenkeb.logic.proof.engine.learn.repr.GraphEmbeddingModel
+import edu.osu.cse.groenkeb.logic.proof.engine.learn.repr.DeepGraphEmbedding
 
-class GraphEmbeddingModelTest {
+class DeepGraphEmbeddingTest {
   @Test
   def testEmbedProblemBasic() {
     implicit val rules = standardRules
@@ -20,7 +20,7 @@ class GraphEmbeddingModelTest {
     val context = ProofContext(a, Seq(Assumption(a)))
     val graph = ProblemGraph(context)
     println(graph.graph.adj)
-    val embeddingModel = new GraphEmbeddingModel()
+    val embeddingModel = new DeepGraphEmbedding()
     embeddingModel.embed(graph, steps=1)
   }
   

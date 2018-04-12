@@ -37,13 +37,15 @@ import edu.osu.cse.groenkeb.logic.proof.engine.learn.q.QLearningStrategy
 import edu.osu.cse.groenkeb.logic.proof.engine.learn.q.Features
 import edu.osu.cse.groenkeb.logic.proof.engine.learn.q.LinearQModel
 import edu.osu.cse.groenkeb.logic.proof.engine.learn.q.EpsilonGreedy
+import edu.osu.cse.groenkeb.logic.proof.engine.learn.ProblemGraph
+import edu.osu.cse.groenkeb.logic.proof.engine.NaiveProofStrategy
 
 class QBasicCoreProofTests {
   val _name = new TestName()
   
   val gamma = 0.9
-  val policy = new EpsilonGreedy(0.5, decay=0.01f)
-  val features = Features.concMatching +: Features.ruleMatching(standardRules)
+  val policy = new EpsilonGreedy(0.0, decay=0.0f)
+  val features = Features.ruleRelevance +: Features.ruleMatching(standardRules)
   val model = new LinearQModel(features, gamma)
   implicit val strategy = new QLearningStrategy(model, policy)
   implicit val trace = Trace()

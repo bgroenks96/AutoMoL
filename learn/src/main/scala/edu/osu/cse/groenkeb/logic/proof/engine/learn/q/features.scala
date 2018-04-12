@@ -28,17 +28,15 @@ object Features {
     rules.rules.map[Feature, Seq[Feature]](r => BaseFeature.applyFunc(ruleMatch(r)))
   }
   
-  def concMatching: Feature = {
-    def sentMatch(graph: ProblemGraph, action: Action) = (graph.goal, action.major) match {
-      case (AtomicNode(_), Some(sentence)) => sentence match { case AtomicSentence(_) => 1.0; case _ => 0.0 }
-      case (BinaryNode(And(_,_)), Some(sentence)) => sentence match { case And(_,_) => 1.0; case _ => 0.0 }
-      case (BinaryNode(Or(_,_)), Some(sentence)) => sentence match { case Or(_,_) => 1.0; case _ => 0.0 }
-      case (BinaryNode(If(_,_)), Some(sentence)) => sentence match { case If(_,_) => 1.0; case _ => 0.0 }
-      case (UnaryNode(Not(_)), Some(sentence)) => sentence match { case Not(_) => 1.0; case _ => 0.0 }
-      case (QuantifierNode(ForAll(_,_)), Some(sentence)) => sentence match { case ForAll(_,_) => 1.0; case _ => 0.0 }
-      case (QuantifierNode(Exists(_,_)), Some(sentence)) => sentence match { case Exists(_,_) => 1.0; case _ => 0.0 }
+  def ruleRelevance: Feature = {
+    def relevance(graph: ProblemGraph, action: Action) = graph.goal match {
+      case AtomicNode(a) => if (action.rule.yields(AtomicSentence(a))) 1.0 else 0.0
+      case BinaryNode(s) => if (action.rule.yields(s)) 1.0 else 0.0
+      case UnaryNode(s) => if (action.rule.yields(s)) 1.0 else 0.0
+      case QuantifierNode(s) => if (action.rule.yields(s)) 1.0 else 0.0
+      case AbsurdityNode => if (action.rule.yields(Absurdity)) 1.0 else 0.0
       case _ => 0.0
     }
-    BaseFeature.applyFunc(sentMatch)
+    BaseFeature.applyFunc(relevance)
   }
 }

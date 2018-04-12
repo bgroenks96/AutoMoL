@@ -6,7 +6,7 @@ import botkop.{numsca => ns}
 import botkop.numsca.Tensor
 
 object ProblemGraph {
-  val encodingDims = 10  
+  val encodingDims = 11  
 
   def apply(context: ProofContext): ProblemGraph = {
     val rootNode = RootNode(context.goal, context.available.toSeq.map(p => p.sentence))
@@ -28,6 +28,7 @@ object ProblemGraph {
     case QuantifierNode(Exists(_,_)) => onehot(7)
     case VarNode(_) => onehot(8)
     case PredicateNode(_) => onehot(9)
+    case AbsurdityNode => onehot(10)
     case _ => ???
   }
   

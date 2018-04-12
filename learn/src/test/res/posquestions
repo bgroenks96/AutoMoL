@@ -1,0 +1,366 @@
+% TRIVIAL
+
+[a] ?- a .
+
+[a,b] ?- a .
+
+[not(a)] ?- not(a) .
+
+[and(a,b)] ?- and(a,b) .
+
+[if(a,b)] ?- if(a,b) .
+
+[or(a,b)] ?- or(a,b) .
+
+% SIMPLE INTRODUCTIONS
+
+[a] ?- not(not(a)) .
+
+[a,b] ?- and(a,b) .
+
+[b] ?- if(a,b) .
+
+[a] ?- or(a,b) .
+
+[b] ?- or(a,b) .
+
+% SIMPLE ELIMINATIONS
+
+[a,not(a)] ?- # .
+
+[and(a,b)] ?- a .
+
+[and(a,b)] ?- b .
+
+[if(a,b),a] ?- b .
+
+% SINGLE OPERATORS
+
+	% IF
+
+[] ?- if(a,a) .
+
+[] ?- if(a,if(a,a)) .
+
+[] ?- if(a,if(if(a,a),a)) .
+
+[] ?- if(a,if(if(a,b),a)) .
+
+[if(a,b),if(b,c)] ?- if(a,c) .
+
+[] ?- if(if(a,if(a,b)),if(a,b)) .
+
+[] ?- if(if(a,b),if(if(a,b),if(a,b))) .
+
+[] ?- if(if(a,b),if(if(b,c),if(a,c))) .
+
+[] ?- if(if(a,b),if(if(c,a),if(c,b))) .
+
+[] ?- if(if(a,b),if(if(if(a,b),c),c)) .
+
+[] ?- if(if(b,if(b,a)),if(if(if(b,a),a),a) ) .
+
+[if(a,if(b,c)),if(a,if(c,d))] ?- if(a,if(b,d)) .
+
+[] ?- if(if(a,if(b,c)),if(if(d,b),if(a,if(d,c))))  .
+
+[] ?- if(if(a,d),if(if(if(b,c),a),if(if(a,c),if(if(b,a),d)))) .
+
+
+	% NOT
+
+[not(not(not(a)))] ?- not(a) .
+
+[a,not(a)] ?- not(b) .
+
+	% AND
+
+[and(a,b),and(b,c)] ?- and(a,c) .
+
+[and(a,b)] ?- and(b,a) .
+
+[and(and(a,b),c)] ?- and(a,and(b,c)) .
+
+[and(and(and(a,b),c),d)] ?- and(a,and(b,and(c,d))) .
+
+[and(and(and(and(a,b),c),d),e)] ?- and(a,and(b,and(c,and(d,e)))) .
+
+[and(and(and(and(and(a,b),c),d),e),f)] ?- and(a,and(b,and(c,and(d,and(e,f))))) .
+
+[and(and(and(and(and(and(a,b),c),d),e),f),g)] ?- and(a,and(b,and(c,and(d,and(e,and(f,g)))))) .
+
+	% OR
+
+[or(a,b)] ?- or(b,a) .
+
+[or(or(a,b),c)] ?- or(a,or(b,c)) .
+
+[or(or(or(a,b),c),d)] ?- or(a,or(b,or(c,d))) .
+
+[or(or(or(or(a,b),c),d),e)] ?- or(a,or(b,or(c,or(d,e)))) .
+
+[or(or(or(or(or(a,b),c),d),e),f)] ?- or(a,or(b,or(c,or(d,or(e,f))))) .
+
+[or(or(or(or(or(or(a,b),c),d),e),f),g)] ?- or(a,or(b,or(c,or(d,or(e,or(f,g)))))) .
+
+
+% TWO OPERATORS
+
+	% IF-AND
+
+[] ?- if(and(a,b),a) .
+
+[] ?- if(and(a,b),b) .
+
+[if(a,b), and(a,c)] ?- b .
+
+[] ?- and(if(p,p),if(p,p)) .
+
+[] ?- if(and(a,b),and(b,a)) .
+
+[if(a,b)] ?- if(and(a,c),b) .
+
+[if(a,b)] ?- if(and(c,a),b) .
+
+[if(q,r),if(r,and(p,q))] ?- if(q,p) .
+
+[if(a,b),if(a,c)] ?- if(a,and(b,c)) .
+
+[] ?- if(and(if(a,b),if(a,c)),if(a,and(b,c))) .
+
+[] ?- if(and(if(a,c),if(a,if(c,d))),if(a,if(a,d))) .
+
+[if(d,and(if(a,b),if(a,c)))] ?- if(if(c,e),if(and(a,d),e)) .
+
+	% IF-OR
+
+[] ?- if(a,or(a,b)) .
+
+[] ?- if(b,or(a,b)) .
+
+[or(a,b),if(a,b)] ?- b .
+
+[] ?- if(or(a,b),or(b,a)) .
+
+[] ?- or(if(p,p),if(p,p)) .
+
+[a,if(a,or(b,c))] ?- or(c,b) .
+
+[or(a,b),if(a,c),if(b,c)] ?- c .
+
+[if(a,c),if(b,c),or(a,b)] ?- c .
+
+[if(a,c),if(b,c)] ?- if(or(a,b),c) .
+
+[b, if(a,if(b,c)), if(b,or(a,c))] ?- c .
+
+[] ?- if(if(a,c),if(if(b,c),if(or(a,b),c))) .
+
+
+	% IF-NOT
+
+
+% [if(#,a),b,not(b)] ?- a .
+
+[if(a,not(a))] ?- not(a) .
+
+[] ?- if(if(a,not(a)),not(a)) .
+
+[if(not(a),a)] ?- not(not(a)) .
+
+[if(a,b)] ?- if(not(b),not(a)) .
+
+[not(a)] ?- if(if(b,a),not(b)) .
+
+[not(c),if(if(a,b),c)] ?- not(b) .
+
+[] ?- if(if(a,b),if(not(b),not(a))) .
+
+[if(a,b),if(not(a),b)] ?- not(not(b)) .
+
+[if(a,b),if(b,c)] ?- if(not(c),not(a)) .
+
+[] ?- if(not(not(a)),not(if(a,not(a)))) .
+
+[a, if(a,not(b)), if(a,not(not(b)))] ?- # .
+
+[a, if(a,not(b))] ?- not(if(a,not(not(b)))) .
+
+[if(if(a,b),c),if(not(b),d)] ?- if(not(c),d) .
+
+[if(a,not(b)),if(not(c),b)] ?- if(not(c),not(a)) .
+
+[a, if(a,not(b)), not(not(if(a,not(not(b)))))] ?- # .
+
+[a, not(not(if(a,not(not(b)))))] ?- not(if(a,not(b))) .
+
+[not(not(if(a,not(not(b))))), not(not(if(a,not(b)))), a] ?- # .
+
+
+	% OR-NOT
+
+
+[not(or(a,b))] ?- not(a) .
+
+[not(or(a,b))] ?- not(b) .
+
+[or(a,b),not(a),not(b)] ?- # .
+
+[not(a),or(a,b)] ?- not(not(b)) .
+
+[not(b),or(a,b)] ?- not(not(a)) .
+
+[or(not(a),b), a] ?- not(not(b)) .
+
+[or(a,not(b)), b] ?- not(not(a)) .
+
+[or(not(a),not(b)), a] ?- not(b) .
+
+[p, q] ?- not(or(not(p),not(q))) .
+
+[or(not(a),not(b)), b] ?- not(a) .
+
+[p, q, not(q)] ?- not(or(not(p),not(q))) .
+
+[or(not(a),not(b)), not(not(a))] ?- not(b) .
+
+[or(not(a),not(b)), not(not(b))] ?- not(a) .
+
+[q, or(p,not(q))] ?- not(or(not(p),not(q))) .
+
+[p, q, or(p,not(q)), or(not(p),not(q))] ?- # .
+
+[p, q, or(p,not(q))] ?- not(or(not(p),not(q))) .
+
+[p, q, or(p,not(q))] ?- not(or(not(p),not(q))) .
+
+[q, not(p), or(p,not(q))] ?- not(or(not(p),not(q))) .
+
+[p, not(p), or(p,not(q))] ?- not(or(not(p),not(q))) .
+
+[q, not(p), or(p,not(q))] ?- not(or(not(p),not(q))) .
+
+[p, or(not(p),q), or(p,not(q))] ?- not(or(not(p),not(q))) .
+
+[q, or(not(p),q), or(p,not(q))] ?- not(or(not(p),not(q))) .
+
+[or(p,q), or(not(p),q), or(p,not(q))] ?- not(or(not(p),not(q))) .
+
+	% OR-AND
+
+[or(a,and(b,c))] ?- or(a,b) .
+
+[or(a,and(b,c))] ?- or(a,c) .
+
+[and(a,or(b,c))] ?- or(and(a,b),c) .
+
+[and(a,or(b,c))] ?- or(and(a,b),and(a,c)) .
+
+[or(a,and(b,c))] ?- and(or(a,b),or(a,c)) .
+
+	% AND-NOT
+
+[and(a,not(a))] ?- # .
+
+[and(a,b),not(a)] ?- # .
+
+[and(a,not(a))] ?- not(b) .
+
+[and(b,c),not(and(a,b))] ?- not(a) .
+
+[] ?- not(and(not(p),not(not(not(not(p)))))) .
+
+[q, not(and(p,q)), not(and(p,not(q))), not(and(not(p),q))] ?- # .
+
+[not(p), not(and(not(p),not(q))), not(and(p,not(q))), not(and(not(p),q))] ?- # .
+
+[not(b), not(and(not(a),not(b))), not(and(not(a),not(not(b)))), not(and(not(not(a)),not(b)))] ?- # .
+
+[not(and(not(p),not(q))),not(and(not(not(p)),not(q))),not(and(not(p),not(not(q))))] ?- not(not(p)) .
+
+[not(and(not(p),not(q))),not(and(not(not(p)),not(q))),not(and(not(p),not(not(q))))] ?- not(not(and(not(not(p)),not(not(q))))) .
+
+[not(a), not(and(not(a),not(b))), not(and(not(a),not(not(b)))), not(and(not(not(a)),not(b)))] ?- # .
+
+
+% THREE OPERATORS
+
+	% IF-OR-AND
+
+[and(if(a,c),if(b,c)),a] ?- c .
+
+[and(if(a,c),if(b,c)),b] ?- c .
+
+[and(if(a,c),if(b,c)),or(a,b)] ?- c .
+
+[if(or(a,b),c)] ?- and(if(a,c),if(b,c)) .
+
+[and(if(a,c),if(b,c))] ?- if(or(a,b),c) .
+
+[] ?- if(and(a,or(b,c)),or(and(a,b),c)) .
+
+[and(if(a,c),if(b,c))] ?- if(or(a,b),c) .
+
+[if(p,or(q,r)),if(r,and(p,q))] ?- if(p,q) .
+
+[b, and(if(a,if(b,c)),if(b,or(a,c)))] ?- c .
+
+[a,e,if(a,and(b,if(e,or(c,d))))] ?- or(d,c) .
+
+[] ?- if(and(if(a,c),if(b,c)),if(or(a,b),c)) .
+
+[and(if(a,if(b,c)),if(b,or(a,c)))] ?- if(b,c) .
+
+[and(if(a,c),if(b,c)), if(d,or(a,b))] ?- if(d,c) .
+
+[] ?- if(and(if(a,if(b,c)),if(b,or(a,c))),if(b,c)) .
+
+[if(q,r),if(r,and(p,q)),if(p,or(q,r))] ?- and(if(p,q),if(q,p)) .
+
+[] ?- if(and(and(or(p,q),or(not(p),q)),or(p,not(q))),not(or(not(p),not(q)))) .
+
+[] ?- and(if(or(p,and(q,r)),and(or(p,q),or(p,r))),if(and(or(p,q),or(p,r)),or(p,and(q,r)))) .
+
+	% IF-OR-NOT
+
+[not(or(a,b)),if(not(a),b)] ?- # .
+
+	% IF-AND-NOT
+
+[and(not(a),not(b)), if(d,or(a,b))] ?- not(d) .
+
+[] ?- if(and(a,b),not(not(and(not(not(a)),not(not(b)))))) .
+
+[] ?- and(if(if(p,q),if(not(q),not(p))),if(if(not(q),not(p)),if(p,not(not(q))))) .
+
+[] ?- and(if(if(not(p),q),if(not(q),not(not(p)))),if(if(not(q),p),if(not(p),not(not(q))))) .
+
+[] ?- if(and(and(not(and(not(p),not(q))),not(and(not(not(p)),not(q)))),not(and(not(p),not(not(q))))),not(not(and(not(not(p)),not(not(q)))))) .
+
+
+[] ?- if(and(and(not(and(not(p),not(q))),not(and(not(not(p)),not(q)))),not(and(not(p),not(not(q))))),not(not(p))) . 
+
+
+
+[if(q,r),if(r,and(p,q)),if(p,not(and(not(q),not(r))))] ?- and(if(p,not(not(q))),if(q,p)) .
+
+[] ?- and(if(not(and(not(p),not(and(q,r)))),and(not(and(not(p),not(q))),not(and(not(p),not(r))))),if(and(not(and(not(p),not(q))),not(and(not(p),not(r)))),not(and(not(p),not(and(q,r)))))) .
+
+	% OR-AND-NOT
+
+[not(or(a,b))] ?- and(not(a),not(b)) .
+
+[and(not(a),not(b))] ?- not(or(a,b)) .
+
+[or(not(a),not(b))] ?- not(and(a,b)) .
+
+[and(or(p,q),or(not(p),q)), or(p,not(q))] ?- not(or(not(p),not(q))) .
+
+[and(and(or(p,q),or(not(p),q)),or(p,not(q)))] ?- not(or(not(p),not(q))) .
+
+
+
+
+
+
+

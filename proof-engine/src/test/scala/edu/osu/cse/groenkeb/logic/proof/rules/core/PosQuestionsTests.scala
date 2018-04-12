@@ -18,6 +18,7 @@ import edu.osu.cse.groenkeb.logic.proof._
 import edu.osu.cse.groenkeb.logic.proof.engine._
 import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.parse.ParserException
+import edu.osu.cse.groenkeb.logic.parse.corepl.CorePLProofParser
 
 class PosQuestionsTests {
   
@@ -74,32 +75,8 @@ class PosQuestionsTests {
     println(s"Average step count: ${Math.round(meanStepCount)}")
   }
   
-  private def upcast(sentence: Sentence) = sentence
-  
-  lazy val list: Parser[List[Sentence]] = {
-    (char('[') ~> innerList <~ char(']')) |
-    string("[]").map { _ => Nil }
-  }
-    
-  lazy val innerList: Parser[List[Sentence]] = (
-    for {
-      head <- sentence
-      _ <- char(',')
-      tail <- innerList
-    } yield List(head) ++ tail
-  ) | sentence.map { s => List(s) }
-    
-  lazy val sentence: Parser[Sentence] = (
-    (string("not(") ~> sentence <~ string(")")).map { s => Not(s) } |
-    (string("and(") ~> sentence <~ char(','), sentence <~ char(')')).mapN { (left, right) => upcast(And(left, right)) } |
-    (string("or(") ~> sentence <~ char(','), sentence <~ char(')')).mapN { (left, right) => upcast(Or(left, right)) } |
-    (string("if(") ~> sentence <~ char(','), sentence <~ char(')')).mapN { (left, right) => upcast(If(left, right)) } |
-    char('#').map { _ => upcast(Absurdity) } |
-    stringOf(letter).map { name => AtomicSentence(Atom(NamedPredicate(name))) }
-  )
-  
   lazy val question: Parser[(List[Sentence], Sentence)] = (
-    (list <~ string("?-"), sentence <~ char('.')).mapN { (premises, conc) => (premises, conc) }
+    (CorePLProofParser.list <~ string("?-"), CorePLProofParser.sentence <~ char('.')).mapN { (premises, conc) => (premises, conc) }
   )
   
   private def loadPosquestions = {
