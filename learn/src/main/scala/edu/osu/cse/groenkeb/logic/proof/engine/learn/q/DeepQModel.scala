@@ -9,7 +9,7 @@ import edu.osu.cse.groenkeb.logic.proof._
 final class DeepQModel extends QModel {
   private implicit val ctx = Context.defaultCtx
   
-  def consult(state: ProblemState, availableActions: Seq[Action]): Seq[QValue] = ???
+  def evaluate(state: ProblemState, availableActions: Seq[Action]): Seq[QValue] = ???
   
-  def update(params: QUpdate, availableActions: Seq[Action]): QValue = ???
+  def update(params: QUpdate, availableActions: Seq[Action]): Option[QValue] = ???
 }

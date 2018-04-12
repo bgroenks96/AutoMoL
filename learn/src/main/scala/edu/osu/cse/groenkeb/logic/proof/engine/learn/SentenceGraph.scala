@@ -6,10 +6,8 @@ import edu.osu.cse.groenkeb.logic.proof.ProofContext
 
 import scala.collection.Seq
 
-object SentenceGraph {  
-  def apply(sentence: Sentence): (SentenceGraph, GraphNode) = build(sentence)
-  
-  private def build(sentence: Sentence, parent: Option[GraphNode] = None): (SentenceGraph, GraphNode) = sentence match {
+object SentenceGraph {
+  def apply(sentence: Sentence, parent: Option[GraphNode] = None): (SentenceGraph, GraphNode) = sentence match {
     case AtomicSentence(atom) =>
       val node = AtomicNode(atom)
       val pred = Map(PredicateNode(atom.predicate) -> Adjacency(Seq(node), Nil))
@@ -18,17 +16,17 @@ object SentenceGraph {
       (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, children.keys.toSeq, parent)) ++ children), node)
     case s@BinarySentence(left, right, _) =>
       val node = BinaryNode(s)
-      val (leftGraph, leftNode) = build(left, Some(node))
-      val (rightGraph, rightNode) = build(right, Some(node))
+      val (leftGraph, leftNode) = SentenceGraph(left, Some(node))
+      val (rightGraph, rightNode) = SentenceGraph(right, Some(node))
       (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, Seq(leftNode, rightNode), parent))) ++ leftGraph ++ rightGraph, node)
     case s@UnarySentence(operand, _) =>
       val node = UnaryNode(s)
-      val (operandGraph, operandNode) = build(operand, Some(node))
+      val (operandGraph, operandNode) = SentenceGraph(operand, Some(node))
       (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, Seq(operandNode), parent))) ++ operandGraph, node)
     case s@QuantifiedSentence(sentence, quant) =>
       val node = QuantifierNode(s)
       val termNode = VarNode(quant.term)
-      val (exprGraph, exprNode) = build(sentence, Some(node))
+      val (exprGraph, exprNode) = SentenceGraph(sentence, Some(node))
       (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, Seq(termNode, exprNode), parent))) ++ exprGraph, node)
     case _ => ???
   }

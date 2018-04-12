@@ -4,9 +4,16 @@ import edu.osu.cse.groenkeb.logic.proof.engine.learn.ProblemState
 import edu.osu.cse.groenkeb.logic.proof.Action
 
 trait QModel {
-  def consult(state: ProblemState, availableActions: Seq[Action]): Seq[QValue]
+  /**
+   * Returns a set of Q values for each available action in descending order,
+   * i.e. highest expected reward first.
+   */
+  def evaluate(state: ProblemState, availableActions: Seq[Action]): Seq[QValue]
   
-  def update(params: QUpdate, availableActions: Seq[Action]): QValue
+  /**
+   * Updates the model using the state/action/reward values given in 'params'.
+   */
+  def update(params: QUpdate, availableActions: Seq[Action]): Option[QValue]
 }
 
 object QModel {

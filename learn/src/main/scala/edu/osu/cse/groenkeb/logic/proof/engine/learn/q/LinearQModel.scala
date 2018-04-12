@@ -21,31 +21,33 @@ final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
 
   def update(availableActions: Seq[Action])(implicit context: ProofContext): Seq[Action] = ???
   
-  private val biasTermPadShape = Array(Array(0, 1))
+  private val biasTermPadShape = Array(Array(0, 0), Array(0, 1))
   
   private var weights = ns.ones(features.length + 1)
   
-  def consult(state: ProblemState, availableActions: Seq[Action]): Seq[QValue] = {
+  def evaluate(state: ProblemState, availableActions: Seq[Action]): Seq[QValue] = {
     // Compute Q values for current state and each available action
     val qvals = computeQValues(state, availableActions)
     // Sort Q values in descending order
     qvals.sorted.collect { case (qv, _) => qv }
   }
   
-  def update(params: QUpdate, availableActions: Seq[Action]) = {
-    // Re-compute expected Q value for the previous state and selected action
-    // This is necessary because of the recursive nature of proof search; the weights
-    // may have been updated one or more times since the original Q value was computed
-    val (qval, fvals) = computeQValue(params.oldState)(params.action)
-    // Compute Q values for new state and available actions
-    val newQVals = computeQValues(params.newState, availableActions)
-    // Assume optimal behavior for next action
-    val (maxQVal, _) = newQVals.max
-    // Calculate delta term: reward + gamma*q_max - q
-    val delta = params.reward + gamma*maxQVal.value - qval.value
-    // Update weights using alpha adjusted gradient
-    weights += params.alpha * delta * fvals
-    maxQVal
+  def update(params: QUpdate, availableActions: Seq[Action]) = availableActions match {
+    case Nil => None
+    case _ =>
+      // Re-compute expected Q value for the previous state and selected action
+      // This is necessary because of the recursive nature of proof search; the weights
+      // may have been updated one or more times since the original Q value was computed
+      val (qval, fvals) = computeQValue(params.oldState)(params.action)
+      // Compute Q values for new state and available actions
+      val newQVals = computeQValues(params.newState, availableActions)
+      // Assume optimal behavior for next action
+      val (maxQVal, _) = newQVals.max
+      // Calculate delta term: r + gamma*q_max - q
+      val delta = params.reward + gamma*maxQVal.value - qval.value
+      // Update weights using alpha adjusted gradient
+      weights += params.alpha * delta * fvals
+      Some(maxQVal)
   }
   
   /**
@@ -72,7 +74,7 @@ final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
    */
   private def qfunc(fvals: Tensor): Double = {
     val fvalsWithBias = ns.pad(fvals, biasTermPadShape, PadMode.CONSTANT)
-    fvalsWithBias(-1) := 1
+    fvalsWithBias(fvalsWithBias.shape(1) - 1) := 1
     ns.dot(this.weights, fvalsWithBias.T).squeeze()
   }
 }

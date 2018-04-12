@@ -164,7 +164,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     actions match {
       case Nil => failure()
       case Seq(a@Action(rule, major), rem@_*) => rule.params(major) match {
-        case None => failure({ tryInfer(rem) })
+        case None => failure({ tryInfer(rem) })(context.withGoal(context.goal, a))
         case Some(params) => pendingParams(params)(a).andThen(step({ tryInfer(rem) }))
       }
     }

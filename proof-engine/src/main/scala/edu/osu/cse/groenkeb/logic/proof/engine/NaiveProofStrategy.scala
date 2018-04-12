@@ -13,7 +13,6 @@ case class NaiveProofStrategy() extends ProofStrategy {
       action <- context.available.filter { p => rule.major(p.sentence) } match {
         case avail if avail.isEmpty => Seq(Action(rule))
         case avail => avail.map { p => Action(rule, Some(p.sentence)) }.toSeq
-        case _ => edu.osu.cse.groenkeb.logic.proof.rules.core.AndElimination; null
       }
     } yield action
   
