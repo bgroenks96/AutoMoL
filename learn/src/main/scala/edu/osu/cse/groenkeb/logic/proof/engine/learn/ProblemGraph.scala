@@ -9,6 +9,7 @@ object ProblemGraph {
   val encodingDims = 11  
 
   def apply(context: ProofContext): ProblemGraph = {
+    import scala.collection.mutable.Map
     val rootNode = RootNode(context.goal, context.available.toSeq.map(p => p.sentence))
     val (goalGraph, goalNode) = SentenceGraph(context.goal, Some(rootNode))
     val (premGraphs, premNodes) = context.available.toSeq.map(p => SentenceGraph(p.sentence, Some(rootNode))).unzip

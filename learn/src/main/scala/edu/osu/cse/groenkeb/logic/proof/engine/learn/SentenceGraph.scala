@@ -5,32 +5,46 @@ import edu.osu.cse.groenkeb.logic.proof.Premise
 import edu.osu.cse.groenkeb.logic.proof.ProofContext
 
 import scala.collection.Seq
+import scala.collection.mutable.Map
 
 object SentenceGraph {
-  def apply(sentence: Sentence, parent: Option[GraphNode] = None): (SentenceGraph, GraphNode) = sentence match {
+  def apply(sentence: Sentence, parent: Option[GraphNode] = None): (SentenceGraph, GraphNode) = {
+    val adjMap = Map[GraphNode, Adjacency]()
+    val node = build(sentence, parent, adjMap)
+    (SentenceGraph(adjMap), node)
+  }
+  
+  private[learn] def build(sentence: Sentence, parent: Option[GraphNode] = None, adjMap: Map[GraphNode, Adjacency]):
+    GraphNode = sentence match {
     case Absurdity =>
       val node = AbsurdityNode
-      (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, Nil, parent))), node)
+      adjMap.put(node, createAdj(node, Nil, parent))
+      node
     case AtomicSentence(atom) =>
       val node = AtomicNode(atom)
-      val pred = Map(PredicateNode(atom.predicate) -> Adjacency(Seq(node), Nil))
-      val terms = atom.terms.map(t => VarNode(t) -> Adjacency(Seq(node), Nil)).toMap
-      val children = pred ++ terms
-      (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, children.keys.toSeq, parent)) ++ children), node)
+      val pred = PredicateNode(atom.predicate)
+      adjMap.put(pred, createAdj(pred, Nil, parent))
+      val terms = atom.terms.map(t => VarNode(t))
+      terms.foreach(v => adjMap.put(v, createAdj(v, Nil, parent)))
+      adjMap.put(node, createAdj(node, pred +: terms, parent))
+      node
     case s@BinarySentence(left, right, _) =>
       val node = BinaryNode(s)
-      val (leftGraph, leftNode) = SentenceGraph(left, Some(node))
-      val (rightGraph, rightNode) = SentenceGraph(right, Some(node))
-      (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, Seq(leftNode, rightNode), parent))) ++ leftGraph ++ rightGraph, node)
+      val leftNode = build(left, Some(node), adjMap)
+      val rightNode = build(right, Some(node), adjMap)
+      adjMap.put(node, createAdj(node, Seq(leftNode, rightNode), parent))
+      node
     case s@UnarySentence(operand, _) =>
       val node = UnaryNode(s)
-      val (operandGraph, operandNode) = SentenceGraph(operand, Some(node))
-      (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, Seq(operandNode), parent))) ++ operandGraph, node)
+      val subNode = build(operand, Some(node), adjMap)
+      adjMap.put(node, createAdj(node, Seq(subNode), parent))
+      node
     case s@QuantifiedSentence(sentence, quant) =>
       val node = QuantifierNode(s)
       val termNode = VarNode(quant.term)
-      val (exprGraph, exprNode) = SentenceGraph(sentence, Some(node))
-      (SentenceGraph(Map[GraphNode, Adjacency](node -> createAdj(node, Seq(termNode, exprNode), parent))) ++ exprGraph, node)
+      val exprNode = build(sentence, Some(node), adjMap)
+      adjMap.put(node, createAdj(node, Seq(termNode, exprNode), parent))
+      node
     case _ => ???
   }
   

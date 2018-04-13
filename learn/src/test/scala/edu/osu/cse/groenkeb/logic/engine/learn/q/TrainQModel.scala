@@ -30,7 +30,7 @@ import cats.implicits._
 object TrainQModel {
   val gamma = 0.9
   val policy = new EpsilonGreedy(0.0, decay=0.0)
-  val features = Seq(introRuleFilter, ruleOrdering)
+  val features = Seq(introRuleFilter, ruleOrdering, accessibility)
   val model = new LinearQModel(features, gamma)
   implicit val strategy = new QLearningStrategy(model, policy)
   implicit val trace = Trace()
