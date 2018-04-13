@@ -42,7 +42,7 @@ object ProblemGraph {
 }
 
 case class ProblemGraph(graph: SentenceGraph, goal: GraphNode, assumptions: Seq[GraphNode], root: RootNode) {
-  val encodings = initEncodings(root)
+  //val encodings = initEncodings(root)
   
   private def initEncodings(node: GraphNode, sign: Int = 1): Map[GraphNode, Tensor] = {
     require(sign == 1 || sign == -1)

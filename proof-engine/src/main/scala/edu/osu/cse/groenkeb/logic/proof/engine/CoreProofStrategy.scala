@@ -9,7 +9,10 @@ import edu.osu.cse.groenkeb.logic.proof.rules.core._
 case class CoreProofStrategy() extends ProofStrategy {
   private implicit val ruleOrdering = Ordering[Int].on[Rule]((r: Rule) => ruleOrdinal(r))
   
-  def actions(implicit context: ProofContext) = generateActions
+  def actions(implicit context: ProofContext) = context.goal match {
+    case s@AtomicSentence(a) if context.available.forall(p => !p.sentence.accessible(a)) => Nil
+    case _ => generateActions
+  }
   
   def decide(result: ProofResult)(implicit context: ProofContext): ProofResult = result
   

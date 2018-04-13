@@ -12,8 +12,8 @@ trait QPolicy {
 final class EpsilonGreedy(var epsilon: Double, decay: Double = 0f, rand: Random = new Random()) extends QPolicy {
   def actionSequence(qvals: Seq[QValue]): Seq[Action] = {
     require(epsilon >= 0.0, "")
-    val currentEpsilon = this.epsilon
-    this.epsilon -= this.decay
+    val currentEpsilon = epsilon
+    this.epsilon = Math.max(currentEpsilon - decay, 0)
     rand.nextFloat() match {
       case p if p > currentEpsilon => qvals.map(qv => qv.args.action)
       case _ => rand.shuffle(qvals.map(qv => qv.args.action))

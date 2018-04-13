@@ -1,16 +1,12 @@
 package edu.osu.cse.groenkeb.logic.proof.engine.learn.q
 
-import edu.osu.cse.groenkeb.logic.proof._
-import edu.osu.cse.groenkeb.logic.proof.engine.learn.ProblemState
 import org.nd4j.linalg.factory.Nd4j.PadMode
-import botkop.{numsca => ns}
-import botkop.numsca.Tensor
 
-import scala.collection.mutable.Map
-import edu.osu.cse.groenkeb.logic.proof.engine.learn.ProblemGraph
-import edu.osu.cse.groenkeb.logic.proof.engine.learn.WorkingState
-import edu.osu.cse.groenkeb.logic.proof.engine.learn.SolvedState
-import edu.osu.cse.groenkeb.logic.proof.engine.learn.FailedState
+import botkop.{ numsca => ns }
+import botkop.numsca.Tensor
+import edu.osu.cse.groenkeb.logic.proof.Action
+import edu.osu.cse.groenkeb.logic.proof.ProofContext
+import edu.osu.cse.groenkeb.logic.proof.engine.learn.ProblemState
 
 final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
   // Represents Q value + feature values
@@ -21,9 +17,9 @@ final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
 
   def update(availableActions: Seq[Action])(implicit context: ProofContext): Seq[Action] = ???
   
-  private val biasTermPadShape = Array(Array(0, 0), Array(0, 1))
+  var weights = ns.ones(features.length + 1)
   
-  private var weights = ns.ones(features.length + 1)
+  private var mode: QModel.Mode = QModel.TrainMode
   
   def evaluate(state: ProblemState, availableActions: Seq[Action]): Seq[QValue] = {
     // Compute Q values for current state and each available action
@@ -34,7 +30,7 @@ final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
   
   def update(params: QUpdate, availableActions: Seq[Action]) = availableActions match {
     case Nil => None
-    case _ =>
+    case _ if this.mode == QModel.TrainMode =>
       // Re-compute expected Q value for the previous state and selected action
       // This is necessary because of the recursive nature of proof search; the weights
       // may have been updated one or more times since the original Q value was computed
@@ -48,6 +44,11 @@ final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
       // Update weights using alpha adjusted gradient
       weights += params.alpha * delta * fvals
       Some(maxQVal)
+    case _ => None
+  }
+  
+  def setMode(mode: QModel.Mode) {
+    this.mode = mode
   }
   
   /**
@@ -65,9 +66,7 @@ final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
    * Evaluates feature values for the given state and action.
    */
   private def evaluateFeatures(state: ProblemState, action: Action): Tensor = {
-    val fvals = ns.pad(Tensor(features.map(f => f(state, action)).toArray), biasTermPadShape, PadMode.CONSTANT)
-    fvals(fvals.shape(1) - 1) := 1
-    fvals
+    Tensor(features.map(f => f(state, action)).toArray :+ 1.0)
   }
   
   /**

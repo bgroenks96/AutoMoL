@@ -17,5 +17,13 @@ object dsl {
     }
     def or(arg: Sentence) = (s, arg)
     def isAtomic = s.isInstanceOf[AtomicSentence] or (s == Absurdity)
+    def accessible(atom: Atom): Boolean = checkAccessibility(atom, s)
+  }
+  
+  private def checkAccessibility(atom: Atom, sentence: Sentence): Boolean = sentence match {
+    case Not(s) => false
+    case If(_, right) if right.contains(AtomicSentence(atom)) => true
+    case If(left, _) => false
+    case s => s.contains(AtomicSentence(atom))
   }
 }
