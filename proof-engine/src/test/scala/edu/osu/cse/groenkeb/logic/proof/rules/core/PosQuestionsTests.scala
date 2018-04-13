@@ -19,9 +19,11 @@ import edu.osu.cse.groenkeb.logic.proof.engine._
 import edu.osu.cse.groenkeb.logic.proof.rules._
 import edu.osu.cse.groenkeb.logic.parse.ParserException
 import edu.osu.cse.groenkeb.logic.parse.corepl.CorePLProofParser
+import org.junit.Ignore
 
 class PosQuestionsTests {
   
+  @Ignore
   @Test
   def testPosquestionsNaiveStrategy = {
     implicit val trace = Trace()
@@ -53,25 +55,19 @@ class PosQuestionsTests {
     implicit val trace = Trace()
     implicit val options = Seq(trace)
     implicit val strategy = new CoreProofStrategy()
+    implicit val rules = standardRules
     val solver = new ProofSolver()
-    val rules = standardRules
-    val questions = loadPosquestions.toList
-    val proofs = for {
-      (assumptions, goal) <- questions
-    } yield {
-      (solver.prove(ProofContext(goal, rules, assume(assumptions:_*))).collect({ case r:Success => r }), trace.stepCount)
+    val questions = loadPosquestions.map { case (assumptions, goal) => ProofContext(goal, assumptions.map(s => Assumption(s))) }.toList
+    var meanStepCount = 0.0
+    questions.zipWithIndex.foreach {
+      case (q, i) =>
+        println("Problem " + (i + 1))
+        println(q)
+        Assert.assertFalse(solver.prove(q).filter(r => r.isInstanceOf[Success]).isEmpty)
+        println(s"Finished after ${trace.stepCount} attempted steps")
+        meanStepCount += (trace.stepCount - meanStepCount) / (i+1)
     }
     
-    var meanStepCount = 0.0
-    proofs.zipWithIndex.foreach {
-      case ((results, steps), i) =>
-        println("Problem " + (i + 1))
-        Assert.assertFalse(s"Failed on problem $i; ${questions(i)}", results.isEmpty)
-        ProofUtils.prettyPrint(results.head.proof);
-        println(s"Finished after $steps attempted steps")
-        println("--------------")
-        meanStepCount += (steps - meanStepCount) / (i+1)
-    }
     println(s"Average step count: ${Math.round(meanStepCount)}")
   }
   
@@ -80,7 +76,7 @@ class PosQuestionsTests {
   )
   
   private def loadPosquestions = {
-    val res = ClassLoader.getSystemClassLoader.getResourceAsStream("posquestions")
+    val res = ClassLoader.getSystemClassLoader.getResourceAsStream("asset")
     Assert.assertNotNull(res)
     val reader = new BufferedReader(new InputStreamReader(res))
     reader.lines().iterator().asScala

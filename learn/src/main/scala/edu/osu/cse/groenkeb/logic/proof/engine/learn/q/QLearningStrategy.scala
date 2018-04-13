@@ -9,7 +9,8 @@ import edu.osu.cse.groenkeb.logic.proof.engine.Success
 import edu.osu.cse.groenkeb.logic.proof.engine.learn._
 import scala.util.Random
 
-final case class QLearningStrategy(model: QModel, policy: QPolicy, val alpha: Double = 0.1) extends ProofStrategy {
+final case class QLearningStrategy(model: QModel, policy: QPolicy, var alpha: Double = 0.1, val alphaDecay: Double = 1.0E-6, val alphaMin: Double = 1.0E-6)
+    extends ProofStrategy {
   type Reward = Double
   private val RewardSuccess = 1
   private val RewardValidStep = 0.1
@@ -35,6 +36,7 @@ final case class QLearningStrategy(model: QModel, policy: QPolicy, val alpha: Do
       case Some(prevState) if pendingUpdates.contains(prevState) =>
         val update = pendingUpdates(prevState)
         model.update(QUpdate(QArgs(prevState, update.action), state, update.reward, alpha), availableActions)
+        updateAlpha
         pendingUpdates.remove(prevState)
       case _ => Unit
     }
@@ -50,21 +52,25 @@ final case class QLearningStrategy(model: QModel, policy: QPolicy, val alpha: Do
       val prevState = WorkingState(ProblemGraph(context), None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
       val successState = SolvedState(proof, prevState)
       model.update(QUpdate(QArgs(prevState, action), successState, RewardSuccess, alpha), Nil)
+      updateAlpha
       result
     case Failure(context, Continue(_)) =>
       val prevState = WorkingState(ProblemGraph(context), None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
       val failedState = FailedState(prevState)
       model.update(QUpdate(QArgs(prevState, action), failedState, RewardFailureWithContinue, alpha), Nil)
+      updateAlpha
       result
     case Success(proof, context, Cut()) =>
       val prevState = WorkingState(ProblemGraph(context), None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
       val successState = SolvedState(proof, prevState)
       model.update(QUpdate(QArgs(prevState, action), successState, RewardSuccess, alpha), Nil)
+      updateAlpha
       result
     case Failure(context, Cut()) =>
       val prevState = WorkingState(ProblemGraph(context), None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
       val failedState = FailedState(prevState)
       model.update(QUpdate(QArgs(prevState, action), failedState, RewardFailureTerminal, alpha), Nil)
+      updateAlpha
       result
     case Pending(context,_,_) =>
       val prevState = WorkingState(ProblemGraph(context), None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
@@ -80,6 +86,10 @@ final case class QLearningStrategy(model: QModel, policy: QPolicy, val alpha: Do
         case avail => avail.map { p => Action(rule, Some(p.sentence)) }.toSeq
       }
     } yield action
+    
+  private def updateAlpha {
+      alpha = Math.max(alphaMin, alpha - alphaDecay)
+    }
     
   private def stateFor(context: ProofContext, default: ProofContext => ProblemState) = stateCache.get(context) match {
       case Some(state) => state

@@ -26,33 +26,57 @@ import atto._
 import atto.Atto._
 import atto.ParseResult._
 import cats.implicits._
+import scala.util.Random
+import edu.osu.cse.groenkeb.logic.proof.engine.learn.q.QModel
 
 object TrainQModel {
   val gamma = 0.9
   val policy = new EpsilonGreedy(0.0, decay=0.0)
-  val features = Seq(introRuleFilter, ruleOrdering, accessibility)
+  val features = Seq(introRuleFilter, ruleOrdering)
   val model = new LinearQModel(features, gamma)
-  implicit val strategy = new QLearningStrategy(model, policy)
+  val alphaDecay = 1.0E-8
+  val alphaMin = 1.0E-6
+  implicit val strategy = new QLearningStrategy(model, policy, alpha=0.1f, alphaDecay=alphaDecay, alphaMin=alphaMin)
   implicit val trace = Trace()
   implicit val options = Seq(trace)
   implicit val parser = new SentenceParser(new NodeRecursiveTokenizer())(new DefaultPropOpMatcher())  
 
   def main(args: Array[String]) = {
+    //Random.setSeed(1)
     implicit val trace = Trace()
     implicit val options = Seq(trace)
     implicit val rules = standardRules
     val solver = new ProofSolver()
     val questions = loadPosquestions.map { case (assumptions, goal) => ProofContext(goal, assumptions.map(s => Assumption(s))) }.toList
-    for (i <- 1 to 1) {
-      var totalStepCount = 0.0
-      questions.zipWithIndex.foreach{ case (q, i) => {
-        println(s"Problem $i: $q")
+    val (trainSet, valSet) = splitForValidation(questions)
+    for (i <- 1 to 10) {
+      model.setMode(QModel.TrainMode)
+      var trainStepCount = 0.0
+      trainSet.foreach{ case (q, i) => {
+        println(s"Problem $i (train): $q")
         Assert.assertFalse(solver.prove(q).collect { case s:Success => s.proof }.isEmpty)
-        totalStepCount += trace.stepCount
+        trainStepCount += trace.stepCount
       }}
-      println(s"Iteration $i average step count: ${totalStepCount/questions.length}")
+      model.setMode(QModel.TestMode)
+      var valStepCount = 0.0
+      valSet.foreach{ case (q, i) => {
+        println(s"Problem $i (validation): $q")
+        Assert.assertFalse(solver.prove(q).collect { case s:Success => s.proof }.isEmpty)
+        valStepCount += trace.stepCount
+      }}
+      println(s"Iteration $i complete: AvgSteps train: ${trainStepCount/trainSet.length} val: ${valStepCount/valSet.length}  combined: ${(trainStepCount + valStepCount)/questions.length}")
+      println("current learning rate: " + strategy.alpha)
+      strategy.alpha = 0.1
     }
     println("done")
+  }
+  
+  private def splitForValidation(train: Seq[ProofContext], split: Float = 0.2f) = {
+    val arange = Array.range(0, train.length).toList
+    val valCount = (split*train.length).toInt
+    val randomIndices = Random.shuffle(arange).take(valCount)
+    val (vpart, tpart) = train.zipWithIndex.partition { case (c, i) => randomIndices.contains(i) }
+    (tpart, vpart)
   }
   
   lazy val question: Parser[(List[Sentence], Sentence)] = (

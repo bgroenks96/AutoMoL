@@ -53,9 +53,10 @@ object Features {
   
   def accessibility: Feature = {
     def accessible(graph: ProblemGraph, action: Action) = graph.goal match {
-      case AtomicNode(atom) =>
-        if (toSentences(graph.assumptions:_*).exists(s => s.accessible(atom))) 0.0 else 1.0
-      case _ => 0.0
+      case AtomicNode(atom)
+        if (toSentences(graph.assumptions:_*).exists(s => s.accessible(atom))) => 1.0
+      case AtomicNode(_) => 0.0
+      case _ => 1.0
     }
     BaseFeature.applyFunc(accessible)
   }

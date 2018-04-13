@@ -1,0 +1,97 @@
+%#1
+[not(if(not(if(not(if(not(if(a, not(if(not(a),a)))),not(or(b,not(b))))), not(if(not(not(if(not(if(a, not(if(not(a),a)))),not(or(b,not(b)))))), not(if(not(if(a, not(if(not(a),a)))),not(or(b,not(b))))))))), not(or(c, not(c)))))] ?- not(if(not(if(a,not(if(not(a),a)))), not(or(not(if(not(if(b,not(if(not(b), b)))),not(or(c,not(c))))), not(not(if(not(if(b,not(if(not(b),b)))),not(or(c,not(c)))))))))) . 
+
+%#2
+[not(if(not(if(a, not(or(or(b, not(b)), not(if(not(a), not(not(a)))))))), not(or(or(c, not(c)), not(if(not(not(if(a, not(or(or(b, not(b)), not(if(not(a), not(not(a))))))))), not(not(not(if(a, not(or(or(b, not(b)), not(if(not(a), not(not(a))))))))))))))))] ?- not(if(a, not(or(or(not(if(b, not(or(or(c, not(c)), not(if(not(b), not(not(b)))))))), not(not(if(b, not(or(or(c, not(c)), not(if(not(b), not(not(b)))))))))), not(if(not(a),not(not(a)))))))) .
+
+%#3
+[if(not(if(not(a), not(if(not(if(a, not(not(a)))), not(or(b, not(b))))))), not(if(not(if(if(not(a), not(if(not(if(a, not(not(a)))), not(or(b, not(b)))))), not(not(if(not(a), not(if(not(if(a, not(not(a)))), not(or(b, not(b)))))))))), not(or(c, not(c))))))] ?- if(not(a), not(if(not(if(a, not(not(a)))), not(or(if(not(b), not(if(not(if(b, not(not(b)))), not(or(c, not(c)))))), not(if(not(b), not(if(not(if(b, not(not(b)))), not(or(c,not(c)))))))))))) .
+
+%#4
+[or(or(a, not(if(not(if(a, not(not(a)))), not(or(b, not(b)))))), not(if(not(if(or(a, not(if(not(if(a, not(not(a)))), not(or(b, not(b)))))), not(not(or(a, not(if(not(if(a, not(not(a)))), not(or(b, not(b)))))))))), not(or(c, not(c))))))] ?- or(a, not(if(not(if(a, not(not(a)))), not(or(or(b, not(if(not(if(b, not(not(b)))), not(or(c, not(c)))))), not(or(b, not(if(not(if(b, not(not(b)))), not(or(c,not(c)))))))))))) .
+
+%#5
+[not(if(not(if(not(if(not(if(a, not(or(a, not(a))))), not(or(b, not(b))))), not(or(not(if(not(if(a, not(or(a, not(a))))), not(or(b, not(b))))), not(not(if(not(if(a, not(or(a, not(a))))), not(or(b, not(b)))))))))), not(or(c, not(c)))))] ?- not(if(not(if(a, not(or(a, not(a))))), not(or(not(if(not(if(b, not(or(b, not(b))))), not(or(c, not(c))))), not(not(if(not(if(b, not(or(b, not(b))))), not(or(c,not(c)))))))))) .
+
+%#6
+[not(if(not(if(a, not(or(or(a, not(b)), not(if(not(a), not(b))))))), not(or(or(not(if(a, not(or(or(a, not(b)), not(if(not(a), not(b))))))), not(c)), not(if(not(not(if(a, not(or(or(a, not(b)), not(if(not(a), not(b)))))))), not(c)))))))] ?- not(if(a, not(or(or(a, not(not(if(b, not(or(or(b, not(c)), not(if(not(b), not(c))))))))), not(if(not(a), not(not(if(b, not(or(or(b, not(c)), not(if(not(b),not(c)))))))))))))) .
+
+%#7
+[not(if(not(if(a, not(or(or(b, not(b)), not(if(not(a), not(b))))))), not(or(or(c, not(c)), not(if(not(not(if(a, not(or(or(b, not(b)), not(if(not(a), not(b)))))))), not(c)))))))] ?- not(if(a, not(or(or(not(if(b, not(or(or(c, not(c)), not(if(not(b), not(c))))))), not(not(if(b, not(or(or(c, not(c)), not(if(not(b), not(c))))))))), not(if(not(a), not(not(if(b, not(or(or(c, not(c)), not(if(not(b),not(c)))))))))))))) .
+
+%#8
+[not(if(if(not(not(if(if(not(a), a), not(or(not(b), not(if(a, not(b)))))))), not(if(if(not(a), a), not(or(not(b), not(if(a, not(b)))))))), not(or(not(c), not(if(not(if(if(not(a), a), not(or(not(b), not(if(a, not(b))))))), not(c)))))))] ?- not(if(if(not(a), a), not(or(not(not(if(if(not(b), b), not(or(not(c), not(if(b, not(c)))))))), not(if(a, not(not(if(if(not(b), b), not(or(not(c), not(if(b,not(c)))))))))))))) .
+
+%#9
+[not(if(not(if(a, not(if(not(a), not(if(not(a), not(or(b, not(b))))))))), not(if(not(not(if(a, not(if(not(a), not(if(not(a), not(or(b, not(b)))))))))), not(if(not(not(if(a, not(if(not(a), not(if(not(a), not(or(b, not(b)))))))))), not(or(c, not(c)))))))))] ?- not(if(a, not(if(not(a), not(if(not(a), not(or(not(if(b, not(if(not(b), not(if(not(b), not(or(c, not(c))))))))), not(not(if(b, not(if(not(b), not(if(not(b), not(or(c,not(c)))))))))))))))))) .
+
+%#10
+[not(if(not(if(a, not(or(a, not(if(not(a), not(or(b, not(b))))))))), not(or(not(if(a, not(or(a, not(if(not(a), not(or(b, not(b))))))))), not(if(not(not(if(a, not(or(a, not(if(not(a), not(or(b, not(b)))))))))), not(or(c, not(c)))))))))] ?- not(if(a, not(or(a, not(if(not(a), not(or(not(if(b, not(or(b, not(if(not(b), not(or(c, not(c))))))))), not(not(if(b, not(or(b, not(if(not(b), not(or(c,not(c)))))))))))))))))) .
+
+%#11
+[or(or(a, not(if(a, not(or(not(b), not(if(not(a), not(b)))))))), not(if(or(a, not(if(a, not(or(not(b), not(if(not(a), not(b)))))))), not(or(not(c), not(if(not(or(a, not(if(a, not(or(not(b), not(if(not(a), not(b))))))))), not(c))))))))] ?- or(a, not(if(a, not(or(not(or(b, not(if(b, not(or(not(c), not(if(not(b), not(c))))))))), not(if(not(a), not(or(b, not(if(b, not(or(not(c), not(if(not(b),not(c)))))))))))))))) .
+
+[or(or(a, not(if(a, not(or(not(b), not(if(not(a), not(b)))))))), not(if(or(a, not(if(a, not(or(not(b), not(if(not(a), not(b)))))))), not(or(not(c), not(if(not(or(a, not(if(a, not(or(not(b), not(if(not(a), not(b))))))))), not(c)))))))), not(or(a, not(if(a, not(or(not(or(b, not(if(b, not(or(not(c), not(if(not(b), not(c))))))))), not(if(not(a), not(or(b, not(if(b, not(or(not(c), not(if(not(b),not(c)))))))))))))))))] ?- #  .
+
+%#12
+[not(if(not(if(a, not(or(not(b), if(not(a), not(if(not(a), not(b)))))))), not(or(not(c), if(not(not(if(a, not(or(not(b), if(not(a), not(if(not(a), not(b))))))))), not(if(not(not(if(a, not(or(not(b), if(not(a), not(if(not(a), not(b))))))))), not(c))))))))] ?- not(if(a, not(or(not(not(if(b, not(or(not(c), if(not(b), not(if(not(b), not(c))))))))), if(not(a), not(if(not(a), not(not(if(b, not(or(not(c), if(not(b), not(if(not(b),not(c)))))))))))))))) .
+
+%#13
+[not(if(not(if(a, not(or(not(b), not(if(b, not(or(a, not(a))))))))), not(or(not(c), not(if(c, not(or(not(if(a, not(or(not(b), not(if(b, not(or(a, not(a))))))))), not(not(if(a, not(or(not(b), not(if(b, not(or(a, not(a))))))))))))))))))] ?- not(if(a, not(or(not(not(if(b, not(or(not(c), not(if(c, not(or(b, not(b)))))))))), not(if(not(if(b, not(or(not(c), not(if(c, not(or(b, not(b))))))))), not(or(a,not(a))))))))) .
+
+%#14
+[not(if(not(if(a, not(or(not(b), if(not(b), not(if(not(a), not(b)))))))), not(or(not(c), if(not(c), not(if(not(not(if(a, not(or(not(b), if(not(b), not(if(not(a), not(b))))))))), not(c))))))))] ?- not(if(a, not(or(not(not(if(b, not(or(not(c), if(not(c), not(if(not(b), not(c))))))))), if(not(not(if(b, not(or(not(c), if(not(c), not(if(not(b), not(c))))))))), not(if(not(a), not(not(if(b, not(or(not(c), if(not(c), not(if(not(b),not(c)))))))))))))))) .
+
+%#15
+[not(if(not(if(a, not(or(not(b), not(if(b, not(or(not(a), b)))))))), not(or(not(c), not(if(c, not(or(not(not(if(a, not(or(not(b), not(if(b, not(or(not(a), b))))))))), c))))))))] ?- not(if(a, not(or(not(not(if(b, not(or(not(c), not(if(c, not(or(not(b), c))))))))), not(if(not(if(b, not(or(not(c), not(if(c, not(or(not(b), c)))))))), not(or(not(a), not(if(b, not(or(not(c), not(if(c, not(or(not(b),c)))))))))))))))) .
+
+%#16
+[not(if(or(not(if(or(a, not(if(a, not(not(a))))), not(or(b, not(b))))), not(if(not(if(or(a, not(if(a, not(not(a))))), not(or(b, not(b))))), not(not(not(if(or(a, not(if(a, not(not(a))))), not(or(b, not(b)))))))))), not(or(c, not(c)))))] ?- not(if(or(a, not(if(a, not(not(a))))), not(or(not(if(or(b, not(if(b, not(not(b))))), not(or(c, not(c))))), not(not(if(or(b, not(if(b, not(not(b))))), not(or(c,not(c)))))))))) .
+
+%#17
+[not(if(not(if(a, not(if(not(a), a)))), not(or(not(if(not(if(b, not(if(not(b), b)))), not(or(c, not(c))))), not(not(if(not(if(b, not(if(not(b), b)))), not(or(c, not(c))))))))))] ?- not(if(not(if(not(if(not(if(a, not(if(not(a), a)))), not(or(b, not(b))))), not(if(not(not(if(not(if(a, not(if(not(a), a)))), not(or(b, not(b)))))), not(if(not(if(a, not(if(not(a), a)))), not(or(b, not(b))))))))), not(or(c,not(c))))) .
+
+%#18
+[not(if(a, not(or(or(not(if(b, not(or(or(c, not(c)), not(if(not(b), not(not(b)))))))), not(not(if(b, not(or(or(c, not(c)), not(if(not(b), not(not(b)))))))))), not(if(not(a), not(not(a))))))))] ?- not(if(not(if(a, not(or(or(b, not(b)), not(if(not(a), not(not(a)))))))), not(or(or(c, not(c)), not(if(not(not(if(a, not(or(or(b, not(b)), not(if(not(a), not(not(a))))))))), not(not(not(if(a, not(or(or(b, not(b)), not(if(not(a),not(not(a)))))))))))))))) .
+
+%#19
+[if(not(a), not(if(not(if(a, not(not(a)))), not(or(if(not(b), not(if(not(if(b, not(not(b)))), not(or(c, not(c)))))), not(if(not(b), not(if(not(if(b, not(not(b)))), not(or(c, not(c))))))))))))] ?- if(not(if(not(a), not(if(not(if(a, not(not(a)))), not(or(b, not(b))))))), not(if(not(if(if(not(a), not(if(not(if(a, not(not(a)))), not(or(b, not(b)))))), not(not(if(not(a), not(if(not(if(a, not(not(a)))), not(or(b, not(b)))))))))), not(or(c,not(c)))))) .
+
+%#20
+[or(a, not(if(not(if(a, not(not(a)))), not(or(or(b, not(if(not(if(b, not(not(b)))), not(or(c, not(c)))))), not(or(b, not(if(not(if(b, not(not(b)))), not(or(c, not(c))))))))))))] ?- or(or(a, not(if(not(if(a, not(not(a)))), not(or(b, not(b)))))), not(if(not(if(or(a, not(if(not(if(a, not(not(a)))), not(or(b, not(b)))))), not(not(or(a, not(if(not(if(a, not(not(a)))), not(or(b, not(b)))))))))), not(or(c,not(c)))))) .
+
+%#21
+[not(if(not(if(a, not(or(a, not(a))))), not(or(not(if(not(if(b, not(or(b, not(b))))), not(or(c, not(c))))), not(not(if(not(if(b, not(or(b, not(b))))), not(or(c, not(c))))))))))] ?- not(if(not(if(not(if(not(if(a, not(or(a, not(a))))), not(or(b, not(b))))), not(or(not(if(not(if(a, not(or(a, not(a))))), not(or(b, not(b))))), not(not(if(not(if(a, not(or(a, not(a))))), not(or(b, not(b)))))))))), not(or(c,not(c))))) .
+
+%#22
+[not(if(a, not(or(or(a, not(not(if(b, not(or(or(b, not(c)), not(if(not(b), not(c))))))))), not(if(not(a), not(not(if(b, not(or(or(b, not(c)), not(if(not(b), not(c))))))))))))))] ?- not(if(not(if(a, not(or(or(a, not(b)), not(if(not(a), not(b))))))), not(or(or(not(if(a, not(or(or(a, not(b)), not(if(not(a), not(b))))))), not(c)), not(if(not(not(if(a, not(or(or(a, not(b)), not(if(not(a), not(b)))))))),not(c))))))) .
+
+%#23
+[not(if(a, not(or(or(not(if(b, not(or(or(c, not(c)), not(if(not(b), not(c))))))), not(not(if(b, not(or(or(c, not(c)), not(if(not(b), not(c))))))))), not(if(not(a), not(not(if(b, not(or(or(c, not(c)), not(if(not(b), not(c))))))))))))))] ?- not(if(not(if(a, not(or(or(b, not(b)), not(if(not(a), not(b))))))), not(or(or(c, not(c)), not(if(not(not(if(a, not(or(or(b, not(b)), not(if(not(a), not(b)))))))),not(c))))))) .
+
+%#24
+[not(if(if(not(a), a), not(or(not(not(if(if(not(b), b), not(or(not(c), not(if(b, not(c)))))))), not(if(a, not(not(if(if(not(b), b), not(or(not(c), not(if(b, not(c))))))))))))))] ?- not(if(if(not(not(if(if(not(a), a), not(or(not(b), not(if(a, not(b)))))))), not(if(if(not(a), a), not(or(not(b), not(if(a, not(b)))))))), not(or(not(c), not(if(not(if(if(not(a), a), not(or(not(b), not(if(a, not(b))))))),not(c))))))) .
+
+%#25
+[not(if(a, not(if(not(a), not(if(not(a), not(or(not(if(b, not(if(not(b), not(if(not(b), not(or(c, not(c))))))))), not(not(if(b, not(if(not(b), not(if(not(b), not(or(c, not(c))))))))))))))))))] ?- not(if(not(if(a, not(if(not(a), not(if(not(a), not(or(b, not(b))))))))), not(if(not(not(if(a, not(if(not(a), not(if(not(a), not(or(b, not(b)))))))))), not(if(not(not(if(a, not(if(not(a), not(if(not(a), not(or(b, not(b)))))))))), not(or(c,not(c))))))))) .
+
+%#26
+[not(if(a, not(or(a, not(if(not(a), not(or(not(if(b, not(or(b, not(if(not(b), not(or(c, not(c))))))))), not(not(if(b, not(or(b, not(if(not(b), not(or(c, not(c))))))))))))))))))] ?- not(if(not(if(a, not(or(a, not(if(not(a), not(or(b, not(b))))))))), not(or(not(if(a, not(or(a, not(if(not(a), not(or(b, not(b))))))))), not(if(not(not(if(a, not(or(a, not(if(not(a), not(or(b, not(b)))))))))), not(or(c,not(c))))))))) .
+
+%#27
+[or(a, not(if(a, not(or(not(or(b, not(if(b, not(or(not(c), not(if(not(b), not(c))))))))), not(if(not(a), not(or(b, not(if(b, not(or(not(c), not(if(not(b), not(c))))))))))))))))] ?- or(or(a, not(if(a, not(or(not(b), not(if(not(a), not(b)))))))), not(if(or(a, not(if(a, not(or(not(b), not(if(not(a), not(b)))))))), not(or(not(c), not(if(not(or(a, not(if(a, not(or(not(b), not(if(not(a), not(b))))))))),not(c)))))))) .
+
+%#28
+[not(if(a, not(or(not(not(if(b, not(or(not(c), if(not(b), not(if(not(b), not(c))))))))), if(not(a), not(if(not(a), not(not(if(b, not(or(not(c), if(not(b), not(if(not(b), not(c))))))))))))))))] ?- not(if(not(if(a, not(or(not(b), if(not(a), not(if(not(a), not(b)))))))), not(or(not(c), if(not(not(if(a, not(or(not(b), if(not(a), not(if(not(a), not(b))))))))), not(if(not(not(if(a, not(or(not(b), if(not(a), not(if(not(a), not(b))))))))),not(c)))))))) .
+
+%#29
+[not(if(a, not(or(not(not(if(b, not(or(not(c), not(if(c, not(or(b, not(b)))))))))), not(if(not(if(b, not(or(not(c), not(if(c, not(or(b, not(b))))))))), not(or(a, not(a)))))))))] ?- not(if(not(if(a, not(or(not(b), not(if(b, not(or(a, not(a))))))))), not(or(not(c), not(if(c, not(or(not(if(a, not(or(not(b), not(if(b, not(or(a, not(a))))))))), not(not(if(a, not(or(not(b), not(if(b, not(or(a,not(a)))))))))))))))))) .
+
+%#30
+[not(if(a, not(or(not(not(if(b, not(or(not(c), if(not(c), not(if(not(b), not(c))))))))), if(not(not(if(b, not(or(not(c), if(not(c), not(if(not(b), not(c))))))))), not(if(not(a), not(not(if(b, not(or(not(c), if(not(c), not(if(not(b), not(c))))))))))))))))] ?- not(if(not(if(a, not(or(not(b), if(not(b), not(if(not(a), not(b)))))))), not(or(not(c), if(not(c), not(if(not(not(if(a, not(or(not(b), if(not(b), not(if(not(a), not(b))))))))), not(c)))))))) .
+
+%#31
+[not(if(a, not(or(not(not(if(b, not(or(not(c), not(if(c, not(or(not(b), c))))))))), not(if(not(if(b, not(or(not(c), not(if(c, not(or(not(b), c)))))))), not(or(not(a), not(if(b, not(or(not(c), not(if(c, not(or(not(b), c))))))))))))))))] ?- not(if(not(if(a, not(or(not(b), not(if(b, not(or(not(a), b)))))))), not(or(not(c), not(if(c, not(or(not(not(if(a, not(or(not(b), not(if(b, not(or(not(a), b))))))))), c)))))))) .
+
+%#32
+[not(if(or(a, not(if(a, not(not(a))))), not(or(not(if(or(b, not(if(b, not(not(b))))), not(or(c, not(c))))), not(not(if(or(b, not(if(b, not(not(b))))), not(or(c, not(c))))))))))] ?- not(if(or(not(if(or(a, not(if(a, not(not(a))))), not(or(b, not(b))))), not(if(not(if(or(a, not(if(a, not(not(a))))), not(or(b, not(b))))), not(not(not(if(or(a, not(if(a, not(not(a))))), not(or(b, not(b)))))))))), not(or(c,not(c))))) .
