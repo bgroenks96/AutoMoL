@@ -21,6 +21,8 @@ final case class Proof(conclusion: Sentence, rule: Rule, args: RuleArgs, undisch
     case _ => false
   }
   
+  def usesOne(ss: Traversable[Sentence])(implicit context: ProofContext) = ss.exists(s => uses(s))
+  
   override def toString = "Proof(%s,%s,%s,%s%s)"
     .format(conclusion,
             rule,

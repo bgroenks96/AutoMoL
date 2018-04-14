@@ -5,9 +5,9 @@ sealed abstract class Sentence
   def matches(s: Sentence): Boolean
   def contains(s: Sentence): Boolean
   def substitute(orig: Term, sub: Term): Sentence
-  def decompose(): Seq[Sentence]
-  def decomposeRecursive(): Seq[Sentence] = {
-    decompose().flatMap(pts => pts.decomposeRecursive())
+  def decompose: Seq[Sentence]
+  def decomposeRecursive: Seq[Sentence] = {
+    decompose.flatMap(pts => pts.decomposeRecursive)
   }
   override def toString: String
 }
@@ -21,7 +21,7 @@ case object Absurdity extends Sentence
   
   def contains(s: Sentence) = matches(s)
   
-  def decompose() = List(this)
+  def decompose = Nil
   
   def substitute(orig: Term, sub: Term) = this
   
@@ -39,7 +39,7 @@ final case class AtomicSentence(atom: Atom) extends Sentence
   
   def contains(s: Sentence) = matches(s)
   
-  def decompose() = List(this)
+  def decompose = Nil
   
   def toRelation = atom.toRelation
   
@@ -60,7 +60,7 @@ final case class BinarySentence(left: Sentence, right: Sentence, conn: BinaryCon
   
   def substitute(orig: Term, sub: Term) = BinarySentence(left.substitute(orig, sub), right.substitute(orig, sub), conn)
   
-  def decompose() = List(left, right)
+  def decompose = List(left, right)
   
   override def toString() = String.format("%s(%s,%s)", conn, left, right)
 }
@@ -77,7 +77,7 @@ final case class UnarySentence(operand: Sentence, conn: UnaryConnective) extends
   
   def substitute(orig: Term, sub: Term) = UnarySentence(operand.substitute(orig, sub), conn)
   
-  def decompose() = List(operand)
+  def decompose = List(operand)
   
   override def toString() = String.format("%s(%s)", conn, operand)
 }
@@ -94,7 +94,7 @@ final case class QuantifiedSentence(operand: Sentence, quantifier: Quantifier) e
   
   def substitute(orig: Term, sub: Term) = QuantifiedSentence(operand.substitute(orig, sub), quantifier)
   
-  def decompose() = List(operand)
+  def decompose = List(operand)
   
   override def toString() = String.format("%s(%s)", quantifier, operand)
 }

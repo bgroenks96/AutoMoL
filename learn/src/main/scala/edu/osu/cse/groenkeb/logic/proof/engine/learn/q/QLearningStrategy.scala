@@ -24,11 +24,11 @@ final case class QLearningStrategy(model: QModel, policy: QPolicy, var alpha: Do
   
   def actions(implicit context: ProofContext): Seq[Action] = {
     val maybePrevState = context.parent match {
-      case Some(parent) => Some(WorkingState(ProblemGraph(parent), None)) //Some(stateFor(parent, c => WorkingState(ProblemGraph(c), None)))
+      case Some(parent) => Some(WorkingState(ProblemGraph(parent), parent, None)) //Some(stateFor(parent, c => WorkingState(ProblemGraph(c), None)))
       case None => None
     }
     // Build problem state for current context
-    val state = WorkingState(ProblemGraph(context), maybePrevState) //stateFor(context, c => WorkingState(ProblemGraph(c), maybePrevState))
+    val state = WorkingState(ProblemGraph(context), context, maybePrevState) //stateFor(context, c => WorkingState(ProblemGraph(c), maybePrevState))
     // Store state for future updates
     val availableActions = generateActions
     // Run update for pending parent state, if necessary
@@ -49,31 +49,31 @@ final case class QLearningStrategy(model: QModel, policy: QPolicy, var alpha: Do
   
   override def feedback(action: Action, result: ProofResult)(implicit context: ProofContext): ProofResult = result match {
     case Success(proof, context, Continue(_)) =>
-      val prevState = WorkingState(ProblemGraph(context), None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
-      val successState = SolvedState(proof, prevState)
+      val prevState = WorkingState(ProblemGraph(context), context, None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
+      val successState = SolvedState(proof, context, prevState)
       model.update(QUpdate(QArgs(prevState, action), successState, RewardSuccess, alpha), Nil)
       updateAlpha
       result
     case Failure(context, Continue(_)) =>
-      val prevState = WorkingState(ProblemGraph(context), None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
-      val failedState = FailedState(prevState)
+      val prevState = WorkingState(ProblemGraph(context), context, None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
+      val failedState = FailedState(context, prevState)
       model.update(QUpdate(QArgs(prevState, action), failedState, RewardFailureWithContinue, alpha), Nil)
       updateAlpha
       result
     case Success(proof, context, Cut()) =>
-      val prevState = WorkingState(ProblemGraph(context), None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
-      val successState = SolvedState(proof, prevState)
+      val prevState = WorkingState(ProblemGraph(context), context, None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
+      val successState = SolvedState(proof, context, prevState)
       model.update(QUpdate(QArgs(prevState, action), successState, RewardSuccess, alpha), Nil)
       updateAlpha
       result
     case Failure(context, Cut()) =>
-      val prevState = WorkingState(ProblemGraph(context), None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
-      val failedState = FailedState(prevState)
+      val prevState = WorkingState(ProblemGraph(context), context, None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
+      val failedState = FailedState(context, prevState)
       model.update(QUpdate(QArgs(prevState, action), failedState, RewardFailureTerminal, alpha), Nil)
       updateAlpha
       result
     case Pending(context,_,_) =>
-      val prevState = WorkingState(ProblemGraph(context), None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
+      val prevState = WorkingState(ProblemGraph(context), context, None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
       pendingUpdates(prevState) = PendingUpdate(action, RewardValidStep)
       result
   }

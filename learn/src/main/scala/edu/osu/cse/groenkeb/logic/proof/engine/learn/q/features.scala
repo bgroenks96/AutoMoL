@@ -16,13 +16,13 @@ import org.nd4j.linalg.api.ndarray.INDArray
 abstract class BaseFeature extends Feature {
   def apply(state: ProblemState, action: Action) = BaseFeature.applyFunc(eval)(state, action)
   
-  def eval(graph: ProblemGraph, action: Action): Double
+  def eval(graph: WorkingState, action: Action): Double
 }
 
 object BaseFeature {
-  def applyFunc(evalFunc: (ProblemGraph, Action) => Double): (ProblemState, Action) => Double = {
+  def applyFunc(evalFunc: (WorkingState, Action) => Double): (ProblemState, Action) => Double = {
     (state, action) => state match {
-      case WorkingState(graph, _) => evalFunc(graph, action)
+      case s@WorkingState(_, _, _) => evalFunc(s, action)
       case _ => 0.0
     }
   }
@@ -30,20 +30,16 @@ object BaseFeature {
 
 object Features {
   def introRuleFilter: Feature = {
-    def relevance(graph: ProblemGraph, action: Action) = graph.goal match {
-      case AtomicNode(a) => if (action.rule.yields(AtomicSentence(a))) 1.0 else -1.0
-      case BinaryNode(s) => if (action.rule.yields(s)) 1.0 else -1.0
-      case UnaryNode(s) => if (action.rule.yields(s)) 1.0 else -1.0
-      case QuantifierNode(s) => if (action.rule.yields(s)) 1.0 else -1.0
-      case AbsurdityNode => if (action.rule.yields(Absurdity)) 1.0 else -1.0
-      case _ => 0.0
+    def relevance(state: WorkingState, action: Action) = {
+      if (action.rule.yields(state.goal)) 1.0
+      else 0.0
     }
     BaseFeature.applyFunc(relevance)
   }
   
   def ruleOrdering: Feature = {
     val ruleCount = 7
-    def order(graph: ProblemGraph, action: Action) = action.rule match {
+    def order(state: WorkingState, action: Action) = action.rule match {
       case AndElimination => 1.0
       case OrElimination => 1.0 - 1*1.0/ruleCount
       case NegationElimination => 1.0 - 2*1.0/ruleCount
@@ -57,12 +53,7 @@ object Features {
   }
   
   def accessibility: Feature = {
-    def accessible(graph: ProblemGraph, action: Action) = graph.goal match {
-      case AtomicNode(atom)
-        if (toSentences(graph.assumptions:_*).exists(s => s.accessible(atom))) => 1.0
-      case AtomicNode(_) => -1.0
-      case _ => 1.0
-    }
+    def accessible(graph: WorkingState, action: Action) = 0.0
     BaseFeature.applyFunc(accessible)
   }
   
@@ -77,8 +68,9 @@ object Features {
           .reduce((t1, t2) => t1 + t2)
         s + graph.encodings(node)
     }
-    def score(dist: Int)(graph: ProblemGraph, action: Action) = action.major match {
+    def score(dist: Int)(state: WorkingState, action: Action) = action.major match {
       case Some(s) =>
+        val graph = state.graph
         find(s, graph.assumptions) match {
           case Some(node) =>
             val nx = graph.encodings(node) + walk(graph, node, dist, Set(node))
@@ -93,13 +85,14 @@ object Features {
   
   def shortestPathToGoal: Feature = {
     import scala.collection.mutable.Map
-    def shortestPath(graph: ProblemGraph, action: Action) = action.major match {
-      case Some(s) => find(s, graph.assumptions) match {
+    def shortestPath(state: WorkingState, action: Action) = action.major match {
+      case Some(s) => find(s, state.graph.assumptions) match {
         case Some(n) =>
+          val ngraph = state.graph.graph
           // Dijkstra's shortest-path algorithm
           val distMap = Map[GraphNode, Int]()
           val unvisited = Set[GraphNode]()
-          graph.graph.nodes.foreach {
+          ngraph.nodes.foreach {
             v =>
               distMap(v) = Int.MaxValue
               unvisited.add(v)
@@ -108,7 +101,7 @@ object Features {
           while (!unvisited.isEmpty) {
             val min = unvisited.min[GraphNode](Ordering.by(v => distMap(v)))
             unvisited.remove(min)
-            graph.graph.adjOut(min).foreach {
+            ngraph.adjOut(min).foreach {
               v =>
                 val d = distMap(min) + 1
                 if (d < distMap(v)) {
@@ -116,23 +109,12 @@ object Features {
                 }
             }
           }
-          1.0 / distMap(graph.goal)
+          1.0 / distMap(state.graph.goal)
         case None => 0.0
       }
       case None => 0.0
     }
     BaseFeature.applyFunc(shortestPath)
-  }
-  
-  private def toSentences(nodes: GraphNode*) = nodes.map {
-    n => n match {
-      case AtomicNode(atom) => AtomicSentence(atom)
-      case BinaryNode(s) => s
-      case UnaryNode(s) => s
-      case QuantifierNode(s) => s
-      case AbsurdityNode => Absurdity
-      case _ => ???
-    }
   }
   
   private def find(s: Sentence, nodes: Seq[GraphNode]) = nodes.find {

@@ -28,25 +28,23 @@ class PosQuestionsTests {
   def testPosquestionsNaiveStrategy = {
     implicit val trace = Trace()
     implicit val options = Seq(trace)
+    implicit val rules = standardRules
     val solver = new ProofSolver()
-    val rules = standardRules
-    val questions = loadPosquestions.toList
-    val proofs = for {
-      (assumptions, goal) <- questions
-    } yield {
-      (solver.prove(ProofContext(goal, rules, assume(assumptions:_*))).collect({ case r:Success => r }), trace.stepCount)
+    val questions = loadPosquestions.map { case (assumptions, goal) => ProofContext(goal, assumptions.map(s => Assumption(s))) }.toList
+    var meanStepCount = 0.0
+    questions.zipWithIndex.foreach {
+      case (q, i) =>
+        println("Problem " + (i + 1))
+        val results = solver.prove(q).collect { case s:Success => s }
+        Assert.assertFalse(s"Failed on problem $i; ${questions(i)}", results.isEmpty)
+        val proof = results.head.proof
+        ProofUtils.prettyPrint(proof);
+        val proofSteps = ProofUtils.countSteps(proof)
+        println(s"Found a proof with $proofSteps steps of inference after ${trace.stepCount} total attempted steps")
+        println("--------------")
+        meanStepCount += (trace.stepCount - meanStepCount) / (i+1)
     }
     
-    var meanStepCount = 0.0
-    proofs.zipWithIndex.foreach {
-      case ((results, steps), i) =>
-        println("Problem " + (i + 1))
-        Assert.assertFalse(s"Failed on problem $i; ${questions(i)}", results.isEmpty)
-        ProofUtils.prettyPrint(results.head.proof);
-        println(s"Finished after $steps attempted steps")
-        println("--------------")
-        meanStepCount += (steps - meanStepCount) / (i+1)
-    }
     println(s"Average step count: ${Math.round(meanStepCount)}")
   }
   
@@ -60,11 +58,15 @@ class PosQuestionsTests {
     val questions = loadPosquestions.map { case (assumptions, goal) => ProofContext(goal, assumptions.map(s => Assumption(s))) }.toList
     var meanStepCount = 0.0
     questions.zipWithIndex.foreach {
-      case (q, i) if i == 25 =>
+      case (q, i) =>
         println("Problem " + (i + 1))
-        println(q)
-        Assert.assertFalse(solver.prove(q).filter(r => r.isInstanceOf[Success]).isEmpty)
-        println(s"Finished after ${trace.stepCount} attempted steps")
+        val results = solver.prove(q).collect { case s:Success => s }
+        Assert.assertFalse(s"Failed on problem $i; ${questions(i)}", results.isEmpty)
+        val proof = results.head.proof
+        ProofUtils.prettyPrint(proof);
+        val proofSteps = ProofUtils.countSteps(proof)
+        println(s"Found a proof with $proofSteps steps of inference after ${trace.stepCount} total attempted steps")
+        println("--------------")
         meanStepCount += (trace.stepCount - meanStepCount) / (i+1)
       case _ => Unit
     }
@@ -77,7 +79,7 @@ class PosQuestionsTests {
   )
   
   private def loadPosquestions = {
-    val res = ClassLoader.getSystemClassLoader.getResourceAsStream("posquestions")
+    val res = ClassLoader.getSystemClassLoader.getResourceAsStream("asset")
     Assert.assertNotNull(res)
     val reader = new BufferedReader(new InputStreamReader(res))
     reader.lines().iterator().asScala
@@ -101,5 +103,6 @@ class PosQuestionsTests {
       NegationIntroduction, NegationElimination,
       AndIntroduction, AndElimination,
       OrIntroduction, OrElimination,
-      IfIntroduction, IfElimination))
+      IfIntroduction, IfElimination,
+      RestrictedDilemma))
 }

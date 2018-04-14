@@ -2,8 +2,8 @@ package edu.osu.cse.groenkeb.logic
 
 object dsl {
   implicit def booleanExtensions(b: Boolean) = new {
-    def and(arg: Boolean) = b && arg
-    def or(arg: Boolean) = b || arg
+    def and(arg: => Boolean) = b && arg
+    def or(arg: => Boolean) = b || arg
     def not = !b
   }
   
@@ -31,7 +31,7 @@ object dsl {
       case Not(ne) if ne.matches(sub) => ~parity
       case Not(ne) => parityOf(sub, ne, ~parity)
       case If(ante, _) if ante.contains(sub) => parityOf(sub, ante, ~parity)
-      case s => s.decompose.collect { case d if d.contains(sub) => parityOf(sub, d, parity) }.reduce((p1, p2) => p1 + p2)
+      case s => s.decompose.collect { case d if d.contains(sub) => parityOf(sub, d, parity) }.fold(parity)((p1, p2) => p1 + p2)
     }
   }
   

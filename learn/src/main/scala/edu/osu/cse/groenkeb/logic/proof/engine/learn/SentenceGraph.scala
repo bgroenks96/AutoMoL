@@ -63,6 +63,11 @@ final case class SentenceGraph(adj: Map[GraphNode, Adjacency]) {
   
   def adjOut(node: GraphNode) = adj.getOrElse(node, Adjacency()).out
   
+  def neighbors(node: GraphNode) = {
+    val adj = this.adj.getOrElse(node, Adjacency())
+    (adj.in ++ adj.out).distinct
+  }
+  
   def degree(node: GraphNode) = adj.getOrElse(node, Adjacency()).degree
   
   def ++(graph: SentenceGraph) =
