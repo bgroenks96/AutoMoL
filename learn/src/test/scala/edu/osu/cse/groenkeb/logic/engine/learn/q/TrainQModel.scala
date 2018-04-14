@@ -32,11 +32,11 @@ import edu.osu.cse.groenkeb.logic.proof.engine.learn.q.QModel
 object TrainQModel {
   val gamma = 0.9
   val policy = new EpsilonGreedy(0.0, decay=0.0)
-  val features = Seq(introRuleFilter, ruleOrdering)
+  val features = Seq(introRuleFilter, ruleOrdering, accessibility)
   val model = new LinearQModel(features, gamma)
-  val alphaDecay = 1.0E-8
-  val alphaMin = 1.0E-6
-  implicit val strategy = new QLearningStrategy(model, policy, alpha=0.1f, alphaDecay=alphaDecay, alphaMin=alphaMin)
+  val alphaDecay = 0.0
+  val alphaMin = 1.0E-5
+  implicit val strategy = new QLearningStrategy(model, policy, alpha=0.00f, alphaDecay=alphaDecay, alphaMin=alphaMin)
   implicit val trace = Trace()
   implicit val options = Seq(trace)
   implicit val parser = new SentenceParser(new NodeRecursiveTokenizer())(new DefaultPropOpMatcher())  
@@ -66,7 +66,7 @@ object TrainQModel {
       }}
       println(s"Iteration $i complete: AvgSteps train: ${trainStepCount/trainSet.length} val: ${valStepCount/valSet.length}  combined: ${(trainStepCount + valStepCount)/questions.length}")
       println("current learning rate: " + strategy.alpha)
-      strategy.alpha = 0.1
+      strategy.alpha = strategy.alpha - 0.0005
     }
     println("done")
   }

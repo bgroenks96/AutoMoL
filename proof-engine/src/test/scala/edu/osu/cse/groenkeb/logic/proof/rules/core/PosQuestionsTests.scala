@@ -60,12 +60,13 @@ class PosQuestionsTests {
     val questions = loadPosquestions.map { case (assumptions, goal) => ProofContext(goal, assumptions.map(s => Assumption(s))) }.toList
     var meanStepCount = 0.0
     questions.zipWithIndex.foreach {
-      case (q, i) =>
+      case (q, i) if i == 25 =>
         println("Problem " + (i + 1))
         println(q)
         Assert.assertFalse(solver.prove(q).filter(r => r.isInstanceOf[Success]).isEmpty)
         println(s"Finished after ${trace.stepCount} attempted steps")
         meanStepCount += (trace.stepCount - meanStepCount) / (i+1)
+      case _ => Unit
     }
     
     println(s"Average step count: ${Math.round(meanStepCount)}")
@@ -76,7 +77,7 @@ class PosQuestionsTests {
   )
   
   private def loadPosquestions = {
-    val res = ClassLoader.getSystemClassLoader.getResourceAsStream("asset")
+    val res = ClassLoader.getSystemClassLoader.getResourceAsStream("posquestions")
     Assert.assertNotNull(res)
     val reader = new BufferedReader(new InputStreamReader(res))
     reader.lines().iterator().asScala

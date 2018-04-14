@@ -6,6 +6,9 @@ sealed abstract class Sentence
   def contains(s: Sentence): Boolean
   def substitute(orig: Term, sub: Term): Sentence
   def decompose(): Seq[Sentence]
+  def decomposeRecursive(): Seq[Sentence] = {
+    decompose().flatMap(pts => pts.decomposeRecursive())
+  }
   override def toString: String
 }
 

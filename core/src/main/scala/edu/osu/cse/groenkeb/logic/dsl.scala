@@ -17,13 +17,20 @@ object dsl {
     }
     def or(arg: Sentence) = (s, arg)
     def isAtomic = s.isInstanceOf[AtomicSentence] or (s == Absurdity)
-    def accessible(atom: Atom): Boolean = checkAccessibility(atom, s)
+    def parity(sub: Sentence): Parity = parityOf(sub, s)
+    def accessible(sub: Sentence): Boolean = s.contains(sub) and (parityOf(sub, s) == Positive)
   }
   
-  private def checkAccessibility(atom: Atom, sentence: Sentence): Boolean = sentence match {
-    case Not(s) => false
-    case If(_, right) if right.contains(AtomicSentence(atom)) => true
-    case If(left, _) => false
-    case s => s.contains(AtomicSentence(atom))
+  private def parityOf(sub: Sentence, wrt: Sentence, parity: Parity = Positive): Parity = {
+    require(wrt.contains(sub))
+    wrt match {
+      case s if s.matches(sub) => parity
+      case Not(s) if s.matches(sub) => ~parity
+      case Not(s) => parityOf(sub, s, ~parity)
+      case If(ante, _) if ante.contains(sub) => parityOf(sub, ante, ~parity)
+      case BinarySentence(left, right, _) if left.contains(sub) => parityOf(sub, left, parity)
+      case BinarySentence(left, right, _) if right.contains(sub) => parityOf(sub, right, parity)
+      case UnarySentence(s, _) if s.contains(sub) => parityOf(sub, s, parity)
+    }
   }
 }

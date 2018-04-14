@@ -20,6 +20,10 @@ case class ProofContext (goal: Sentence,
                          depth: Int,
                          action: Option[Action],
                          parent: Option[ProofContext]) {
+  val atoms = available
+                .flatMap(p => p.sentence.decomposeRecursive ++ goal.decomposeRecursive)
+                .collect { case AtomicSentence(atom) => atom }
+  
   def this(goal: Sentence, rules: RuleSet, available: Traversable[Premise]) = this(goal, rules, available.toSet, 1, None, None)
   
   def this(goal: Sentence, available: Traversable[Premise] = Nil)(implicit rules: RuleSet) = this(goal, rules, available)

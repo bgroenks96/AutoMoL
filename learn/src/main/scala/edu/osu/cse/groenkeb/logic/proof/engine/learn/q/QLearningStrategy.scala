@@ -42,7 +42,7 @@ final case class QLearningStrategy(model: QModel, policy: QPolicy, var alpha: Do
     }
     // Evaluate Q model for current state and select non-negative Q values
     val qvalues = model.evaluate(state, availableActions)
-    policy.actionSequence(qvalues)
+    policy.actionSequence(qvalues.filter(qv => qv.value >= 0))
   }
   
   def decide(result: ProofResult)(implicit context: ProofContext): ProofResult = result

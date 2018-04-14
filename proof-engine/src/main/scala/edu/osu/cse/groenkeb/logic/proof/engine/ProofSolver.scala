@@ -19,6 +19,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
   private def proof(premises: Seq[Premise])(implicit context: ProofContext): ProofResult = {
     trace
     premises match {
+      case Nil if checkForLoops(context.parent) => failure()
       case Nil => tryInfer(strategy.actions)
       case Seq(head, rem@_*) => head match {
         case a: Assumption if context.hasGoal(a.sentence) => success(a.proof, proof(rem))
@@ -223,5 +224,15 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
   private def resetTrace: Unit = this.options.find(o => o.isInstanceOf[Trace]) match {
     case Some(Trace(state)) => state.reset
     case None => Unit
+  }
+  
+  private def checkForLoops(ancestor: Option[ProofContext] = None)(implicit context: ProofContext): Boolean = {
+    def premisesMatch(as1: Set[Premise], as2: Set[Premise]) = as1.forall(a1 => as2.exists(a2 => a1.matches(a2)))
+    ancestor match {
+      case Some(ProofContext(goal,_,avail,_,Some(a),_))
+        if goal == context.goal && premisesMatch(avail, context.available) => true
+      case Some(parent) => checkForLoops(parent.parent)
+      case None => false
+    }
   }
 }
