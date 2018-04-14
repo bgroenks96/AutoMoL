@@ -28,15 +28,16 @@ import atto.ParseResult._
 import cats.implicits._
 import scala.util.Random
 import edu.osu.cse.groenkeb.logic.proof.engine.learn.q.QModel
+import edu.osu.cse.groenkeb.logic.proof.engine.learn.ProblemState
 
 object TrainQModel {
   val gamma = 0.9
   val policy = new EpsilonGreedy(0.0, decay=0.0)
-  val features = Seq(basicRuleFilter, ruleOrdering, accessibility, majorComplexityScore, similarityScore(2))
+  val features = Seq(basicRuleFilter, ruleOrdering, atomicAccessibility, majorComplexityScore, shortestPathToGoal)
   val model = new LinearQModel(features, gamma)
-  val alphaDecay = 1.0E-9
-  val alphaMin = 1.0E-4
-  val numEpochs = 5
+  val alphaDecay = 0.0
+  val alphaMin = 0.0
+  val numEpochs = 2
   val numSplits = 3 // 3-fold cross validation
   implicit val trace = Trace()
   implicit val options = Seq(trace)
@@ -51,12 +52,21 @@ object TrainQModel {
   }
   
   private def trainWith(questions: IndexedSeq[ProofContext]) {
-    val baselineSolver = new ProofSolver()(new CoreProofStrategy())
+    val baselineSolver = new ProofSolver()(new CoreProofStrategy(), options)
     val partitions = splitForCrossValidation(questions, k=numSplits)
     for (i <- 1 to numEpochs) {
       println("Starting epoch " + i)
-      implicit val strategy = new QLearningStrategy(model, policy, alpha=0.01f, alphaDecay=alphaDecay, alphaMin=alphaMin)
+      var expectedReward = 0.0
+      var nUpdates = 0
+      val updateExpectedReward = (s: ProblemState, r: Double) => {
+        nUpdates += 1
+        expectedReward += (r - expectedReward) / nUpdates
+      }
+      implicit val strategy = new QLearningStrategy(model, policy, alpha=0.01, alphaDecay=alphaDecay, alphaMin=alphaMin, updateCallback=updateExpectedReward)
       val solver = new ProofSolver
+      var avgStepCountTrain = 0.0
+      var avgStepCountVal = 0.0
+      var avgStepCountBase = 0.0
       var avgEffScoreTrain = 0.0
       var avgEffScoreVal = 0.0
       var avgEffScoreBase = 0.0
@@ -64,54 +74,72 @@ object TrainQModel {
         val valSet = partitions(j)
         val trainSet = Array.range(0, numSplits).filter(i => i != j).flatMap(i => partitions(i))
         model.setMode(QModel.TrainMode)
+        println(s"begin training pass ${j+1} for epoch $i")
         trainSet.zipWithIndex.foreach {
           case (prob, i) => {
-            println(s"Problem $i : $prob")
+            //println(s"Problem $i : $prob")
             val results = solver.prove(prob).collect { case s:Success => s.proof }
             Assert.assertFalse(results.isEmpty)
             val proof = results.head
             val steps = ProofUtils.countSteps(proof)
-            println(s"Found a proof with $steps steps of inference after ${trace.stepCount} total attempted steps")
+            //println(s"Found a proof with $steps steps of inference after ${trace.stepCount} total attempted steps")
             val effScore = steps / trace.stepCount.toDouble
-            println("Efficiency score: " + effScore)
+            //println("Efficiency score: " + effScore)
             avgEffScoreTrain += (effScore - avgEffScoreTrain) / (j*trainSet.length+i+1)
+            avgStepCountTrain += (trace.stepCount - avgStepCountTrain) / (j*trainSet.length+i+1)
           }
         }
         println("average efficiency score (train): " + avgEffScoreTrain)
-        println("validation pass " + j)
+        println("average total step count (train): " + avgStepCountTrain)
+        println(s"expected reward ($nUpdates updates): " + expectedReward)
+        expectedReward = 0.0
+        nUpdates = 0
+        println(s"begin validation pass ${j+1} for epoch $i")
         model.setMode(QModel.TestMode)
         valSet.zipWithIndex.foreach {
           case (prob, i) => {
-            println(s"Problem $i : $prob")
+            //println(s"Problem $i : $prob")
             val results = solver.prove(prob).collect { case s:Success => s.proof }
             Assert.assertFalse(results.isEmpty)
             val proof = results.head
             val steps = ProofUtils.countSteps(proof)
-            println(s"Found a proof with $steps steps of inference after ${trace.stepCount} total attempted steps")
+            //println(s"Found a proof with $steps steps of inference after ${trace.stepCount} total attempted steps")
             val effScore = steps / trace.stepCount.toDouble
-            println("Efficiency score: " + effScore)
+            //println("Efficiency score: " + effScore)
             avgEffScoreVal += (effScore - avgEffScoreVal) / (j*valSet.length+i+1)
+            avgStepCountVal += (trace.stepCount - avgStepCountVal) / (j*valSet.length+i+1)
           }
         }
         println("average efficiency score (val): " + avgEffScoreVal)
+        println("average total step count (val): " + avgStepCountVal)
+        println(s"expected reward: " + expectedReward)
+        expectedReward = 0.0
+        nUpdates = 0
+        println(s"begin baseline test ${j+1} for epoch $i")
         valSet.zipWithIndex.foreach {
           case (prob, i) => {
-            println(s"Problem $i : $prob")
+            //println(s"Problem $i : $prob")
             val results = baselineSolver.prove(prob).collect { case s:Success => s.proof }
             Assert.assertFalse(results.isEmpty)
             val proof = results.head
             val steps = ProofUtils.countSteps(proof)
-            println(s"Found a proof with $steps steps of inference after ${trace.stepCount} total attempted steps")
+            //println(s"Found a proof with $steps steps of inference after ${trace.stepCount} total attempted steps")
             val effScore = steps / trace.stepCount.toDouble
-            println("Efficiency score: " + effScore)
+            //println("Efficiency score: " + effScore)
             avgEffScoreBase += (effScore - avgEffScoreBase) / (j*valSet.length+i+1)
+            avgStepCountBase += (trace.stepCount - avgStepCountBase) / (j*valSet.length+i+1)
           }
         }
-        println("average efficiency score (baseline): " + avgEffScoreBase)
+        println("average total step count (base): " + avgStepCountBase)
       }
       println("Average efficiency score (train): " + avgEffScoreTrain)
       println("Average efficiency score (val): " + avgEffScoreVal)
-      println("Average efficiency score (baseline): " + avgEffScoreBase)
+      println("Average efficiency score (val w/ baseline): " + avgEffScoreBase)
+      println("average total step count (train): " + avgStepCountTrain)
+      println("average total step count (val): " + avgStepCountVal)
+      println("average total step count (val w/ baseline): " + avgStepCountBase)
+      println("current learning rate: " + strategy.alpha)
+      println("weights: " + model.weights.mkString(" "))
     }
     println("done")
     println("final model weights: " + model.weights)
@@ -121,7 +149,7 @@ object TrainQModel {
     val partitionSize = train.size / k
     val partitions = Array.ofDim[IndexedSeq[ProofContext]](k)
     for (i <- 0 until k) {
-      partitions(i) = train.slice(i, (i+1)*partitionSize)
+      partitions(i) = train.slice(i*partitionSize, (i+1)*partitionSize)
     }
     partitions
   }

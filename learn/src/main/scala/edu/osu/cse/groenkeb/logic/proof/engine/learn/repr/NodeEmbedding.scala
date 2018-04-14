@@ -32,7 +32,6 @@ final class NodeEmbedding(val node: GraphNode, val nodeDegree: Int) {
   }
   
   private def initialEmbedding = node match {
-    case RootNode(_,_) => MxUtil.onehot(0, NDArray.zeros(1, embeddingSize))
     case AtomicNode(_) => MxUtil.onehot(1, NDArray.zeros(1, embeddingSize))
     case BinaryNode(And(_, _)) => MxUtil.onehot(2, NDArray.zeros(1, embeddingSize))
     case BinaryNode(Or(_, _)) => MxUtil.onehot(3, NDArray.zeros(1, embeddingSize))

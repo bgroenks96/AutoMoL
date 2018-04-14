@@ -31,7 +31,7 @@ case class ProofSearch(step: ProofStep) {
     def expand(result: ProofResult): Stream[ProofResult] = result match {
       case Success(p, context, Cut()) => Stream(Success(p, context, Cut()))
       case Failure(context, Cut()) => Stream(Failure(context, Cut()))
-      case Success(p, context, Continue(step)) => continue(result)
+      case Success(p, context, Continue(step)) => Stream(Success(p, context, Cut())) //continue(result)
       case Failure(context, Continue(step)) => continue(result)
       case result:Pending => descend(result)
     }

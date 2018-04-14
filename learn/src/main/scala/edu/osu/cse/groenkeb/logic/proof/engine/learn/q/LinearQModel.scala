@@ -10,14 +10,14 @@ import edu.osu.cse.groenkeb.logic.proof.engine.learn.ProblemState
 
 final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
   // Represents Q value + feature values
-  type QResult = (QValue, Tensor)
+  type QResult = (QValue, Array[Double])
   
   // Sort by negative Q-value, thus ensuring descending order
   implicit val orderByHighestQValue = Ordering[Double].on[QResult]((qv: QResult) => qv._1.value)
 
   def update(availableActions: Seq[Action])(implicit context: ProofContext): Seq[Action] = ???
   
-  var weights = ns.ones(features.length + 1)
+  var weights = ns.ones(features.length + 1).data
   
   private var mode: QModel.Mode = QModel.TrainMode
   
@@ -42,7 +42,10 @@ final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
       // Calculate delta term: r + gamma*q_max - q
       val delta = params.reward + gamma*maxQVal.value - qval.value
       // Update weights using alpha adjusted gradient
-      weights += params.alpha * delta * fvals
+      for (i <- 0 until weights.length) {
+        weights(i) += params.alpha*delta*fvals(i)
+      }
+      //weights += params.alpha * delta * fvals
       Some(maxQVal)
     case _ => None
   }
@@ -65,14 +68,15 @@ final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
   /**
    * Evaluates feature values for the given state and action.
    */
-  private def evaluateFeatures(state: ProblemState, action: Action): Tensor = {
-    Tensor(features.map(f => f(state, action)).toArray :+ 1.0)
+  private def evaluateFeatures(state: ProblemState, action: Action): Array[Double] = {
+    (features.map(f => f(state, action)) :+ 1.0).toArray
   }
   
   /**
    * Computes the raw Q-value for the given feature vector using the current weights.
    */
-  private def qfunc(fvals: Tensor): Double = {
-    ns.dot(this.weights, fvals.T).squeeze()
+  private def qfunc(fvals: Array[Double]): Double = {
+    this.weights.zip(fvals).map { case (w, f) => w*f }.sum
+    //ns.dot(this.weights, fvals.T).squeeze()
   }
 }

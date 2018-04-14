@@ -23,5 +23,5 @@ trait ProofStrategy {
    * Provides explicit "feedback" to the strategy about the outcome of a particular action.
    * Returns the same result that was passed in for convenience to the caller (i.e. ProofSolver).
    */
-  def feedback(action: Action, result: ProofResult)(implicit context: ProofContext): ProofResult = result
+  def feedback(action: Action, result: ProofResult, trace: Trace)(implicit context: ProofContext): ProofResult = result
 }

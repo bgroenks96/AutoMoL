@@ -13,7 +13,7 @@ trait QModel {
   /**
    * Updates the model using the state/action/reward values given in 'params'.
    */
-  def update(params: QUpdate, availableActions: Seq[Action]): Option[QValue]
+  def update(params: QUpdate, availableActions: Seq[Action]): Unit
   
   def setMode(mode: QModel.Mode)
 }

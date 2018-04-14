@@ -30,12 +30,16 @@ object BaseFeature {
 
 object Features {
   def basicRuleFilter: Feature = {
-    def relevance(state: WorkingState, action: Action) = {
-      if (!action.rule.yields(state.goal)) -1.0
-      else action.rule match {
-        case IfElimination if (state.goal.isAtomic) or (state.goal has Or) => 1.0
-        case _ => 0.0
-      }
+    def relevance(state: WorkingState, action: Action) = action.rule match {
+      case r@AndElimination => 1.0
+      case r@OrElimination => 1.0
+      case r@NegationElimination /*if state.goal is Absurdity*/ => 1.0
+      case r@AndIntroduction if state.goal has And => 1.0
+      case r@IfIntroduction if state.goal has If => 1.0
+      case r@NegationIntroduction if state.goal has Not => 1.0
+      case r@IfElimination if (state.goal.isAtomic) or (state.goal has Or) => 1.0
+      case r@OrIntroduction if state.goal has Or => 1.0
+      case _ => -1.0
     }
     BaseFeature.applyFunc(relevance)
   }
@@ -55,40 +59,40 @@ object Features {
     BaseFeature.applyFunc(order)
   }
   
-  def accessibility: Feature = {
-    def accessible(graph: WorkingState, action: Action) = graph.goal match {
-      case a:AtomicSentence if graph.assumptions.forall(p => !p.sentence.accessible(a)) => -1.0
+  def atomicAccessibility: Feature = {
+    def accessible(state: WorkingState, action: Action) = state.goal match {
+      case a:AtomicSentence if state.assumptions.forall(p => !p.sentence.accessible(a)) => -1.0
       case a:AtomicSentence => 1.0
       case _ => 0.0
     }
     BaseFeature.applyFunc(accessible)
   }
   
-  def similarityScore(dist: Int): Feature = {
-    def walk(graph: ProblemGraph, node: GraphNode, dist: Int, visited: Set[GraphNode] = Set()): Tensor = dist match {
-      case d if d == 0 => graph.encodings(node)
-      case d =>
-        visited.add(node)
-        val s = (graph.graph.adjIn(node) ++ graph.graph.adjOut(node))
-          .filter(n => !visited.contains(n))
-          .map(n => walk(graph, n, d - 1, visited))
-          .fold(ns.zeros(ProblemGraph.encodingDims))((t1, t2) => t1 + t2)
-        s + graph.encodings(node)
-    }
-    def score(dist: Int)(state: WorkingState, action: Action) = action.major match {
-      case Some(s) =>
-        val graph = state.graph
-        find(s, graph.assumptions) match {
-          case Some(node) =>
-            val nx = graph.encodings(node) + walk(graph, node, dist, Set(node))
-            val cx = graph.encodings(graph.goal) + walk(graph, graph.goal, dist, Set(graph.goal))
-            (ns.dot(nx, cx.T) / (ns.dot(nx, nx.T)*ns.dot(cx, cx.T))).squeeze()
-          case None => 0.0
-        }
-      case None => 0.0
-    }
-    BaseFeature.applyFunc(score(dist))
-  }
+//  def similarityScore(dist: Int): Feature = {
+//    def walk(graph: ProblemGraph, node: GraphNode, dist: Int, visited: Set[GraphNode] = Set()): Tensor = dist match {
+//      case d if d == 0 => graph.encodings(node)
+//      case d =>
+//        visited.add(node)
+//        val s = (graph.graph.adjIn(node) ++ graph.graph.adjOut(node))
+//          .filter(n => !visited.contains(n))
+//          .map(n => walk(graph, n, d - 1, visited))
+//          .fold(ns.zeros(ProblemGraph.encodingDims))((t1, t2) => t1 + t2)
+//        s + graph.encodings(node)
+//    }
+//    def score(dist: Int)(state: WorkingState, action: Action) = action.major match {
+//      case Some(s) =>
+//        val graph = state.graph
+//        find(s, graph.assumptions) match {
+//          case Some(node) =>
+//            val nx = graph.encodings(node) + walk(graph, node, dist, Set(node))
+//            val cx = graph.encodings(graph.goal) + walk(graph, graph.goal, dist, Set(graph.goal))
+//            (ns.dot(nx, cx.T) / (ns.dot(nx, nx.T)*ns.dot(cx, cx.T))).squeeze()
+//          case None => 0.0
+//        }
+//      case None => 0.0
+//    }
+//    BaseFeature.applyFunc(score(dist))
+//  }
   
   def shortestPathToGoal: Feature = {
     import scala.collection.mutable.Map
@@ -108,7 +112,7 @@ object Features {
           while (!unvisited.isEmpty) {
             val min = unvisited.min[GraphNode](Ordering.by(v => distMap(v)))
             unvisited.remove(min)
-            ngraph.adjOut(min).foreach {
+           (ngraph.adjIn(min) ++ ngraph.adjOut(min)).foreach {
               v =>
                 val d = distMap(min) + 1
                 if (d < distMap(v)) {
@@ -116,7 +120,7 @@ object Features {
                 }
             }
           }
-          1.0 / distMap(state.graph.goal)
+          1.0 / (distMap(state.graph.goal) + 1)
         case None => 0.0
       }
       case None => 0.0
@@ -132,7 +136,7 @@ object Features {
         val premComplexity = prems.map(s => s.complexity)
         val majorPremIndex = prems.indexOf(major)
         val max = (goalComplexity +: premComplexity).max
-        -premComplexity(majorPremIndex) / max.toDouble
+        1.0 - premComplexity(majorPremIndex) / max.toDouble
       case _ => 0.0
     }
     BaseFeature.applyFunc(majorComplexity)

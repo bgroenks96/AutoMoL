@@ -11,7 +11,7 @@ final class DeepQModel extends QModel {
   
   def evaluate(state: ProblemState, availableActions: Seq[Action]): Seq[QValue] = ???
   
-  def update(params: QUpdate, availableActions: Seq[Action]): Option[QValue] = ???
+  def update(params: QUpdate, availableActions: Seq[Action]): Unit = ???
   
   def setMode(mode: QModel.Mode) {
     this.mode = mode

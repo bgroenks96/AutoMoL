@@ -94,9 +94,6 @@ final case class Adjacency(in: Seq[GraphNode] = Nil, out: Seq[GraphNode] = Nil) 
 }
 
 sealed abstract class GraphNode
-final case class RootNode(goal: Sentence, assumptions: Seq[Sentence]) extends GraphNode {
-  override def toString = "root"
-}
 final case class QuantifierNode(sentence: QuantifiedSentence) extends GraphNode {
   override def toString = sentence.toString()
 }

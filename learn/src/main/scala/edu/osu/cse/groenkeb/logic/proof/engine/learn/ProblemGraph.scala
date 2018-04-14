@@ -10,16 +10,14 @@ object ProblemGraph {
 
   def apply(context: ProofContext): ProblemGraph = {
     import scala.collection.mutable.Map
-    val rootNode = RootNode(context.goal, context.available.toSeq.map(p => p.sentence))
-    val (goalGraph, goalNode) = SentenceGraph(context.goal, Some(rootNode))
-    val (premGraphs, premNodes) = context.available.toSeq.map(p => SentenceGraph(p.sentence, Some(rootNode))).unzip
-    val rootGraph = SentenceGraph(Map[GraphNode, Adjacency](rootNode -> Adjacency(Nil, goalNode +: premNodes)))
-    val mergedGraph = rootGraph ++ ((goalGraph +: premGraphs).reduce[SentenceGraph]{ case (g1, g2) => g1 ++ g2 })
-    ProblemGraph(mergedGraph, goalNode, premNodes, rootNode)
+    val (goalGraph, goalNode) = SentenceGraph(context.goal)
+    val (premGraphs, premNodes) = context.available.toSeq.map(p => SentenceGraph(p.sentence)).unzip
+    //val rootGraph = SentenceGraph(Map[GraphNode, Adjacency](rootNode -> Adjacency(Nil, goalNode +: premNodes)))
+    val mergedGraph = ((goalGraph +: premGraphs).reduce[SentenceGraph]{ case (g1, g2) => g1 ++ g2 })
+    ProblemGraph(mergedGraph, goalNode, premNodes)
   }
   
   def encode(node: GraphNode): Tensor = node match {
-    case RootNode(_,_) => onehot(0)
     case AtomicNode(_) => onehot(1)
     case BinaryNode(And(_, _)) => onehot(2)
     case BinaryNode(Or(_, _)) => onehot(3)
@@ -42,8 +40,8 @@ object ProblemGraph {
   }
 }
 
-case class ProblemGraph(graph: SentenceGraph, goal: GraphNode, assumptions: Seq[GraphNode], root: RootNode) {
-  val encodings = initEncodings(root)
+case class ProblemGraph(graph: SentenceGraph, goal: GraphNode, assumptions: Seq[GraphNode]) {
+  //val encodings = initEncodings(root)
   
   private def initEncodings(node: GraphNode, sign: Int = 1): Map[GraphNode, Tensor] = {
     require(sign == 1 || sign == -1)
@@ -54,7 +52,6 @@ case class ProblemGraph(graph: SentenceGraph, goal: GraphNode, assumptions: Seq[
   }
   
   private def signOf(node: GraphNode, ind: Int, outCount: Int): Int = node match {
-    case RootNode(_,_) if ind < outCount - 1 => -1
     case BinaryNode(If(_, _)) if ind == 0 => -1
     case UnaryNode(Not(_)) => -1
     case _ => 1
