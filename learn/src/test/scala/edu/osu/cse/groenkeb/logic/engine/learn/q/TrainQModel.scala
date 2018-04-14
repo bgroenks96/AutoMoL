@@ -32,43 +32,98 @@ import edu.osu.cse.groenkeb.logic.proof.engine.learn.q.QModel
 object TrainQModel {
   val gamma = 0.9
   val policy = new EpsilonGreedy(0.0, decay=0.0)
-  val features = Seq(introRuleFilter, ruleOrdering, accessibility)
+  val features = Seq(basicRuleFilter, ruleOrdering, accessibility, majorComplexityScore, similarityScore(2))
   val model = new LinearQModel(features, gamma)
-  val alphaDecay = 0.0
-  val alphaMin = 1.0E-5
-  implicit val strategy = new QLearningStrategy(model, policy, alpha=0.00f, alphaDecay=alphaDecay, alphaMin=alphaMin)
+  val alphaDecay = 1.0E-9
+  val alphaMin = 1.0E-4
+  val numEpochs = 5
+  val numSplits = 3 // 3-fold cross validation
   implicit val trace = Trace()
   implicit val options = Seq(trace)
-  implicit val parser = new SentenceParser(new NodeRecursiveTokenizer())(new DefaultPropOpMatcher())  
+  implicit val rules = standardRules
 
   def main(args: Array[String]) = {
-    //Random.setSeed(1)
     implicit val trace = Trace()
     implicit val options = Seq(trace)
     implicit val rules = standardRules
-    val solver = new ProofSolver()
-    val questions = loadPosquestions.map { case (assumptions, goal) => ProofContext(goal, assumptions.map(s => Assumption(s))) }.toList
-    val (trainSet, valSet) = splitForValidation(questions)
-    for (i <- 1 to 10) {
-      model.setMode(QModel.TrainMode)
-      var trainStepCount = 0.0
-      trainSet.foreach{ case (q, i) => {
-        println(s"Problem $i (train): $q")
-        Assert.assertFalse(solver.prove(q).collect { case s:Success => s.proof }.isEmpty)
-        trainStepCount += trace.stepCount
-      }}
-      model.setMode(QModel.TestMode)
-      var valStepCount = 0.0
-      valSet.foreach{ case (q, i) => {
-        println(s"Problem $i (validation): $q")
-        Assert.assertFalse(solver.prove(q).collect { case s:Success => s.proof }.isEmpty)
-        valStepCount += trace.stepCount
-      }}
-      println(s"Iteration $i complete: AvgSteps train: ${trainStepCount/trainSet.length} val: ${valStepCount/valSet.length}  combined: ${(trainStepCount + valStepCount)/questions.length}")
-      println("current learning rate: " + strategy.alpha)
-      strategy.alpha = strategy.alpha - 0.0005
+    val questions = loadData.map { case (assumptions, goal) => ProofContext(goal, assumptions.map(s => Assumption(s))) }.toIndexedSeq
+    trainWith(questions)
+  }
+  
+  private def trainWith(questions: IndexedSeq[ProofContext]) {
+    val baselineSolver = new ProofSolver()(new CoreProofStrategy())
+    val partitions = splitForCrossValidation(questions, k=numSplits)
+    for (i <- 1 to numEpochs) {
+      println("Starting epoch " + i)
+      implicit val strategy = new QLearningStrategy(model, policy, alpha=0.01f, alphaDecay=alphaDecay, alphaMin=alphaMin)
+      val solver = new ProofSolver
+      var avgEffScoreTrain = 0.0
+      var avgEffScoreVal = 0.0
+      var avgEffScoreBase = 0.0
+      for (j <- 0 until numSplits) {
+        val valSet = partitions(j)
+        val trainSet = Array.range(0, numSplits).filter(i => i != j).flatMap(i => partitions(i))
+        model.setMode(QModel.TrainMode)
+        trainSet.zipWithIndex.foreach {
+          case (prob, i) => {
+            println(s"Problem $i : $prob")
+            val results = solver.prove(prob).collect { case s:Success => s.proof }
+            Assert.assertFalse(results.isEmpty)
+            val proof = results.head
+            val steps = ProofUtils.countSteps(proof)
+            println(s"Found a proof with $steps steps of inference after ${trace.stepCount} total attempted steps")
+            val effScore = steps / trace.stepCount.toDouble
+            println("Efficiency score: " + effScore)
+            avgEffScoreTrain += (effScore - avgEffScoreTrain) / (j*trainSet.length+i+1)
+          }
+        }
+        println("average efficiency score (train): " + avgEffScoreTrain)
+        println("validation pass " + j)
+        model.setMode(QModel.TestMode)
+        valSet.zipWithIndex.foreach {
+          case (prob, i) => {
+            println(s"Problem $i : $prob")
+            val results = solver.prove(prob).collect { case s:Success => s.proof }
+            Assert.assertFalse(results.isEmpty)
+            val proof = results.head
+            val steps = ProofUtils.countSteps(proof)
+            println(s"Found a proof with $steps steps of inference after ${trace.stepCount} total attempted steps")
+            val effScore = steps / trace.stepCount.toDouble
+            println("Efficiency score: " + effScore)
+            avgEffScoreVal += (effScore - avgEffScoreVal) / (j*valSet.length+i+1)
+          }
+        }
+        println("average efficiency score (val): " + avgEffScoreVal)
+        valSet.zipWithIndex.foreach {
+          case (prob, i) => {
+            println(s"Problem $i : $prob")
+            val results = baselineSolver.prove(prob).collect { case s:Success => s.proof }
+            Assert.assertFalse(results.isEmpty)
+            val proof = results.head
+            val steps = ProofUtils.countSteps(proof)
+            println(s"Found a proof with $steps steps of inference after ${trace.stepCount} total attempted steps")
+            val effScore = steps / trace.stepCount.toDouble
+            println("Efficiency score: " + effScore)
+            avgEffScoreBase += (effScore - avgEffScoreBase) / (j*valSet.length+i+1)
+          }
+        }
+        println("average efficiency score (baseline): " + avgEffScoreBase)
+      }
+      println("Average efficiency score (train): " + avgEffScoreTrain)
+      println("Average efficiency score (val): " + avgEffScoreVal)
+      println("Average efficiency score (baseline): " + avgEffScoreBase)
     }
     println("done")
+    println("final model weights: " + model.weights)
+  }
+  
+  private def splitForCrossValidation(train: IndexedSeq[ProofContext], k: Int = 3) = {
+    val partitionSize = train.size / k
+    val partitions = Array.ofDim[IndexedSeq[ProofContext]](k)
+    for (i <- 0 until k) {
+      partitions(i) = train.slice(i, (i+1)*partitionSize)
+    }
+    partitions
   }
   
   private def splitForValidation(train: Seq[ProofContext], split: Float = 0.2f) = {
@@ -83,7 +138,7 @@ object TrainQModel {
     (CorePLProofParser.list <~ string("?-"), CorePLProofParser.sentence <~ char('.')).mapN { (premises, conc) => (premises, conc) }
   )
   
-  private def loadPosquestions = {
+  private def loadData = {
     val res = ClassLoader.getSystemClassLoader.getResourceAsStream("posquestions")
     Assert.assertNotNull(res)
     val reader = new BufferedReader(new InputStreamReader(res))

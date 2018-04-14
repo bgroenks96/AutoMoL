@@ -29,10 +29,13 @@ object BaseFeature {
 }
 
 object Features {
-  def introRuleFilter: Feature = {
+  def basicRuleFilter: Feature = {
     def relevance(state: WorkingState, action: Action) = {
-      if (action.rule.yields(state.goal)) 1.0
-      else 0.0
+      if (!action.rule.yields(state.goal)) -1.0
+      else action.rule match {
+        case IfElimination if (state.goal.isAtomic) or (state.goal has Or) => 1.0
+        case _ => 0.0
+      }
     }
     BaseFeature.applyFunc(relevance)
   }
@@ -53,7 +56,11 @@ object Features {
   }
   
   def accessibility: Feature = {
-    def accessible(graph: WorkingState, action: Action) = 0.0
+    def accessible(graph: WorkingState, action: Action) = graph.goal match {
+      case a:AtomicSentence if graph.assumptions.forall(p => !p.sentence.accessible(a)) => -1.0
+      case a:AtomicSentence => 1.0
+      case _ => 0.0
+    }
     BaseFeature.applyFunc(accessible)
   }
   
@@ -65,7 +72,7 @@ object Features {
         val s = (graph.graph.adjIn(node) ++ graph.graph.adjOut(node))
           .filter(n => !visited.contains(n))
           .map(n => walk(graph, n, d - 1, visited))
-          .reduce((t1, t2) => t1 + t2)
+          .fold(ns.zeros(ProblemGraph.encodingDims))((t1, t2) => t1 + t2)
         s + graph.encodings(node)
     }
     def score(dist: Int)(state: WorkingState, action: Action) = action.major match {
@@ -115,6 +122,20 @@ object Features {
       case None => 0.0
     }
     BaseFeature.applyFunc(shortestPath)
+  }
+  
+  def majorComplexityScore: Feature = {
+    def majorComplexity(state: WorkingState, action: Action) = action.major match {
+      case Some(major) if state.assumptions.exists(p => p.matches(major)) =>
+        val prems = state.assumptions.map(p => p.sentence).toSeq
+        val goalComplexity = state.goal.complexity
+        val premComplexity = prems.map(s => s.complexity)
+        val majorPremIndex = prems.indexOf(major)
+        val max = (goalComplexity +: premComplexity).max
+        -premComplexity(majorPremIndex) / max.toDouble
+      case _ => 0.0
+    }
+    BaseFeature.applyFunc(majorComplexity)
   }
   
   private def find(s: Sentence, nodes: Seq[GraphNode]) = nodes.find {
