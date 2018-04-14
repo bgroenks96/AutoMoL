@@ -72,7 +72,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     def advance(paramResults: scala.collection.Seq[Stream[ProofResult]]): Seq[Stream[ProofResult]] = paramResults match {
       case Nil => Nil
       case Seq(Stream(head)) => Seq(Stream())
-      case Seq(Stream(head, next, tail@_*), rem@_*) => Seq(Stream.cons(next, { tail.toStream })) ++ rem
+      case Seq(head #:: tail, rem@_*) if !tail.isEmpty => Seq(Stream.cons(tail.head, { tail.drop(1) })) ++ rem
       case Seq(Stream(head), rem@_*) => Seq(Stream(head)) ++ advance(rem)
     }
 
@@ -80,7 +80,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
 
     def unaryResults(p0: RuleParam)(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])(implicit action: Action): ProofResult =
       paramResults.map { s => s.filter { r => r.isInstanceOf[Success] } } match {
-        case results@Seq(Stream(head, rem@_*)) => inferFromUnaryResult(head) match {
+        case results@Seq(head #:: tail) => inferFromUnaryResult(head) match {
           case Some(proof) => success(proof, { unaryResults(p0)(resultContext, advance(results)) })
           case None => failure({ unaryResults(p0)(resultContext, advance(results)) })
         }
@@ -93,7 +93,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     def binaryResults(p0: RuleParam, p1: RuleParam)(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])
                      (implicit action: Action): ProofResult = {
       paramResults.map { s => s.filter { r => r.isInstanceOf[Success] } } match {
-        case results@Seq(Stream(head1, rem1@_*), Stream(head2, rem2@_*)) => inferFromBinaryResults(head1, head2) match {
+        case results@Seq(head1 #:: tail1, head2 #:: tail2) => inferFromBinaryResults(head1, head2) match {
           case Some(proof) => success(proof, { binaryResults(p0, p1)(resultContext, advance(results)) })
           case None => failure({ binaryResults(p0, p1)(resultContext, advance(results)) })
         }
@@ -107,7 +107,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
                       (resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]])
                       (implicit action: Action): ProofResult = {
       paramResults.map { s => s.filter { r => r.isInstanceOf[Success] } } match {
-        case results@Seq(Stream(head1, rem1@_*), Stream(head2, rem2@_*), Stream(head3, rem3@_*)) => 
+        case results@Seq(head1 #:: tail1, head2 #:: tail2, head3 #:: tail3) => 
           inferFromTernaryResults(head1, head2, head3) match {
             case Some(proof) => success(proof, { ternaryResults(p0, p1, p2)(resultContext, advance(results)) })
             case None => failure({ ternaryResults(p0, p1, p2)(resultContext, advance(results)) })
@@ -133,7 +133,7 @@ final class ProofSolver(implicit strategy: ProofStrategy = new NaiveProofStrateg
     def optionResults(resultContext: ProofContext, paramResults: Seq[Stream[ProofResult]]): ProofResult = paramResults match {
       // OptionParams are traversed by a single chain of proof steps, so we can assume that the given results should have only
       // a single stream of results
-      case Seq(Stream(head, tail@_*)) => head
+      case Seq(head #:: tail) => head
       case Seq(Stream()) => failure()
       case _ => throw new IllegalArgumentException("unexpected parameter count for option results")
     }

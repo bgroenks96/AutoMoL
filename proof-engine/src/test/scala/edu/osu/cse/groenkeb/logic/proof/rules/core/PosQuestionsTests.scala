@@ -79,7 +79,7 @@ class PosQuestionsTests {
   )
   
   private def loadPosquestions = {
-    val res = ClassLoader.getSystemClassLoader.getResourceAsStream("asset")
+    val res = ClassLoader.getSystemClassLoader.getResourceAsStream("posquestions")
     Assert.assertNotNull(res)
     val reader = new BufferedReader(new InputStreamReader(res))
     reader.lines().iterator().asScala
