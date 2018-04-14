@@ -10,7 +10,7 @@ case class CoreProofStrategy() extends ProofStrategy {
   private implicit val ruleOrdering = Ordering[Int].on[Rule]((r: Rule) => ruleOrdinal(r))
   
   def actions(implicit context: ProofContext) = context.goal match {
-    case s@AtomicSentence(a) if context.available.forall(p => !p.sentence.accessible(a)) => Nil
+    case s if context.available.forall(p => !p.sentence.accessible(s)) => Nil
     case _ => generateActions
   }
   
