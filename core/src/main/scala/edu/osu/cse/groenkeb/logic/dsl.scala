@@ -15,6 +15,7 @@ object dsl {
       case BinarySentence(s1, s2, `op`) => true
       case _ => false
     }
+    def hasRec(op: Operator): Boolean = sentenceHasOp(s, op)
     def or(arg: Sentence) = (s, arg)
     def isAtomic = s.isInstanceOf[AtomicSentence] or (s == Absurdity)
     def parity(sub: Sentence): Parity = parityOf(sub, s)
@@ -31,7 +32,7 @@ object dsl {
       case Not(ne) if ne.matches(sub) => ~parity
       case Not(ne) => parityOf(sub, ne, ~parity)
       case If(ante, _) if ante.contains(sub) => parityOf(sub, ante, ~parity)
-      case s => s.decompose.collect { case d if d.contains(sub) => parityOf(sub, d, parity) }.fold(parity)((p1, p2) => p1 + p2)
+      case s => s.decompose.collect { case d if d.contains(sub) => parityOf(sub, d, parity) }.reduce((p1, p2) => p1 + p2)
     }
   }
   
@@ -47,5 +48,11 @@ object dsl {
     case Not(ne) => 3 + weightedComplexity(ne)
     case If(left, right) => 4 + weightedComplexity(left) + weightedComplexity(right)
     case QuantifiedSentence(s,_) => 5 + weightedComplexity(s)
+  }
+  
+  def sentenceHasOp(s: Sentence, op: Operator): Boolean = s match {
+    case UnarySentence(sub, o) => o == op || sentenceHasOp(sub, op)
+    case BinarySentence(sub1, sub2, o) => o == op || sentenceHasOp(sub1, op) || sentenceHasOp(sub2, op)
+    case _ => false
   }
 }

@@ -12,7 +12,7 @@ case class Atom(val predicate: Predicate, val terms: Term*) {
   
   override def toString = terms match {
     case Nil => predicate.toString()
-    case terms => String.format("%s[%s]", predicate.toString(), terms.mkString("."))
+    case terms => String.format("%s[%s]", predicate.toString(), terms.mkString(","))
   }
 }
 
