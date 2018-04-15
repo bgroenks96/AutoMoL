@@ -17,7 +17,7 @@ final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
 
   def update(availableActions: Seq[Action])(implicit context: ProofContext): Seq[Action] = ???
   
-  var weights = ns.ones(features.length + 1).data
+  var weights = ns.zeros(features.length + 1).data
   
   private var mode: QModel.Mode = QModel.TrainMode
   
@@ -28,9 +28,8 @@ final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
     qvals.sorted.collect { case (qv, _) => qv }
   }
   
-  def update(params: QUpdate, availableActions: Seq[Action]) = availableActions match {
-    case Nil => None
-    case _ if this.mode == QModel.TrainMode =>
+  def update(params: QUpdate, availableActions: Seq[Action]) = {
+    if (this.mode == QModel.TrainMode) {
       // Re-compute expected Q value for the previous state and selected action
       // This is necessary because of the recursive nature of proof search; the weights
       // may have been updated one or more times since the original Q value was computed
@@ -38,16 +37,15 @@ final class LinearQModel(features: Seq[Feature], gamma: Double) extends QModel {
       // Compute Q values for new state and available actions
       val newQVals = computeQValues(params.newState, availableActions)
       // Assume optimal behavior for next action
-      val (maxQVal, _) = newQVals.max
+      val maxQVal = if (newQVals.isEmpty) 0.0 else newQVals.max._1.value
       // Calculate delta term: r + gamma*q_max - q
-      val delta = params.reward + gamma*maxQVal.value - qval.value
+      val delta = params.reward + gamma*maxQVal - qval.value
       // Update weights using alpha adjusted gradient
       for (i <- 0 until weights.length) {
         weights(i) += params.alpha*delta*fvals(i)
       }
       //weights += params.alpha * delta * fvals
-      Some(maxQVal)
-    case _ => None
+    }
   }
   
   def setMode(mode: QModel.Mode) {

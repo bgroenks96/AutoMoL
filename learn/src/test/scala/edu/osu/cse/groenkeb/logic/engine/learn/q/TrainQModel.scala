@@ -33,11 +33,11 @@ import edu.osu.cse.groenkeb.logic.proof.engine.learn.ProblemState
 object TrainQModel {
   val gamma = 0.9
   val policy = new EpsilonGreedy(0.0, decay=0.0)
-  val features = Seq(basicRuleFilter, ruleOrdering, atomicAccessibility, majorComplexityScore, shortestPathToGoal)
+  val features = Seq(basicRuleFilter, ruleOrdering, majorComplexityScore)
   val model = new LinearQModel(features, gamma)
   val alphaDecay = 0.0
   val alphaMin = 0.0
-  val numEpochs = 2
+  val numEpochs = 10
   val numSplits = 3 // 3-fold cross validation
   implicit val trace = Trace()
   implicit val options = Seq(trace)
@@ -62,7 +62,7 @@ object TrainQModel {
         nUpdates += 1
         expectedReward += (r - expectedReward) / nUpdates
       }
-      implicit val strategy = new QLearningStrategy(model, policy, alpha=0.01, alphaDecay=alphaDecay, alphaMin=alphaMin, updateCallback=updateExpectedReward)
+      implicit val strategy = new QLearningStrategy(model, policy, alpha=0.1, alphaDecay=alphaDecay, alphaMin=alphaMin, updateCallback=updateExpectedReward)
       val solver = new ProofSolver
       var avgStepCountTrain = 0.0
       var avgStepCountVal = 0.0

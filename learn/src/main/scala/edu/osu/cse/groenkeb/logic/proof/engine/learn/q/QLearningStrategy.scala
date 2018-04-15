@@ -60,7 +60,7 @@ final case class QLearningStrategy(model: QModel,
     case Success(proof, context, Continue(_)) =>
       val prevState = WorkingState(ProblemGraph(context), context, None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
       val successState = SolvedState(proof, context, prevState)
-      val reward = ProofUtils.countSteps(proof) / trace.stepCount.toDouble
+      val reward = calculateReward(proof, trace.stepCount)
       model.update(QUpdate(QArgs(prevState, action), successState, reward, alpha), Nil)
       updateAlpha
       updateCallback(successState, reward)
@@ -75,7 +75,7 @@ final case class QLearningStrategy(model: QModel,
     case Success(proof, context, Cut()) =>
       val prevState = WorkingState(ProblemGraph(context), context, None) //stateFor(context, c => WorkingState(ProblemGraph(c), None))
       val successState = SolvedState(proof, context, prevState)
-      val reward = ProofUtils.countSteps(proof) / trace.stepCount.toDouble
+      val reward = calculateReward(proof, trace.stepCount)
       model.update(QUpdate(QArgs(prevState, action), successState, reward, alpha), Nil)
       updateAlpha
       updateCallback(successState, reward)
@@ -101,6 +101,8 @@ final case class QLearningStrategy(model: QModel,
         case avail => avail.map { p => Action(rule, Some(p.sentence)) }.toSeq
       }
     } yield action
+    
+  private def calculateReward(proof: Proof, totalStepCount: Int) = -Math.log(ProofUtils.countSteps(proof) / totalStepCount.toDouble)
     
   private def filterRules(implicit context: ProofContext): Seq[Rule] = context.rules.collect {
     case r@AndElimination => r
